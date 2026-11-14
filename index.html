@@ -4,7 +4,7 @@
 <meta property="og:title" content="Star69AI | Managed AI Receptionist for Businesses"><meta property="og:description" content="A professionally configured and managed AI receptionist for service businesses. Answer calls, capture leads and help schedule appointments."><meta property="og:type" content="website"><meta property="og:url" content="https://star69ai.com/"><meta property="og:image" content="https://star69ai.com/assets/star69ai-logo.png"><meta property="og:image:alt" content="Star69AI logo"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Star69AI | Managed AI Receptionist"><meta name="twitter:description" content="Professionally configured and managed AI receptionist services for service businesses."><meta name="twitter:image" content="https://star69ai.com/assets/star69ai-logo.png"><meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./homepage-polish.css"><link rel="stylesheet" href="./contact.css"><link rel="stylesheet" href="./story-series.css"><link rel="stylesheet" href="./dashboard-demo.css"><link rel="stylesheet" href="./experience.css"><link rel="stylesheet" href="./demo-center.css"><link rel="stylesheet" href="./homepage-refresh.css"><script type="application/ld+json">
+<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./homepage-polish.css"><link rel="stylesheet" href="./contact.css"><link rel="stylesheet" href="./story-series.css"><link rel="stylesheet" href="./dashboard-demo.css"><link rel="stylesheet" href="./experience.css"><link rel="stylesheet" href="./demo-center.css"><link rel="stylesheet" href="./homepage-refresh.css"><link rel="stylesheet" href="./hero-assistant-fix.css"><script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
@@ -46,6 +46,8 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 </script>
+<link rel="stylesheet" href="/site-header.css">
+<script defer src="/site-header.js"></script>
 </head><body class="multi-page" id="top"><header class="topbar reference-topbar">
 <a class="brand reference-brand" href="/" aria-label="Star69AI home"><img src="./assets/star69ai-logo.svg" alt="Star69AI home — Smarter Calls. Bigger Opportunity." style="display:block;width:260px;max-width:42vw;max-height:58px;height:auto;object-fit:contain"></a>
 <nav class="nav reference-nav" id="primary-navigation" aria-label="Main navigation">
@@ -59,7 +61,7 @@
 </header><main><section class="hero reference-hero dark-shell" id="home" aria-labelledby="home-hero-title">
   <div class="hero-grid section-wrap">
     <div class="hero-copy">
-      <div class="eyebrow"><i aria-hidden="true"></i> STAR69AI · MANAGED AI RECEPTIONIST</div>
+      
       <p class="hero-preheadline">A better first hello. A stronger next step.</p>
       <h1 id="home-hero-title">Never miss the call that could <em>grow your business.</em></h1>
       <p class="hero-lede"><strong>Your business deserves more than voicemail.</strong> Star69AI builds, configures and manages an AI receptionist around the way your business works—answering incoming calls, capturing caller details, responding to approved questions and helping every opportunity move forward.</p>
@@ -79,15 +81,17 @@
       <div class="hero-model-glow" aria-hidden="true"></div>
       <div class="hero-orbit hero-orbit-one" aria-hidden="true"></div>
       <div class="hero-orbit hero-orbit-two" aria-hidden="true"></div>
-      <div class="hero-model-status"><span class="hero-live-dot"></span> YOUR AI RECEPTIONIST <b>READY</b></div>
       <img class="hero-model-image" src="./assets/Asistente%20virtual%20con%20headset%20futurista.png" alt="Star69AI virtual receptionist wearing a futuristic headset" fetchpriority="high" decoding="async">
-      <button class="onboarding-speech concierge-bubble-trigger" type="button" id="concierge-bubble-trigger" aria-label="Ask the AI receptionist a question and start a live chat" aria-haspopup="dialog" aria-controls="concierge-embed" aria-expanded="false"><span class="onboarding-speech-kicker">✦ MEET YOUR AI CONCIERGE</span><span class="onboarding-speech-text">Tell me about your business. I’ll show you what I can handle.</span><span class="concierge-bubble-hint">START A CONVERSATION ↗</span></button>
-      <section class="concierge-embed" id="concierge-embed" role="dialog" aria-modal="false" aria-label="AI Concierge chat" hidden><div class="concierge-embed-head"><button class="concierge-embed-close" type="button" id="concierge-embed-close" aria-label="Close AI Concierge">×</button></div><iframe src="https://star69ai-concierge.hisjarman.workers.dev/" title="Chat with the Star69AI AI Concierge" loading="lazy" allow="clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>
-      <div class="hero-model-caption">A PERSONALIZED CALL EXPERIENCE <span aria-hidden="true">✦</span></div>
+      <section class="hero-chat-widget" aria-label="Live AI assistant">
+        <div class="hero-chat-widget-heading">
+          <strong>Meet your AI assistant</strong>
+          <span>Ask a question and explore how a managed receptionist could support your business.</span>
+        </div>
+        <iframe src="https://star69ai-concierge.hisjarman.workers.dev/" title="Chat with the Star69AI AI assistant" loading="eager" allow="clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </section>
     </div>
   </div>
 </section>
-      <div class="hero-model-caption"><span class="hero-live-dot"></span> YOUR AI RECEPTIONIST · ALWAYS ON</div>
     </div>
   </div>
 </section>

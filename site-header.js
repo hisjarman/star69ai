@@ -20,6 +20,7 @@
           <div class="site-global-more-panel">
             <a href="/about.html">About Star69AI</a>
             <a href="/managed-service.html">Managed service</a>
+            <a href="/directory/">Provider directory</a>
             <a href="/faq.html">FAQ</a>
             <a href="/challenge/">AI Challenge</a>
             <a href="/trust-lab.html">AI Trust Lab</a>

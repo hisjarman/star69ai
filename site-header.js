@@ -10,10 +10,10 @@
       <nav class="site-global-nav" id="site-global-navigation" aria-label="Main navigation">
         <a data-nav-path="/" href="/">Home</a>
         <a data-nav-path="/how-it-works.html" href="/how-it-works.html">How it works</a>
-        <a data-nav-path="/industries.html" href="/industries.html">Industries</a>
+        <a data-nav-path="/hub/" href="/hub/">Industry Hub</a>
         <a data-nav-path="/pricing.html" href="/pricing.html">Pricing</a>
         <a data-nav-path="/demos.html" href="/demos.html">Demos</a>
-        <a data-nav-path="/insights/" href="/insights/">Insights</a>
+        <a data-nav-path="/learning-center/" href="/learning-center/">Learning Center</a>
         <a data-nav-path="/blog/" href="/blog/">Stories</a>
         <details class="site-global-more">
           <summary>More <span aria-hidden="true">⌄</span></summary>
@@ -21,6 +21,8 @@
             <a href="/about.html">About Star69AI</a>
             <a href="/managed-service.html">Managed service</a>
             <a href="/directory/">Provider directory</a>
+            <a href="/research/managed-ai-receptionists.html">Managed AI research</a>
+            <a href="/industries.html">Industry overview</a>
             <a href="/faq.html">FAQ</a>
             <a href="/challenge/">AI Challenge</a>
             <a href="/trust-lab.html">AI Trust Lab</a>

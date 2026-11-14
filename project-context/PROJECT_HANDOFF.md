@@ -836,3 +836,11 @@ Known prior issue to recheck against current source: a portal request reported `
 - Worker customer lookup now requires the Clerk primary email to be verified (existing behavior), refuses ambiguous email-to-customer matches, refuses a customer record already linked to a different Clerk user, and uses a conditional update before claiming an unlinked pending customer workspace.
 - Current production database contains one customer record and two demo-request records; no duplicate customer-email groups were found. No customer records or email addresses were displayed or changed.
 - Verification limitation: no real demo lead was submitted, no Resend acknowledgement was triggered, and no Retell agent, phone number, customer subscription or production call routing was created. The Worker upload and binding preservation are confirmed, but the live `/api/demo-requests` route, Admin Console workflow, and browser form fallback still require controlled end-to-end testing.
+
+## Shared public navigation and visible homepage AI assistant — proposed 2026-11-14
+
+- Added a shared public-site header implementation in `site-header.js` and `site-header.css`, loaded by the sitemap's public marketing, legal, blog, insights, challenge, partner and Trust Lab pages.
+- The shared header provides consistent Star69AI branding, primary navigation, a More menu, Client Login and Get Started links, plus an accessible responsive menu with Escape/outside-click closing.
+- The homepage hero now removes the overlapping assistant speech bubble and the redundant “YOUR AI RECEPTIONIST · ALWAYS ON” and “STAR69AI · MANAGED AI RECEPTIONIST” labels. The assistant image remains beneath the introduction, and the AI Concierge iframe is displayed as a visible, inline chat widget below the image rather than hidden behind a bubble click.
+- Changes are isolated on `fix/sitewide-header-visible-hero-assistant-2026-11-14`. They are not live until review and merge.
+- Before merging, verify header presence and navigation on every public page at desktop/mobile widths; test all menu links, Client Login, Get Started, active-page states, and the visible homepage chat iframe. Confirm the Worker iframe loads, accepts a chat message, and remains usable on small screens. No Worker or D1 changes are included.

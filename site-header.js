@@ -37,7 +37,8 @@
     </header>`;
   const install = () => {
     if (!document.body || document.querySelector('[data-site-global-header]')) return;
-    document.querySelectorAll('body > header.topbar, body > header.reference-topbar, body > header.site-header').forEach(node => node.remove());
+    const existingSiteHeader = document.querySelector('body > header.topbar, body > header.reference-topbar, body > header.site-header') || document.querySelector('body > header');
+    if (existingSiteHeader) existingSiteHeader.remove();
     document.body.insertAdjacentHTML('afterbegin', markup);
     const header = document.querySelector('[data-site-global-header]');
     const toggle = header.querySelector('.site-global-toggle');

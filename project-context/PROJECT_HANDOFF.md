@@ -844,3 +844,14 @@ Known prior issue to recheck against current source: a portal request reported `
 - The homepage hero now removes the overlapping assistant speech bubble and the redundant “YOUR AI RECEPTIONIST · ALWAYS ON” and “STAR69AI · MANAGED AI RECEPTIONIST” labels. The assistant image remains beneath the introduction, and the AI Concierge iframe is displayed as a visible, inline chat widget below the image rather than hidden behind a bubble click.
 - Changes are isolated on `fix/sitewide-header-visible-hero-assistant-2026-11-14`. They are not live until review and merge.
 - Before merging, verify header presence and navigation on every public page at desktop/mobile widths; test all menu links, Client Login, Get Started, active-page states, and the visible homepage chat iframe. Confirm the Worker iframe loads, accepts a chat message, and remains usable on small screens. No Worker or D1 changes are included.
+
+
+## Global AI receptionist provider directory — proposed 2026-11-14
+
+- Added a public searchable directory at `/directory/` with 83 provider entries across nine markets: United States, Canada, United Kingdom, Ireland, Australia, New Zealand, South Africa, Singapore and India.
+- Listings distinguish managed, hybrid, self-service, industry-specific and platform models. Search and filters cover provider, country, service model and billing model.
+- Comparison fields include monthly pricing, included calls/minutes where reported, overage rates, setup fees, billing cadence, official provider website and a linked pricing-evidence page.
+- Listings with unconfirmed terms use “Confirm” or “Quote required”; no missing price is presented as a verified price. Prices retain the provider's original currency and are not converted.
+- Added the directory to the shared public navigation and sitemap. The page includes CollectionPage structured data, a research/pricing disclaimer, comparison guidance, FAQs and a Star69AI demo CTA.
+- Research inventory is a first release, not a guarantee of complete worldwide coverage. Some prices and plan details are reported by dated third-party comparisons rather than independently rechecked against each provider's pricing page. Every listing links to the provider's own website and a supporting evidence page; confirm prices, tax, setup and eligibility directly with each vendor before relying on them.
+- Branch: `feature/global-managed-ai-receptionist-directory-2026-11-14`. No merge or production publication has occurred. Before merge, validate every provider URL and pricing claim, inspect the directory on desktop/mobile, test all filters and links, and verify sitemap/navigation integration.

@@ -28,7 +28,7 @@ Star69AI handles agent configuration, call-flow customization, phone setup, test
 |---|---:|---:|---:|
 | Starter | $149/month | 300 | $0.49/minute |
 | Growth | $249/month | 600 | $0.39/minute |
-| Pro | $399/month | 1,000 | $0.29/minute |
+| Pro | $399/month | 1,200 | $0.29/minute |
 
 A **$99 one-time setup fee** is invoiced separately by SIMIAPP CLOUD through PayPal for monthly customers (eligible discounted partner referrals may receive a 50% setup discount). Six-month prepayment saves 20%, twelve-month prepayment saves 30%, and both prepaid terms waive the setup fee completely. Prepaid offers cannot be combined with partner or AI Challenge discounts.
 

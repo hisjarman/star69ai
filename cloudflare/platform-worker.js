@@ -245,6 +245,7 @@ async function startPublicCheckout(req,env,origin){
  if(contact.length<2||business.length<2||phone.length<5||! /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||industry.length<2)throw Error("complete_contact_business_and_industry_details_required");
  if(!planInfo[plan]||!["monthly","six_month","annual"].includes(cadence))throw Error("valid_subscription_plan_required");
  if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
+ if(!env.RETELL_API_KEY||!env.CLERK_SECRET_KEY)throw Error("automated_demo_and_account_provisioning_not_configured");
  const existing=await env.DB.prepare("SELECT id,status,subscription_status FROM avr_customers WHERE lower(email)=? LIMIT 1").bind(email).first();
  if(existing)throw Error("customer_email_already_registered_sign_in_or_contact_support");
  let affiliateId=null,offerMode="standard";

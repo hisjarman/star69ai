@@ -168,8 +168,8 @@ async function handlePartnerDashboard(request,env,origin){
     ]);
     const activeReferrals=Number(leadStats?.customers||0);
     partner.currentRate=activeReferrals>=15?0.30:activeReferrals>=5?0.25:0.20;
-    partner.referralUrlStandard="https://star69ai.com/get-started.html?ref="+partnerCode+"&offer=standard";
-    partner.referralUrlDiscounted="https://star69ai.com/get-started.html?ref="+partnerCode+"&offer=discount";
+    partner.referralUrlStandard="https://star69ai.com/checkout.html?ref="+partnerCode+"&offer=standard";
+    partner.referralUrlDiscounted="https://star69ai.com/checkout.html?ref="+partnerCode+"&offer=discount";
     return json({partner,stats:{clicks:Number(clicks?.total||0),leads:Number(leadStats?.leads||0),customers:activeReferrals,pendingCents:Number(commissionStats?.pending||0),paidCents:Number(commissionStats?.paid||0)},referrals:referrals.results||[],commissions:commissions.results||[]},200,origin,env);
   }catch(e){console.error("partner_dashboard_failed",e?.message||e);return json({error:"partner_dashboard_unavailable"},503,origin,env);}
 }

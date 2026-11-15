@@ -7,7 +7,7 @@
  function cell(text){const td=document.createElement("td");td.textContent=text||"—";return td;}
  function emptyRow(body,cols,message){const tr=document.createElement("tr"),td=cell(message);td.colSpan=cols;td.className="pp-empty";tr.append(td);body.replaceChildren(tr);}
  function render(data){
-  $("#pp-status").textContent="PARTNER ACCOUNT · "+Math.round(Number(data.partner.currentRate||0.20)*100)+"% CURRENT COMMISSION RATE";
+  $("#pp-status").textContent="PARTNER ACCOUNT · PRIVATE CONSOLE";
   $("#pp-code").textContent=data.partner.partnerCode;
   $("#pp-payout-method").value=data.partner.payoutMethod||"paypal";
   $("#pp-paypal-email").value=data.partner.paypalEmail||"";

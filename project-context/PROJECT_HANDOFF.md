@@ -1014,3 +1014,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Timeline checks passed: seven top year links match seven detail cards, and the detailed history section appears after the homepage intake form.
 - Checkout source check passed: a discounted partner referral cannot use the AI Challenge promo code; the old stacked coupon and follow-up webhook code paths are removed. Prepaid checkout continues to reject promo codes.
 - Not yet completed: visual browser QA, live authenticated partner-account verification, Stripe test checkout/webhook tests, Cloudflare Worker deployment, and GitHub Pages publication. PR remains draft and unmerged.
+
+
+## Real estate lead follow-up insight — 2026-11-15
+
+- Published article: **How Real Estate Agents Can Turn More Property Inquiries Into Qualified Appointments**
+- URL/slug: `/insights/real-estate-lead-follow-up-appointments.html`
+- Primary SEO keyword: `real estate lead follow-up`
+- Industry: real estate operations; practical guidance on inquiry ownership, appointment coordination, respectful follow-up, after-hours call coverage, and lead tracking.
+- Article body verified at 756 words; meta description verified at 144 characters.
+- Article HTML, Insights index card, sitemap entry, and this handoff update were committed directly to `main` under the user's standing automatic-publication authorization. No branch or pull request was created.

@@ -53,3 +53,25 @@
   .form-panel .offer-disclosure strong{font-size:15px!important}
   .form-panel .offer-disclosure span{font-size:13px!important}
 }
+
+
+/* The homepage custom-demo card is light; use explicit dark text for its reward notice. */
+.conversation-form-card .offer-disclosure{
+  background:linear-gradient(115deg,#e8fff0 0%,#effaff 100%)!important;
+  border:2px solid #168a45!important;border-left:7px solid #087a36!important;
+  box-shadow:0 5px 18px rgba(8,122,54,.12)!important;
+  color:#173d2b!important;padding:16px 17px!important;
+}
+.conversation-form-card .offer-disclosure strong{
+  display:block;color:#075c2b!important;font-size:15px!important;
+  font-weight:900!important;line-height:1.45!important;
+}
+.conversation-form-card .offer-disclosure span{
+  display:block;color:#173d2b!important;font-size:13px!important;
+  font-weight:700!important;line-height:1.7!important;
+}
+@media(max-width:640px){
+  .conversation-form-card .offer-disclosure{padding:14px!important}
+  .conversation-form-card .offer-disclosure strong{font-size:14px!important}
+  .conversation-form-card .offer-disclosure span{font-size:13px!important}
+}

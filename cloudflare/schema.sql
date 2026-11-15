@@ -1,5 +1,5 @@
 -- AIVirtualReceptionist platform tables; run against existing avr-trust-lab D1.
-CREATE TABLE IF NOT EXISTS avr_customers (id TEXT PRIMARY KEY, business_name TEXT NOT NULL, contact_name TEXT, email TEXT NOT NULL, phone TEXT, clerk_user_id TEXT UNIQUE, status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','active','suspended','closed')), plan_key TEXT CHECK(plan_key IN ('starter','growth','pro')), stripe_customer_id TEXT UNIQUE, stripe_subscription_id TEXT, subscription_status TEXT, current_period_end TEXT, included_minutes INTEGER NOT NULL DEFAULT 0, admin_notes TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
+CREATE TABLE IF NOT EXISTS avr_customers (id TEXT PRIMARY KEY, business_name TEXT NOT NULL, contact_name TEXT, email TEXT NOT NULL, phone TEXT, clerk_user_id TEXT UNIQUE, status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','active','suspended','closed')), plan_key TEXT CHECK(plan_key IN ('starter','growth','pro')), stripe_customer_id TEXT UNIQUE, stripe_subscription_id TEXT, subscription_status TEXT, current_period_end TEXT, current_period_start TEXT, overage_billing_preference TEXT NOT NULL DEFAULT 'pay_month_end' CHECK(overage_billing_preference IN ('pay_month_end','carryover')), overage_carry_in_seconds INTEGER NOT NULL DEFAULT 0 CHECK(overage_carry_in_seconds>=0), overage_coverage_blocked INTEGER NOT NULL DEFAULT 0 CHECK(overage_coverage_blocked IN (0,1)), overage_blocked_reason TEXT, included_minutes INTEGER NOT NULL DEFAULT 0, admin_notes TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
 CREATE TABLE IF NOT EXISTS avr_agents (agent_id TEXT PRIMARY KEY, agent_name TEXT, customer_id TEXT, voice_id TEXT, language TEXT, status TEXT NOT NULL DEFAULT 'active', raw_json TEXT, synced_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
 CREATE TABLE IF NOT EXISTS avr_numbers (phone_number TEXT PRIMARY KEY, nickname TEXT, customer_id TEXT, agent_id TEXT, phone_number_type TEXT, raw_json TEXT, synced_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
 CREATE TABLE IF NOT EXISTS avr_calls (call_id TEXT PRIMARY KEY, customer_id TEXT, agent_id TEXT, phone_number TEXT, from_number TEXT, to_number TEXT, direction TEXT, call_status TEXT, duration_ms INTEGER, start_timestamp INTEGER, end_timestamp INTEGER, transcript TEXT, recording_url TEXT, call_summary TEXT, user_sentiment TEXT, disconnection_reason TEXT, raw_json TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')));
@@ -27,3 +27,16 @@ CREATE TABLE IF NOT EXISTS avr_demo_requests (
 CREATE UNIQUE INDEX IF NOT EXISTS avr_demo_requests_customer_unique_idx ON avr_demo_requests(customer_id) WHERE customer_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS avr_demo_requests_status_created_idx ON avr_demo_requests(status,created_at DESC);
 CREATE INDEX IF NOT EXISTS avr_demo_requests_email_created_idx ON avr_demo_requests(email,created_at DESC);
+
+
+CREATE TABLE IF NOT EXISTS avr_overage_periods (
+ id TEXT PRIMARY KEY, customer_id TEXT NOT NULL REFERENCES avr_customers(id), period_start TEXT NOT NULL, period_end TEXT NOT NULL,
+ included_minutes INTEGER NOT NULL CHECK(included_minutes>=0), used_seconds INTEGER NOT NULL DEFAULT 0 CHECK(used_seconds>=0),
+ carry_in_seconds INTEGER NOT NULL DEFAULT 0 CHECK(carry_in_seconds>=0), carry_out_seconds INTEGER NOT NULL DEFAULT 0 CHECK(carry_out_seconds>=0),
+ billable_seconds INTEGER NOT NULL DEFAULT 0 CHECK(billable_seconds>=0), billable_amount_cents INTEGER NOT NULL DEFAULT 0 CHECK(billable_amount_cents>=0),
+ stripe_invoice_id TEXT, due_at TEXT, status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','invoiced','paid','past_due','void')),
+ paid_at TEXT, created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')), updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+ UNIQUE(customer_id,period_start)
+);
+CREATE INDEX IF NOT EXISTS avr_overage_periods_due_idx ON avr_overage_periods(status,due_at);
+CREATE INDEX IF NOT EXISTS avr_overage_periods_customer_idx ON avr_overage_periods(customer_id,period_start DESC);

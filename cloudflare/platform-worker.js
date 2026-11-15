@@ -50,8 +50,12 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  const affiliateId=c.affiliate_partner_id||"",partnerDiscount=affiliateId&&c.affiliate_offer_mode==="discount";let coupons=[],discountType="none";
  const code=String(promoCode||"").trim().toUpperCase();
  if(selected!=="monthly"&&code)throw Error("prepaid_offer_cannot_be_combined_with_promo");
- if(selected==="monthly"&&code){if(code!=="CALLSMART10")throw Error("invalid_promo_code");const challengeCoupon=env.STRIPE_COUPON_CALLSMART10;if(!challengeCoupon)throw Error("challenge_offer_not_configured");coupons.push(challengeCoupon);discountType="challenge_10_first_month";}
- if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType=code?"challenge_10_plus_partner_15_first_month":"partner_15_first_month";}
+ if(selected==="monthly"&&code){
+  if(code!=="CALLSMART10")throw Error("invalid_promo_code");
+  if(partnerDiscount){const combinedCoupon=env.STRIPE_COUPON_PARTNER_CHALLENGE25;if(!combinedCoupon)throw Error("combined_partner_challenge_offer_not_configured");coupons.push(combinedCoupon);discountType="partner_15_plus_challenge_10_first_month";}
+  else{const challengeCoupon=env.STRIPE_COUPON_CALLSMART10;if(!challengeCoupon)throw Error("challenge_offer_not_configured");coupons.push(challengeCoupon);discountType="challenge_10_first_month";}
+ }
+ else if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType="partner_15_first_month";}
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId});stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
  const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:"https://star69ai.com/client/?billing=success",cancel_url:"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType};
  coupons.forEach((coupon,index)=>{params["discounts["+index+"][coupon]"]=coupon;});

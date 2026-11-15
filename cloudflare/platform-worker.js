@@ -173,7 +173,8 @@ async function billSubscriptionOverage(env,customer,usage){
   const invoice=await stripeRequest(env,"invoices",{customer:customer.stripe_customer_id,collection_method:"charge_automatically",auto_advance:false,default_payment_method:customer.stripe_payment_method_id,pending_invoice_items_behavior:"exclude","metadata[avr_customer_id]":customer.id,"metadata[avr_overage_ledger_id]":rowId},"POST","avr-overage-invoice-"+rowId);
   const item=await stripeRequest(env,"invoiceitems",{customer:customer.stripe_customer_id,invoice:invoice.id,amount,currency:"usd",description:"Star69AI voice overage — "+delta+" minute(s) at $"+(rate/100).toFixed(2)+"/min","metadata[avr_customer_id]":customer.id,"metadata[avr_overage_ledger_id]":rowId},"POST","avr-overage-item-"+rowId);
   await env.DB.prepare("UPDATE avr_overage_billing_ledger SET stripe_invoice_item_id=?,stripe_invoice_id=?,status='invoiced',updated_at=? WHERE id=?").bind(item.id,invoice.id,new Date().toISOString(),rowId).run();
-  await stripeRequest(env,"invoices/"+encodeURIComponent(invoice.id)+"/finalize",{auto_advance:true},"POST","avr-overage-finalize-"+rowId);
+  await stripeRequest(env,"invoices/"+encodeURIComponent(invoice.id),{auto_advance:true},"POST","avr-overage-auto-advance-"+rowId);
+  await stripeRequest(env,"invoices/"+encodeURIComponent(invoice.id)+"/finalize",{},"POST","avr-overage-finalize-"+rowId);
   return {queued:true,minutes:delta,amountCents:amount,invoiceId:invoice.id};
  }catch(e){
   await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='failed',failure_reason=?,updated_at=? WHERE id=?").bind(String(e.message||"stripe_billing_failed").slice(0,300),new Date().toISOString(),rowId).run();

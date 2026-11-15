@@ -1071,3 +1071,32 @@ body#top .hero-chat-followup .hero-chat-widget iframe{display:block;flex:1;width
   body#top .reference-hero .hero-model-image{max-height:370px}
   body#top .hero-chat-followup .hero-chat-widget{height:680px;min-height:680px}
 }
+
+
+/* Full-bleed Earth-at-night artwork across the complete homepage hero banner. */
+body#top .s69-hero{
+  background-color:#020510;
+  background-image:
+    linear-gradient(90deg,rgba(2,7,20,.92) 0%,rgba(3,10,27,.82) 34%,rgba(3,10,27,.40) 67%,rgba(2,5,16,.30) 100%),
+    linear-gradient(180deg,rgba(2,5,16,.12) 0%,rgba(2,5,16,.24) 72%,rgba(2,5,16,.72) 100%),
+    url("./assets/earth.jpeg");
+  background-position:center,center,center 48%;
+  background-size:cover,cover,cover;
+  background-repeat:no-repeat;
+}
+body#top .s69-hero .s69-earth{
+  background-image:radial-gradient(ellipse at 55% 48%,rgba(0,213,255,.15),rgba(2,5,16,.08) 58%,transparent 82%);
+  opacity:.72;
+}
+@media(max-width:900px){
+  body#top .s69-hero{background-position:center,center,58% center}
+}
+@media(max-width:560px){
+  body#top .s69-hero{
+    background-image:
+      linear-gradient(180deg,rgba(2,7,20,.82) 0%,rgba(3,10,27,.64) 52%,rgba(2,5,16,.78) 100%),
+      url("./assets/earth.jpeg");
+    background-position:center,62% center;
+    background-size:cover,cover;
+  }
+}

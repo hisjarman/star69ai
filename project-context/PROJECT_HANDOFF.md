@@ -99,7 +99,7 @@ The form is for demo/discovery follow-up only; it does not create an account or 
 - Usage estimates must be labeled as estimates until actual billing is implemented and verified.
 - Any annual offer or setup-fee waiver must match the active checkout and written offer terms.
 
-## Technical architecture
+## Minute Vault and published billing rules — 2026-11-15\n\n- Monthly plans: Starter $149 / 300 minutes / $0.55 overage; Growth $249 / 600 minutes / $0.45 overage; Pro $399 / 1,200 minutes / $0.36 overage. Enterprise plans are custom-tailored.\n- The Minute Vault is a server-side D1 ledger. Unused included minutes accumulate while the account remains active and paid. Current-month included minutes are consumed first, followed by the oldest vaulted minutes (FIFO). Overage begins only after included minutes and the available vault are exhausted.\n- Vault minutes have no monetary, refund, transfer, sale or account-credit value. They are preserved through upgrades/downgrades; future monthly grants follow the new plan. Cancellation forfeits the entire remaining vault balance. Stripe subscription cancellation and admin account closure/suspension clear the vault, with a forfeiture audit event.\n- Prepaid customers are paid outside Stripe; active six-/twelve-month prepaid accounts also qualify for vault accrual.\n- Migration `20261115_unused_minute_vault.sql` must be applied to D1 before deploying the Worker. The Worker and portal change in `feature/unused-minute-vault-2026-11-15` are not production-ready until the migration, tests and Worker deployment are completed.\n\n## Technical architecture
 
 - **GitHub Pages:** public website, client portal at `/client/`, admin console at `/admin/`.
 - **Cloudflare Workers:** server-side API and integrations.

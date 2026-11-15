@@ -48,6 +48,13 @@ async function capturePartnerLead(payload) {
 }
 window.star69aiCapturePartnerLead=capturePartnerLead;
 window.star69aiGetPartnerAttribution=()=>readPartnerAttribution();
+function renderOfferContext(){
+  const referred=!!readPartnerAttribution()?.partnerCode;
+  document.querySelectorAll("[data-offer-context]").forEach(node=>{
+    if(referred){node.innerHTML="<strong>Partner referral offer: 5% off your first month.</strong><span>Your referral is tracked. The discount applies to the first monthly subscription payment only—not setup, overages, taxes or third-party charges. It cannot be combined with challenge or prepaid offers.</span><a href=\"./pricing.html\">View pricing ↗</a>";}
+  });
+}
+renderOfferContext();
 document.querySelectorAll('form[action*="formspree.io/f/mrppjqdb"]:not(#intake-form)').forEach(partnerForm=>{
   partnerForm.addEventListener("submit",async event=>{
     event.preventDefault();

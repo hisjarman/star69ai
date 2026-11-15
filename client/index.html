@@ -42,6 +42,7 @@
             <button class="client-nav-item active" type="button" data-page="overview" aria-current="page"><span class="nav-icon">⌂</span><span>Overview</span></button>
             <button class="client-nav-item" type="button" data-page="receptionist"><span class="nav-icon">✧</span><span>Receptionist</span></button>
             <button class="client-nav-item" type="button" data-page="billing"><span class="nav-icon">$</span><span>Plan &amp; billing</span></button>
+            <button class="client-nav-item" type="button" data-page="flex"><span class="nav-icon">↗</span><span>Flex wallet</span></button>
             <button class="client-nav-item" type="button" data-page="addons"><span class="nav-icon">✚</span><span>Upgrades</span></button>
             <button class="client-nav-item" type="button" data-page="calls"><span class="nav-icon">◖</span><span>Call activity</span></button>
             <button class="client-nav-item" type="button" data-page="support"><span class="nav-icon">?</span><span>Support center</span></button>
@@ -97,6 +98,30 @@
           <section class="client-page" data-page-panel="billing">
             <section class="panel"><div class="panel-head"><div><div class="eyebrow">SUBSCRIPTION</div><h2>Plan &amp; billing</h2></div><button id="billing-portal" class="btn secondary">Manage subscription</button></div><p class="small">Your current plan and live usage summary are available on the Overview page.</p><div class="plan-actions"><h2>Change or start a plan</h2><p class="small">Choose monthly billing or pay six or twelve months upfront for additional savings. The $99 setup fee remains separately invoiced.</p><div class="billing-choice"><label for="billing-cadence">Billing schedule</label><select id="billing-cadence"><option value="monthly">Monthly — standard price</option><option value="six_month">6 months upfront — save 5%</option><option value="annual">12 months upfront — save 10%</option></select><label for="billing-promo-code">AI Challenge code (optional)</label><input id="billing-promo-code" type="text" maxlength="32" autocomplete="off" placeholder="CALLSMART10"><p class="small" id="billing-offer-note">Challenge code: 10% off the first monthly payment only. Partner referrals receive 5% off the first monthly payment once the offer is active in checkout. Choose one offer; discounts do not stack. Prepaid savings replace first-month discounts. Prepaid checkout requires matching Stripe prices to be configured.</p></div><div class="row"><button class="btn plan-btn" data-plan="starter">Starter · $149</button><button class="btn plan-btn" data-plan="growth">Growth · $249</button><button class="btn plan-btn" data-plan="pro">Pro · $399</button></div><p class="small">If you already subscribe, use Manage subscription to change or cancel your plan. Checkout will show the exact amount before payment.</p></div></section>
             <section class="panel"><div class="panel-head"><h2>Business profile</h2></div><form id="profile-form" class="form-grid"><div class="field full"><label for="business-name">Business name</label><input id="business-name" required maxlength="160"></div><div class="field"><label for="contact-name">Contact name</label><input id="contact-name" maxlength="120"></div><div class="field"><label for="contact-phone">Phone</label><input id="contact-phone" maxlength="40"></div><div class="field full"><label for="contact-email">Email (managed by Clerk)</label><input id="contact-email" disabled></div><div class="field full"><button class="btn" type="submit">Save account details</button></div></form></section>
+          </section>
+          <section class="client-page" data-page-panel="flex">
+            <section class="panel">
+              <div class="panel-head"><div><div class="eyebrow">FLEX · PREPAID USAGE</div><h2>Your Flex wallet</h2></div><button class="btn secondary" id="refresh-flex-wallet" type="button">Refresh balance</button></div>
+              <p class="small">Flex is separate from your monthly subscription and Minute Vault. Your wallet holds prepaid U.S. dollar credit; call usage is deducted from that dollar balance when Flex billing is activated.</p>
+              <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin:18px 0">
+                <article class="card metric"><small>AVAILABLE CREDIT</small><strong id="flex-balance">$0.00</strong><em>Prepaid USD balance</em></article>
+                <article class="card metric"><small>ESTIMATED CALL TIME</small><strong id="flex-estimated-minutes">0 min</strong><em>At $0.65 per AI voice minute</em></article>
+                <article class="card metric"><small>WALLET STATUS</small><strong id="flex-wallet-status">Not funded</strong><em id="flex-call-status">Calls are not enabled</em></article>
+              </div>
+              <div id="flex-gate-notice" class="notice" role="status">Flex is preparing for launch. Deposits and inbound calls remain disabled until the balance-checking gateway is tested.</div>
+              <h3>Choose a deposit amount</h3>
+              <p class="small">Deposit options are $10, $25, $50, $75, $100 and $149. Each dollar stays as dollar credit; estimated minutes are a guide, not a fixed minute bundle.</p>
+              <div class="row" id="flex-deposit-options">
+                <button class="btn secondary" type="button" data-flex-deposit="1000" disabled>$10 · ~15.4 min</button>
+                <button class="btn secondary" type="button" data-flex-deposit="2500" disabled>$25 · ~38.5 min</button>
+                <button class="btn secondary" type="button" data-flex-deposit="5000" disabled>$50 · ~76.9 min</button>
+                <button class="btn secondary" type="button" data-flex-deposit="7500" disabled>$75 · ~115.4 min</button>
+                <button class="btn secondary" type="button" data-flex-deposit="10000" disabled>$100 · ~153.8 min</button>
+                <button class="btn secondary" type="button" data-flex-deposit="14900" disabled>$149 · ~229.2 min</button>
+              </div>
+              <p class="small">When Flex is enabled, choose an amount to request a PayPal invoice from SIMIAPP CLOUD. Credit is posted only after the payment is verified. No Stripe charge or automatic reload is used for Flex.</p>
+            </section>
+            <section class="panel"><div class="panel-head"><h2>Wallet activity</h2><span class="small">Most recent 20 entries</span></div><div id="flex-wallet-ledger" class="table-wrap"><div class="empty">Loading wallet activity…</div></div></section>
           </section>
           <section class="client-page" data-page-panel="addons">      <section class="panel addons-panel" id="addons">
         <div class="panel-head"><div><div class="eyebrow">GROW YOUR RECEPTIONIST</div><h2>Upgrades &amp; add-ons</h2><p class="small">Choose extra capabilities for your business. Submit a request and our team will confirm availability and pricing before any charge.</p></div><span class="pill">Optional services</span></div>

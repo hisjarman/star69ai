@@ -47,6 +47,11 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;
  const priceEnv=selected==="six_month"?p.sixMonthPriceEnv:selected==="annual"?p.annualPriceEnv:p.priceEnv;
  const price=env[priceEnv];if(!price||price==="price_replace_me")throw Error(selected==="monthly"?"stripe_price_id_missing_"+plan:"prepaid_price_not_configured");
+ if(selected!=="monthly"){
+  const months=selected==="six_month"?6:12,discount=selected==="six_month"?0.25:0.35,expectedCents=Math.round(p.price*months*(1-discount)*100);
+  const stripePrice=await stripeRequest(env,"prices/"+encodeURIComponent(price),{},"GET");
+  if(!stripePrice.active||stripePrice.currency!=="usd"||Number(stripePrice.unit_amount)!==expectedCents||stripePrice.recurring?.interval!=="month"||Number(stripePrice.recurring?.interval_count)!==months)throw Error("prepaid_price_configuration_mismatch");
+ }
  const affiliateId=c.affiliate_partner_id||"",partnerDiscount=affiliateId&&c.affiliate_offer_mode==="discount";let coupons=[],discountType="none";
  const code=String(promoCode||"").trim().toUpperCase();
  if(selected!=="monthly"&&code)throw Error("prepaid_offer_cannot_be_combined_with_promo");

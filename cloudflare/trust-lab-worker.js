@@ -166,8 +166,8 @@ async function handlePartnerDashboard(request,env,origin){
       env.DB.prepare("SELECT business_name AS businessName,lead_status AS status,created_at AS createdAt,converted_at AS convertedAt FROM partner_referrals WHERE affiliate_application_id=? ORDER BY created_at DESC LIMIT 100").bind(partner.id).all(),
       env.DB.prepare("SELECT c.commission_amount_cents AS commissionAmountCents,c.currency,c.status,c.validation_until AS validationUntil,c.created_at AS createdAt,cu.business_name AS businessName FROM partner_commissions c LEFT JOIN avr_customers cu ON cu.id=c.customer_id WHERE c.affiliate_application_id=? ORDER BY c.created_at DESC LIMIT 100").bind(partner.id).all()
     ]);
-    const activeReferrals=Number(leadStats?.customers||0),assignedRate=partner.commissionTier==="founding"||partner.commissionTier==="growth"?0.25:partner.commissionTier==="premier"?0.30:0.20,thresholdRate=activeReferrals>=15?0.30:activeReferrals>=5?0.25:0.20;
-    partner.currentRate=Math.max(assignedRate,thresholdRate);
+    const activeReferrals=Number(leadStats?.customers||0);
+    partner.currentRate=activeReferrals>=15?0.30:activeReferrals>=5?0.25:0.20;
     partner.referralUrlStandard="https://star69ai.com/get-started.html?ref="+partnerCode+"&offer=standard";
     partner.referralUrlDiscounted="https://star69ai.com/get-started.html?ref="+partnerCode+"&offer=discount";
     return json({partner,stats:{clicks:Number(clicks?.total||0),leads:Number(leadStats?.leads||0),customers:activeReferrals,pendingCents:Number(commissionStats?.pending||0),paidCents:Number(commissionStats?.paid||0)},referrals:referrals.results||[],commissions:commissions.results||[]},200,origin,env);

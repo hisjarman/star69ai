@@ -109,6 +109,7 @@ async function handlePartnerClick(request,env,origin){
   if(!/^[A-Z0-9]{6,16}$/.test(code))return json({error:"invalid_partner_code"},400,origin,env);
   try{
     const partner=await env.DB.prepare("SELECT id FROM affiliate_applications WHERE partner_code=? AND application_status='approved'").bind(code).first();
+    const offerMode=p.offerMode==="discount"?"discount":"standard";
     if(!partner)return json({error:"partner_not_found"},404,origin,env);
     const ipHash=await hashIp(request.headers.get("CF-Connecting-IP"),env.CLERK_SECRET_KEY),since=new Date(Date.now()-10*60000).toISOString();
     const recent=await env.DB.prepare("SELECT COUNT(*) AS total FROM partner_clicks WHERE ip_hash=? AND created_at>=?").bind(ipHash,since).first();
@@ -116,8 +117,8 @@ async function handlePartnerClick(request,env,origin){
     const clickId=crypto.randomUUID(),now=Date.now(),createdAt=new Date(now).toISOString(),expiresAt=new Date(now+90*86400000).toISOString();
     const landingPath=String(p.landingPath||"/").slice(0,300),referrer=String(p.referrer||"").slice(0,500);
     let referrerDomain=null;try{referrerDomain=referrer?new URL(referrer).hostname.slice(0,180):null;}catch{}
-    await env.DB.prepare("INSERT INTO partner_clicks(click_id,affiliate_application_id,landing_path,referrer_domain,ip_hash,created_at,expires_at) VALUES(?,?,?,?,?,?,?)").bind(clickId,partner.id,landingPath,referrerDomain,ipHash,createdAt,expiresAt).run();
-    return json({tracked:true,clickId,partnerCode:code,expiresAt},201,origin,env);
+    await env.DB.prepare("INSERT INTO partner_clicks(click_id,affiliate_application_id,landing_path,referrer_domain,ip_hash,created_at,expires_at,offer_mode) VALUES(?,?,?,?,?,?,?,?)").bind(clickId,partner.id,landingPath,referrerDomain,ipHash,createdAt,expiresAt,offerMode).run();
+    return json({tracked:true,clickId,partnerCode:code,offerMode,expiresAt},201,origin,env);
   }catch(e){console.error("partner_click_failed",e?.message||e);return json({error:"partner_tracking_unavailable"},503,origin,env);}
 }
 async function handlePartnerLead(request,env,origin){
@@ -127,6 +128,7 @@ async function handlePartnerLead(request,env,origin){
   if(!/^[A-Z0-9]{6,16}$/.test(code)||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||email.length>254)return json({recorded:false},200,origin,env);
   try{
     const partner=await env.DB.prepare("SELECT id,email FROM affiliate_applications WHERE partner_code=? AND application_status='approved'").bind(code).first();
+    const requestedOfferMode=p.offerMode==="discount"?"discount":"standard";
     if(!partner||String(partner.email||"").trim().toLowerCase()===email)return json({recorded:false},200,origin,env);
     const ipHash=await hashIp(request.headers.get("CF-Connecting-IP"),env.CLERK_SECRET_KEY),since=new Date(Date.now()-3600000).toISOString();
     const recent=await env.DB.prepare("SELECT COUNT(*) AS total FROM partner_referrals WHERE ip_hash=? AND created_at>=?").bind(ipHash,since).first();
@@ -135,14 +137,14 @@ async function handlePartnerLead(request,env,origin){
     if(existingCustomer)return json({recorded:false},200,origin,env);
     const now=Date.now(),createdAt=new Date(now).toISOString(),expiresAt=new Date(now+90*86400000).toISOString();
     let clickId=String(p.clickId||"").trim(),click=null;
-    if(clickId)click=await env.DB.prepare("SELECT click_id,expires_at FROM partner_clicks WHERE click_id=? AND affiliate_application_id=? AND expires_at>=?").bind(clickId,partner.id,createdAt).first();
+    if(clickId)click=await env.DB.prepare("SELECT click_id,expires_at,offer_mode FROM partner_clicks WHERE click_id=? AND affiliate_application_id=? AND expires_at>=?").bind(clickId,partner.id,createdAt).first();
     if(!click){
       clickId=crypto.randomUUID();
-      await env.DB.prepare("INSERT INTO partner_clicks(click_id,affiliate_application_id,landing_path,referrer_domain,ip_hash,created_at,expires_at) VALUES(?,?,?,?,?,?,?)").bind(clickId,partner.id,String(p.landingPath||"/get-started.html").slice(0,300),null,ipHash,createdAt,expiresAt).run();
+      await env.DB.prepare("INSERT INTO partner_clicks(click_id,affiliate_application_id,landing_path,referrer_domain,ip_hash,created_at,expires_at,offer_mode) VALUES(?,?,?,?,?,?,?,?)").bind(clickId,partner.id,String(p.landingPath||"/get-started.html").slice(0,300),null,ipHash,createdAt,expiresAt,requestedOfferMode).run();
     }
     const leadName=String(p.name||"").trim().slice(0,120)||null,businessName=String(p.business||"").trim().slice(0,160)||null;
-    const attributionExpiresAt=click?.expires_at||expiresAt;
-    await env.DB.prepare("INSERT OR IGNORE INTO partner_referrals(id,affiliate_application_id,click_id,lead_email,lead_name,business_name,ip_hash,lead_status,created_at,attribution_expires_at) VALUES(?,?,?,?,?,?,?,'lead',?,?)").bind(crypto.randomUUID(),partner.id,clickId,email,leadName,businessName,ipHash,createdAt,attributionExpiresAt).run();
+    const attributionExpiresAt=click?.expires_at||expiresAt,offerMode=click?.offer_mode==="discount"?"discount":requestedOfferMode;
+    await env.DB.prepare("INSERT OR IGNORE INTO partner_referrals(id,affiliate_application_id,click_id,lead_email,lead_name,business_name,ip_hash,lead_status,created_at,attribution_expires_at,offer_mode) VALUES(?,?,?,?,?,?,?,'lead',?,?,?)").bind(crypto.randomUUID(),partner.id,clickId,email,leadName,businessName,ipHash,createdAt,attributionExpiresAt,offerMode).run();
     return json({recorded:true},201,origin,env);
   }catch(e){console.error("partner_lead_capture_failed",e?.message||e);return json({recorded:false,error:"partner_tracking_unavailable"},503,origin,env);}
 }
@@ -166,6 +168,8 @@ async function handlePartnerDashboard(request,env,origin){
     ]);
     const activeReferrals=Number(leadStats?.customers||0),assignedRate=partner.commissionTier==="founding"||partner.commissionTier==="growth"?0.25:partner.commissionTier==="premier"?0.30:0.20,thresholdRate=activeReferrals>=15?0.30:activeReferrals>=5?0.25:0.20;
     partner.currentRate=Math.max(assignedRate,thresholdRate);
+    partner.referralUrlStandard="https://star69ai.com/get-started.html?ref="+partnerCode+"&offer=standard";
+    partner.referralUrlDiscounted="https://star69ai.com/get-started.html?ref="+partnerCode+"&offer=discount";
     return json({partner,stats:{clicks:Number(clicks?.total||0),leads:Number(leadStats?.leads||0),customers:activeReferrals,pendingCents:Number(commissionStats?.pending||0),paidCents:Number(commissionStats?.paid||0)},referrals:referrals.results||[],commissions:commissions.results||[]},200,origin,env);
   }catch(e){console.error("partner_dashboard_failed",e?.message||e);return json({error:"partner_dashboard_unavailable"},503,origin,env);}
 }

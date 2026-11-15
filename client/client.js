@@ -9,12 +9,26 @@
  function safeHttps(v){try{const u=new URL(v);return u.protocol==="https:"?u.href:""}catch{return ""}}
  function money(v){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v)}
  function showPage(page){
-  const labels={overview:["Overview","A clear view of your receptionist and business activity."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Support center","Get help, request changes and track your support requests."]};
+  const labels={overview:["Overview","A clear view of your receptionist and business activity."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Support center","Get help, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   const label=labels[page]||labels.overview;$("#client-page-title").textContent=label[0];$("#client-page-description").textContent=label[1];
   try{history.replaceState(null,"",page==="overview"?"#overview":"#"+page)}catch{}
+  if(page==="knowledge")initKnowledgeSearch();
  }
+ function initKnowledgeSearch(){
+  const input=$("#knowledge-search"),status=$("#knowledge-search-status"),articles=[...document.querySelectorAll(".knowledge-article")],groups=[...document.querySelectorAll(".knowledge-group")];
+  if(!input||input.dataset.bound)return;
+  input.dataset.bound="1";
+  input.addEventListener("input",()=>{
+    const q=input.value.trim().toLowerCase();let matches=0;
+    articles.forEach(article=>{const hit=!q||article.textContent.toLowerCase().includes(q);article.hidden=!hit;if(q&&hit){article.open=true;matches++}});
+    groups.forEach(group=>{group.hidden=!!q&&!group.querySelector(".knowledge-article:not([hidden])")});
+    if(status)status.textContent=q?(matches+" matching guide"+(matches===1?"":"s")+" found. Clear the search to browse every topic."):"Browse the guides below or search for a topic.";
+  });
+}
+document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-category-grid a");if(link){const target=document.querySelector(link.getAttribute("href"));if(target){document.querySelectorAll(".knowledge-group").forEach(g=>g.hidden=false);const input=$("#knowledge-search");if(input){input.value="";input.dispatchEvent(new Event("input"))}}}});
+
  function showSignedOut(){$("#auth").classList.remove("hidden");$("#app").classList.add("hidden");$("#session-pill").textContent="Signed out"}
  function renderUsage(usage,included,plan){
   const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;

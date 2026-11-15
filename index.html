@@ -46,8 +46,8 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 </script>
-<link rel="stylesheet" href="/site-header.css">
-<script defer src="/site-header.js"></script>
+<link rel="stylesheet" href="/site-header.css"><link rel="stylesheet" href="/phone-evolution.css">
+<script defer src="/site-header.js"></script><script defer src="/phone-evolution.js"></script>
 </head><body class="multi-page" id="top"><header class="topbar reference-topbar">
 <a class="brand reference-brand" href="/" aria-label="Star69AI home"><img src="./assets/star69ai-logo.svg" alt="Star69AI home — Smarter Calls. Bigger Opportunity." style="display:block;width:260px;max-width:42vw;max-height:58px;height:auto;object-fit:contain"></a>
 <nav class="nav reference-nav" id="primary-navigation" aria-label="Main navigation">
@@ -58,7 +58,44 @@
 <a class="button button-small nav-login client-login-global" href="./client/">Client Login</a>
 <a class="button button-small nav-login reference-start" href="./get-started.html">Get Started <span>↗</span></a>
 <button class="menu-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
-</header><main><section class="hero reference-hero dark-shell" id="home" aria-labelledby="home-hero-title">
+</header><main>
+<section class="phone-history" aria-labelledby="phone-history-title" data-phone-history>
+  <div class="phone-history-inner">
+    <div class="phone-history-heading">
+      <div class="phone-history-kicker">A BRIEF HISTORY OF COMMUNICATION · INTERACTIVE TIMELINE</div>
+      <h2 id="phone-history-title">From the switchboard to the <em>intelligent front desk.</em></h2>
+      <p>Every generation made it easier to connect. The next generation makes every conversation more useful.</p>
+    </div>
+    <div class="phone-history-rail" role="group" aria-label="Choose a chapter in the history of telephone systems">
+      <button class="phone-history-step is-active" type="button" data-history-step="0" aria-pressed="true"><span>01</span><b>1876</b><small>The telephone</small></button>
+      <button class="phone-history-step" type="button" data-history-step="1" aria-pressed="false"><span>02</span><b>1878</b><small>Switchboards</small></button>
+      <button class="phone-history-step" type="button" data-history-step="2" aria-pressed="false"><span>03</span><b>1891</b><small>Automation</small></button>
+      <button class="phone-history-step" type="button" data-history-step="3" aria-pressed="false"><span>04</span><b>1963</b><small>Touch-tone</small></button>
+      <button class="phone-history-step" type="button" data-history-step="4" aria-pressed="false"><span>05</span><b>1973</b><small>Mobile voice</small></button>
+      <button class="phone-history-step" type="button" data-history-step="5" aria-pressed="false"><span>06</span><b>1995+</b><small>Internet &amp; cloud</small></button>
+      <button class="phone-history-step" type="button" data-history-step="6" aria-pressed="false"><span>07</span><b>Today</b><small>Conversational AI</small></button>
+    </div>
+    <article class="phone-history-lesson" aria-live="polite" aria-atomic="true">
+      <div class="phone-history-lesson-meta"><span data-history-chapter>CHAPTER 01 / 07</span><span data-history-era>THE BEGINNING</span></div>
+      <div class="phone-history-lesson-body">
+        <div class="phone-history-year" data-history-year>1876</div>
+        <div class="phone-history-copy">
+          <h3 data-history-heading>The telephone connects voices.</h3>
+          <p data-history-description>Alexander Graham Bell’s telephone patent helped turn voice transmission over wires into a practical new form of communication. For the first time, a conversation could travel beyond the reach of a human voice.</p>
+          <p class="phone-history-significance"><strong>What changed:</strong> Distance was no longer the end of a conversation.</p>
+        </div>
+      </div>
+      <div class="phone-history-controls">
+        <span class="phone-history-progress" data-history-progress>01 of 07</span>
+        <div class="phone-history-control-buttons">
+          <button type="button" class="phone-history-prev" data-history-prev disabled aria-label="Previous chapter">← Previous</button>
+          <button type="button" class="phone-history-next" data-history-next aria-label="Next chapter">Next chapter →</button>
+        </div>
+      </div>
+    </article>
+    <p class="phone-history-conclusion"><span>THE NEXT CHAPTER</span> The telephone is not disappearing. It is becoming intelligent. <strong>AI is the next evolution of the front desk: a system that can listen, understand intent, capture details and help move a conversation forward.</strong></p>
+  </div>
+</section><section class="hero reference-hero dark-shell" id="home" aria-labelledby="home-hero-title">
   <div class="hero-grid section-wrap">
     <div class="hero-copy">
       

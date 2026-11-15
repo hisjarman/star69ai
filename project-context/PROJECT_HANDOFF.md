@@ -874,3 +874,13 @@ Known prior issue to recheck against current source: a portal request reported `
 - The intended feel is premium, original starship-command-interface typography. Do not copy Star Trek logos, wordmarks or protected interface artwork.
 - Preserve the existing readability standards: 15–17px ordinary copy, accessible contrast, responsive wrapping and comfortable line-height. Avoid applying Michroma to body paragraphs or dense data.
 - Typography update branch: `design/star69ai-starfleet-typography-2026-11-14`; PR review required before merging.
+
+
+## Homepage telephone history learning timeline — proposed 2026-11-14
+
+- Added a textbook-style interactive timeline directly below the shared site header and immediately before the homepage hero/receptionist model.
+- The seven chapters trace the telephone from Bell's 1876 patent, manual exchanges, automatic switching, Touch-Tone, mobile voice and internet/cloud telephony to conversational AI.
+- Desktop visitors can select any chapter from the timeline; mobile visitors get a compact four-column chapter navigator plus Previous/Next controls. Keyboard arrow navigation, button labels, selected-state announcements and reduced-motion support are included.
+- The closing lesson positions AI as the next evolution of the business front desk—not the end of the telephone—and explains listening, intent recognition, approved answers, information capture and human escalation without promising autonomous outcomes.
+- Styling is isolated in `phone-evolution.css`; interaction is in `phone-evolution.js`. No Worker, D1, authentication, billing, lead form or existing assistant iframe behavior is changed.
+- Branch: `feature/homepage-phone-evolution-textbook-timeline-2026-11-14`. Browser checks at 360px, 768px and 1280px, live visual inspection, keyboard/screen-reader review and GitHub Pages publication remain outstanding. Do not merge without explicit approval.

@@ -167,6 +167,17 @@ async function publicOnboardingAuth(env,id,token){
  if(!onboarding||onboarding.public_token_hash!==await sha256Hex(token))throw Error("invalid_checkout_reference");
  return onboarding;
 }
+async function recordPrepaidPartnerCommission(env,customer,captureId,amountCents){
+ const partnerId=customer?.affiliate_partner_id;if(!partnerId||!captureId||!Number.isInteger(Number(amountCents))||Number(amountCents)<=0)return;
+ const partner=await env.DB.prepare("SELECT id FROM affiliate_applications WHERE id=? AND application_status='approved'").bind(partnerId).first();
+ if(!partner)return;
+ const paidAt=new Date().toISOString(),externalId="paypal_"+String(captureId);
+ await env.DB.prepare("UPDATE partner_referrals SET lead_status='converted',customer_id=?,converted_at=COALESCE(converted_at,?) WHERE affiliate_application_id=? AND lower(lead_email)=lower(?)").bind(customer.id,paidAt,partnerId,customer.email).run();
+ const active=await env.DB.prepare("SELECT COUNT(DISTINCT r.customer_id) AS total FROM partner_referrals r JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=? AND r.lead_status='converted' AND c.subscription_status IN ('active','trialing')").bind(partnerId).first();
+ const activeCount=Number(active?.total||0),rate=activeCount>=15?0.30:activeCount>=5?0.25:0.20;
+ const commissionCents=Math.round(Number(amountCents)*rate),validationUntil=new Date(Date.parse(paidAt)+30*86400000).toISOString();
+ await env.DB.prepare("INSERT OR IGNORE INTO partner_commissions(id,affiliate_application_id,customer_id,stripe_invoice_id,stripe_subscription_id,invoice_amount_cents,commission_rate,commission_amount_cents,currency,status,invoice_paid_at,validation_until,payment_provider,payment_reference,admin_note) VALUES(?,?,?, ?,NULL,?,?,?,'usd','pending',?,?,'paypal',?,?)").bind(crypto.randomUUID(),partnerId,customer.id,externalId,Number(amountCents),rate,commissionCents,paidAt,validationUntil,String(captureId),"Prepaid subscription paid through PayPal; commission is based on the collected subscription amount, excluding the waived setup fee.").run();
+}
 async function maybeProvisionPaidOnboarding(env,onboardingId){
  const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=? LIMIT 1").bind(onboardingId).first();
  if(!ob||ob.status==="provisioned"||ob.status==="provisioning")return;
@@ -176,6 +187,7 @@ async function maybeProvisionPaidOnboarding(env,onboardingId){
  if(!lock.meta?.changes)return;
  try{
   const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(ob.customer_id).first();
+  if(ob.plan_payment_provider==="paypal"&&ob.paypal_order_purpose==="prepaid_plan"&&ob.paypal_capture_id)await recordPrepaidPartnerCommission(env,customer,ob.paypal_capture_id,Number(ob.prepaid_amount_cents));
   const lead=await env.DB.prepare("SELECT * FROM avr_demo_requests WHERE id=? LIMIT 1").bind(ob.demo_request_id).first();
   if(!customer||!lead)throw Error("paid_onboarding_records_missing");
   let agentId=ob.agent_id||lead.agent_id||null,llmId=ob.llm_id||lead.llm_id||null;

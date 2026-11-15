@@ -622,6 +622,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     const paypalUrl=p.paypalInvoiceUrl===undefined?existing.paypal_invoice_url:String(p.paypalInvoiceUrl||"").trim().slice(0,1000);
     if(status==="sent"&&(!paypalUrl||!/^https:\/\//i.test(paypalUrl)))throw Error("paypal_invoice_url_required");
     if(status==="paid"&&existing.status!=="sent"&&existing.status!=="paid")throw Error("mark_invoice_sent_before_paid");
+    if(existing.status==="sent"&&status==="draft")throw Error("sent_setup_invoice_cannot_return_to_draft");
     if(existing.status==="paid"&&status!=="paid")throw Error("paid_setup_invoice_is_final");
     if(existing.status==="void"&&status!=="void")throw Error("void_setup_invoice_is_final");
     const now=new Date().toISOString(),note=p.adminNote===undefined?null:String(p.adminNote).trim().slice(0,1000);

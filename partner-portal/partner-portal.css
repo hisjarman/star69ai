@@ -5,3 +5,6 @@
 .pp-link-choice{display:grid;gap:9px;margin-top:12px}.pp-link-choice>label{font-size:12px;font-weight:700;color:var(--pp-ink,#eaf4f2)}.pp-link-choice .pp-link-row{margin:0 0 8px}.pp-link-choice small{display:block;line-height:1.65;color:var(--pp-muted,#a9bec0)}.pp-link-row button{white-space:nowrap}
 
 .pp-program-terms{margin:18px 0}.pp-terms-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.pp-terms-grid article{padding:15px;border:1px solid rgba(112,225,203,.18);border-radius:10px;background:rgba(10,28,35,.48)}.pp-terms-grid article b{display:block;margin-bottom:7px;color:#70e1cb;font-size:12px}.pp-terms-grid article p{margin:0;color:#c1d1ce;font-size:11px;line-height:1.75}.pp-terms-warning{margin:14px 0 0;padding:13px 15px;border-left:3px solid #e6b85c;background:rgba(230,184,92,.09);color:#f0d9a9;font-size:11px;line-height:1.7}.pp-terms-warning strong{color:#ffdf9a}@media(max-width:760px){.pp-terms-grid{grid-template-columns:1fr}}
+
+/* The hidden attribute must win over component display rules so authenticated views do not retain the sign-in panel. */
+[hidden]{display:none!important}

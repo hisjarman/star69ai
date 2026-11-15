@@ -32,7 +32,7 @@ Star69AI handles agent configuration, call-flow customization, phone setup, test
 
 A **$99 one-time setup fee** is invoiced separately by SIMIAPP CLOUD through PayPal for monthly customers (eligible discounted partner referrals may receive a 50% setup discount). Six-month prepayment saves 20%, twelve-month prepayment saves 30%, and both prepaid terms waive the setup fee completely. Prepaid offers cannot be combined with partner or AI Challenge discounts.
 
-**Billing implementation note:** The plan prices and overage rates above are published offer details. Automatic Stripe metered overage billing must not be represented as active until Stripe meter reporting, usage reconciliation, rounding rules and end-to-end billing tests have been implemented and verified. Any portal usage estimate must be clearly identified as an estimate.
+**Billing implementation note:** The plan prices and overage rates above are published offer details. The approved overage policy lets a customer either pay all overage at period close or carry forward up to 50% of the next period's included allowance; any remainder is invoiced and due within 7 days of the new period. If that remainder is unpaid after 7 days, only additional overage coverage is paused—the subscription and included minutes remain active. Partner commissions exclude overage. This policy is not yet active: automated period closing, Stripe invoicing/payment reconciliation, the Retell call-coverage gate, and end-to-end tests must be completed before describing overage billing or pause enforcement as operational.
 
 ## Website and repository structure
 

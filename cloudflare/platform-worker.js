@@ -53,9 +53,9 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  if(selected==="monthly"&&code){
   if(code!=="CALLSMART10")throw Error("invalid_promo_code");
   if(partnerDiscount){
-   const partnerCoupon=env.STRIPE_COUPON_PARTNER15,stackCoupon=env["STRIPE_COUPON_CHALLENGE_STACK_"+plan.toUpperCase()];
-   if(!partnerCoupon||!stackCoupon)throw Error("combined_partner_challenge_offer_not_configured");
-   coupons.push(partnerCoupon,stackCoupon);
+   const combinedCoupon=env["STRIPE_COUPON_CHALLENGE_PARTNER_"+plan.toUpperCase()];
+   if(!combinedCoupon)throw Error("combined_partner_challenge_offer_not_configured");
+   coupons.push(combinedCoupon);
    discountType="partner_15_for_12_months_plus_challenge_10_first_month";
   }else{const challengeCoupon=env.STRIPE_COUPON_CALLSMART10;if(!challengeCoupon)throw Error("challenge_offer_not_configured");coupons.push(challengeCoupon);discountType="challenge_10_first_month";}
  }
@@ -69,7 +69,16 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  const ev=JSON.parse(raw);const seen=await env.DB.prepare("SELECT event_id FROM avr_webhook_events WHERE provider='stripe' AND event_id=?").bind(ev.id).first();if(seen)return {received:true,duplicate:true};
  
  const o=ev.data?.object||{},customerId=o.metadata?.avr_customer_id||null,stripeCustomer=o.customer||o.customer_id||null;
- if(ev.type==="checkout.session.completed"&&customerId){await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,new Date().toISOString(),customerId).run()}
+ if(ev.type==="checkout.session.completed"&&customerId){
+  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,new Date().toISOString(),customerId).run();
+  // Checkout permits one discount per session. For a discounted partner plus challenge code,
+  // apply 25% to the first invoice in Checkout, then attach 15% for the next 11 invoices.
+  if(o.subscription&&o.metadata?.discount_type==="partner_15_for_12_months_plus_challenge_10_first_month"){
+   const followupCoupon=env.STRIPE_COUPON_PARTNER15_11MO;
+   if(!followupCoupon)throw Error("partner_followup_offer_not_configured");
+   await stripeRequest(env,"subscriptions/"+o.subscription,{"discounts[0][coupon]":followupCoupon,"proration_behavior":"none"});
+  }
+ }
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
   await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();

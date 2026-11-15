@@ -90,6 +90,7 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   if($("#vault-balance"))$("#vault-balance").textContent=vault.toLocaleString();
   if($("#vault-used"))$("#vault-used").textContent=vaultUsed.toLocaleString()+" min";
   if($("#vault-overage"))$("#vault-overage").textContent=over.toLocaleString()+" min";
+  const cardStatus=$("#overage-payment-status");if(cardStatus)cardStatus.textContent=customer?.hasOveragePaymentMethod?"A card is saved for automatic overage collection.":"Add a card to enable overage billing; calls will stop at included and vaulted minutes until one is saved.";
   const protection=$("#overage-protection-note");if(protection){if(String(plan||"").toLowerCase()==="flex"){protection.textContent="Pay-as-you-go calls are controlled by your prepaid wallet balance; new calls pause when the balance is exhausted."}else if(overageLimit>0){protection.textContent="Fixed plan overage ceiling: "+overageLimit.toLocaleString()+" minutes (75% of included plan minutes). New calls reserve capacity and are automatically limited to the remaining available duration."}else{protection.textContent=over>0?"New inbound calls are paused because no additional overage has been authorized.":"No overage beyond the fixed plan ceiling is permitted. New calls stop automatically when included minutes, vault minutes and the 75% plan overage cap are exhausted."}}
   $("#minutes-used").textContent=used.toLocaleString();
   $("#minutes-included").textContent=allowance.toLocaleString()+" included minutes";
@@ -209,6 +210,7 @@ function renderAgentRequests(items){
    renderUsage(d.usage||{},customer.includedMinutes||0,customer.plan);
    $("#calls-count").textContent=Number(d.usage?.calls||0).toLocaleString();
    $("#subscription-status").textContent=customer.subscriptionStatus||"Not active";
+   const cardButton=$("#overage-card-setup");if(cardButton){cardButton.textContent=customer.hasOveragePaymentMethod?"Update card for overage":"Add card for automatic overage";cardButton.disabled=false;}
    $("#billing-portal").disabled=!customer.hasBillingAccount;
    $("#billing-portal").textContent=customer.hasBillingAccount?"Manage subscription":"Billing not started";
    const onboardingLocked=!!d.onboarding&&(!d.onboarding.demoApproved||d.onboarding.plan_payment_status!=="paid"||d.onboarding.setup_status==="pending");document.querySelectorAll(".plan-btn").forEach(b=>{b.disabled=customer.plan==="flex"||onboardingLocked||["active","trialing","past_due"].includes(customer.subscriptionStatus)});const planActions=document.querySelector(".plan-actions");if(planActions)planActions.hidden=customer.plan==="flex"||onboardingLocked;
@@ -242,6 +244,7 @@ function renderAgentRequests(items){
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
+ $("#overage-card-setup")?.addEventListener("click",async()=>{const b=$("#overage-card-setup");b.disabled=true;try{const d=await api("/api/client/overage-payment-method/setup",{method:"POST",body:"{}"});if(!d.url)throw Error("Stripe did not return a setup link.");location.assign(d.url)}catch(e){note(e.message,true);b.disabled=false}});
  $("#flex-topup-form")?.addEventListener("submit",async e=>{e.preventDefault();const button=$("#flex-topup-submit");button.disabled=true;try{const amount=Number($("#flex-topup-amount").value);if(!Number.isInteger(amount)||amount<5||amount%5!==0)throw Error("Enter an amount from $5 to $500 in $5 increments.");const d=await api("/api/client/payg-wallet/topup",{method:"POST",body:JSON.stringify({amount})});location.assign(d.approvalUrl)}catch(err){note(err.message,true);button.disabled=false}});
 
  $("#approve-demo")?.addEventListener("click",()=>handleOnboardingAction($("#approve-demo"),"/api/client/demo/approve","Demo approved."));
@@ -265,5 +268,6 @@ function renderAgentRequests(items){
  document.querySelectorAll(".plan-btn").forEach(b=>b.onclick=async()=>{try{b.disabled=true;const d=await api("/api/billing/checkout",{method:"POST",body:JSON.stringify({plan:b.dataset.plan,cadence:$("#billing-cadence")?.value||"monthly",promoCode:$("#billing-promo-code")?.value||""})});location.href=d.url}catch(e){const messages={invalid_promo_code:"That offer code is not valid. Check the code and try again.",challenge_offer_not_configured:"The challenge discount is not active in checkout yet. Please contact Star69AI before paying.",partner_offer_not_configured:"The partner discount is not active in checkout yet. Please contact Star69AI before paying.",prepaid_price_not_configured:"That prepaid billing option is not configured yet. Please contact Star69AI before paying.",prepaid_offer_cannot_be_combined_with_promo:"Prepaid savings cannot be combined with a first-month offer. Clear the code or choose monthly billing."};note(messages[e.message]||e.message,true);b.disabled=false}});
  const params=new URLSearchParams(location.search);
  if(params.has("billing"))note(params.get("billing")==="success"?"Checkout completed. Your subscription will appear after Stripe confirms the webhook.":"Checkout was cancelled.");
+ if(params.has("overage_card"))note(params.get("overage_card")==="success"?"Card setup completed. Stripe is confirming your saved payment method. Refresh shortly.":"Card setup was cancelled.");
  init();
 })();

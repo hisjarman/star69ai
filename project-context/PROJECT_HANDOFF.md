@@ -958,3 +958,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Historical references are linked from the detail cards, including the U.S. patents, National Park Service, Bell System archive, Motorola history, IEEE Spectrum and the original ELIZA paper.
 - Static website files only. No Worker, D1, Stripe, Clerk or production configuration was changed. The partner setup-fee discount remains a known backend gap and is clearly disclosed in the private console.
 - QA still required before merge: desktop/mobile header layout on representative pages; partner public-page content audit; signed-in/approved and signed-out/unapproved Partner Center views; year-card scroll/accordion behavior; keyboard, reduced-motion and mobile timeline review; HTML and JavaScript validation. Do not merge without explicit user approval.
+
+
+## Partner offer exclusivity enforcement — 2026-11-15
+
+- In `cloudflare/platform-worker.js`, monthly checkout now rejects `CALLSMART10` when the customer is attributed to a discounted partner link (`partner_discount_cannot_be_combined_with_challenge`). A standard referral can still use the AI Challenge code; a discounted partner referral uses the partner subscription offer instead.
+- Removed the old Checkout-completion webhook behavior that attached a partner follow-up coupon after a stacked first-month challenge/partner coupon.
+- Prepaid checkout already rejects promo codes and does not apply the monthly partner coupon; prepaid prices remain their own standalone offer.
+- The partner setup-fee discount remains unimplemented because setup is invoiced separately; Partner Center warns partners not to promise automatic application until that invoice workflow is updated.
+- This is a source change only. It must be deployed to the existing `avr-platform-api` Worker separately from GitHub Pages. Do not claim production enforcement until the Worker deployment and Stripe test-mode checkout/webhook cases are verified.

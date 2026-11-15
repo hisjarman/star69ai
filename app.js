@@ -19,17 +19,19 @@ function writePartnerAttribution(value) {
   document.cookie = PARTNER_COOKIE + "=" + encodeURIComponent(JSON.stringify({...value,expiresAt})) + "; Max-Age=7776000; Path=/; Domain=.star69ai.com; SameSite=Lax; Secure";
 }
 const partnerAttributionReady = (async () => {
-  const incoming = String(new URLSearchParams(window.location.search).get("ref") || "").trim().toUpperCase();
+  const params=new URLSearchParams(window.location.search);
+  const incoming = String(params.get("ref") || "").trim().toUpperCase();
   if (!/^[A-Z0-9]{6,16}$/.test(incoming)) return readPartnerAttribution();
-  const fallback={partnerCode:incoming,clickId:""};writePartnerAttribution(fallback);
+  const offerMode=params.get("offer")==="standard"?"standard":"discount"; // Legacy partner links without an offer parameter retain the customer discount.
+  const fallback={partnerCode:incoming,clickId:"",offerMode};writePartnerAttribution(fallback);
   try {
     const response = await fetch(API_BASE + "/api/partners/click", {
       method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({partnerCode:incoming,landingPath:location.pathname,referrer:document.referrer})
+      body:JSON.stringify({partnerCode:incoming,offerMode,landingPath:location.pathname,referrer:document.referrer})
     });
     const result = await response.json().catch(() => ({}));
     if (response.ok && result.clickId) {
-      const value={partnerCode:incoming,clickId:result.clickId};writePartnerAttribution(value);return value;
+      const value={partnerCode:incoming,clickId:result.clickId,offerMode:result.offerMode||offerMode};writePartnerAttribution(value);return value;
     }
   } catch {}
   return fallback;
@@ -40,7 +42,7 @@ async function capturePartnerLead(payload) {
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),1800);
   try {
     const response=await fetch(API_BASE+"/api/partners/lead",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},signal:controller.signal,body:JSON.stringify({
-      partnerCode:attribution.partnerCode,clickId:attribution.clickId||"",name:String(payload.name||"").slice(0,120),
+      partnerCode:attribution.partnerCode,clickId:attribution.clickId||"",offerMode:attribution.offerMode==="discount"?"discount":"standard",name:String(payload.name||"").slice(0,120),
       email:String(payload.email||"").slice(0,254),business:String(payload.business||"").slice(0,160),landingPath:location.pathname
     })});
     return response.ok;
@@ -49,9 +51,13 @@ async function capturePartnerLead(payload) {
 window.star69aiCapturePartnerLead=capturePartnerLead;
 window.star69aiGetPartnerAttribution=()=>readPartnerAttribution();
 function renderOfferContext(){
-  const referred=!!readPartnerAttribution()?.partnerCode;
+  const attribution=readPartnerAttribution();
   document.querySelectorAll("[data-offer-context]").forEach(node=>{
-    if(referred){node.innerHTML="<strong>Partner referral offer: 5% off your first month.</strong><span>Your referral is tracked. Once activated in checkout, the discount applies to the first monthly subscription payment only—not setup, overages, taxes or third-party charges. It cannot be combined with challenge or prepaid offers.</span><a href=\"./pricing.html\">View pricing ↗</a>";}
+    if(attribution?.partnerCode){
+      node.innerHTML=attribution.offerMode==="discount"
+        ?"<strong>Partner referral offer: 15% off monthly subscription payments for the first 12 months.</strong><span>Your referral is tracked. The partner discount applies only when checkout confirms the offer; it excludes setup, overages, taxes and third-party charges. A valid 10% challenge code adds a further first-month discount: 25% total off month one, then 15% off months 2–12. Prepaid offers are separate and cannot be combined with promo codes.</span><a href=\"./pricing.html\">View pricing ↗</a>"
+        :"<strong>Partner referral tracked — standard pricing.</strong><span>Your introduction is attributed to your partner, who may earn a commission if you become a paying customer. This link does not apply a customer discount. You can still review generally available billing offers at checkout.</span><a href=\"./pricing.html\">View pricing ↗</a>";
+    }
   });
 }
 renderOfferContext();

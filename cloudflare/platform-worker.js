@@ -47,21 +47,38 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;
  const priceEnv=selected==="six_month"?p.sixMonthPriceEnv:selected==="annual"?p.annualPriceEnv:p.priceEnv;
  const price=env[priceEnv];if(!price||price==="price_replace_me")throw Error(selected==="monthly"?"stripe_price_id_missing_"+plan:"prepaid_price_not_configured");
- const affiliateId=c.affiliate_partner_id||"";let coupon="",discountType="none";
+ const affiliateId=c.affiliate_partner_id||"",partnerDiscount=affiliateId&&c.affiliate_offer_mode==="discount";let coupons=[],discountType="none";
  const code=String(promoCode||"").trim().toUpperCase();
  if(selected!=="monthly"&&code)throw Error("prepaid_offer_cannot_be_combined_with_promo");
- if(selected==="monthly"&&code){if(code!=="CALLSMART10")throw Error("invalid_promo_code");coupon=env.STRIPE_COUPON_CALLSMART10;if(!coupon)throw Error("challenge_offer_not_configured");discountType="challenge_10_first_month";}
- else if(selected==="monthly"&&affiliateId){coupon=env.STRIPE_COUPON_PARTNER5;if(!coupon)throw Error("partner_offer_not_configured");discountType="partner_5_first_month";}
+ if(selected==="monthly"&&code){
+  if(code!=="CALLSMART10")throw Error("invalid_promo_code");
+  if(partnerDiscount){
+   const combinedCoupon=env["STRIPE_COUPON_CHALLENGE_PARTNER_"+plan.toUpperCase()];
+   if(!combinedCoupon)throw Error("combined_partner_challenge_offer_not_configured");
+   coupons.push(combinedCoupon);
+   discountType="partner_15_for_12_months_plus_challenge_10_first_month";
+  }else{const challengeCoupon=env.STRIPE_COUPON_CALLSMART10;if(!challengeCoupon)throw Error("challenge_offer_not_configured");coupons.push(challengeCoupon);discountType="challenge_10_first_month";}
+ }
+ else if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType="partner_15_for_12_months";}
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId});stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
  const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:"https://star69ai.com/client/?billing=success",cancel_url:"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType};
- if(coupon)params["discounts[0][coupon]"]=coupon;
+ coupons.forEach((coupon,index)=>{params["discounts["+index+"][coupon]"]=coupon;});
  const session=await stripeRequest(env,"checkout/sessions",params);return {url:session.url,id:session.id,cadence:selected,discountType};
 }
 async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers.get("Stripe-Signature")||"",secret=env.STRIPE_WEBHOOK_SECRET;if(!secret)throw Error("stripe_webhook_secret_missing");const parts=Object.fromEntries(sig.split(",").map(x=>x.split("=").map(y=>y.trim()))),ts=parts.t;if(!ts||!parts.v1||Math.abs(Date.now()/1000-Number(ts))>300)throw Error("invalid_stripe_signature");const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const mac=new Uint8Array(await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(ts+"."+raw)));const hex=Array.from(mac,x=>x.toString(16).padStart(2,"0")).join("");if(hex!==parts.v1)throw Error("invalid_stripe_signature");
  const ev=JSON.parse(raw);const seen=await env.DB.prepare("SELECT event_id FROM avr_webhook_events WHERE provider='stripe' AND event_id=?").bind(ev.id).first();if(seen)return {received:true,duplicate:true};
  
  const o=ev.data?.object||{},customerId=o.metadata?.avr_customer_id||null,stripeCustomer=o.customer||o.customer_id||null;
- if(ev.type==="checkout.session.completed"&&customerId){await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,new Date().toISOString(),customerId).run()}
+ if(ev.type==="checkout.session.completed"&&customerId){
+  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,new Date().toISOString(),customerId).run();
+  // Checkout permits one discount per session. For a discounted partner plus challenge code,
+  // apply 25% to the first invoice in Checkout, then attach 15% for the next 11 invoices.
+  if(o.subscription&&o.metadata?.discount_type==="partner_15_for_12_months_plus_challenge_10_first_month"){
+   const followupCoupon=env.STRIPE_COUPON_PARTNER15_11MO;
+   if(!followupCoupon)throw Error("partner_followup_offer_not_configured");
+   await stripeRequest(env,"subscriptions/"+o.subscription,{"discounts[0][coupon]":followupCoupon,"proration_behavior":"none"});
+  }
+ }
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
   await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
@@ -70,12 +87,20 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
   const partnerId=customer?.affiliate_partner_id||o.metadata?.affiliate_partner_id||null;
   const lines=Array.isArray(o.lines?.data)?o.lines.data:[];
-  const commissionableCents=lines.reduce((sum,line)=>{
+  const eligiblePlanPriceIds=new Set(Object.values(planInfo).flatMap(p=>[env[p.priceEnv],env[p.sixMonthPriceEnv],env[p.annualPriceEnv]]).filter(Boolean));
+  const eligibleLinesCents=lines.reduce((sum,line)=>{
+   const rawPriceId=line.price?.id||line.price||line.pricing?.price_details?.price||line.parent?.subscription_item_details?.price?.id;
+   const priceId=typeof rawPriceId==="string"?rawPriceId:rawPriceId?.id;
+   const planSubscriptionLine=eligiblePlanPriceIds.has(priceId);
    const subscriptionLine=line.type==="subscription"||!!line.subscription_item||line.parent?.type==="subscription_item_details";
    const proration=line.proration===true||line.parent?.subscription_item_details?.proration===true;
    const amount=Number(line.amount_excluding_tax??line.amount??0),discounts=Array.isArray(line.discount_amounts)?line.discount_amounts.reduce((n,item)=>n+Number(item.amount||0),0):0,netAmount=Math.max(0,amount-discounts);
-   return subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
+   return planSubscriptionLine&&subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
   },0);
+  const invoiceTotalCents=Math.max(0,Number(o.total??o.amount_due??0));
+  const amountPaidCents=Math.max(0,Number(o.amount_paid??0));
+  const paidRatio=invoiceTotalCents>0?Math.min(1,amountPaidCents/invoiceTotalCents):0;
+  const commissionableCents=Math.round(eligibleLinesCents*paidRatio);
   if(customer&&partnerId&&commissionableCents>0){
    const paidAt=new Date(Number(ev.created||Math.floor(Date.now()/1000))*1000).toISOString();
    await env.DB.prepare("UPDATE partner_referrals SET lead_status='converted',customer_id=?,converted_at=COALESCE(converted_at,?) WHERE affiliate_application_id=? AND lower(lead_email)=lower(?)").bind(customer.id,paidAt,partnerId,customer.email).run();
@@ -83,7 +108,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    if(partner){
     const active=await env.DB.prepare("SELECT COUNT(DISTINCT r.customer_id) AS total FROM partner_referrals r JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=? AND r.lead_status='converted' AND c.subscription_status IN ('active','trialing')").bind(partnerId).first();
     const activeCount=Number(active?.total||0);
-    const assignedRate=partner.commission_tier==="founding"||partner.commission_tier==="growth"?0.25:partner.commission_tier==="premier"?0.30:0.20;const thresholdRate=activeCount>=15?0.30:activeCount>=5?0.25:0.20;const rate=Math.max(assignedRate,thresholdRate);
+    const rate=activeCount>=15?0.30:activeCount>=5?0.25:0.20;
     const commissionCents=Math.round(commissionableCents*rate);
     const subscriptionId=o.subscription||o.parent?.subscription_details?.subscription||null;
     const validationUntil=new Date(Date.parse(paidAt)+30*86400000).toISOString();
@@ -586,7 +611,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
    }
    if(path==="/api/admin/overview"&&req.method==="GET"){const [cc,active,subs,calls,mins]=await Promise.all([env.DB.prepare("SELECT COUNT(*) n FROM avr_customers").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_customers WHERE status='active'").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_customers WHERE subscription_status IN ('active','trialing')").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_calls").first(),env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) n FROM avr_calls WHERE start_timestamp>=?").bind(new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).first()]);return json({customers:cc.n,activeCustomers:active.n,activeSubscriptions:subs.n,totalCalls:calls.n,minutesThisMonth:Math.ceil(Number(mins.n||0)/60000)},200,origin,env)}
    if(path==="/api/admin/customers"&&req.method==="GET"){const r=await env.DB.prepare("SELECT c.*, (SELECT COUNT(*) FROM avr_calls x WHERE x.customer_id=c.id) AS total_calls,(SELECT COALESCE(SUM(duration_ms),0) FROM avr_calls x WHERE x.customer_id=c.id AND x.start_timestamp>=?) AS usage_ms FROM avr_customers c ORDER BY c.created_at DESC LIMIT 500").bind(new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).all();return json({customers:(r.results||[]).map(c=>({...c,usage_minutes:Math.ceil(Number(c.usage_ms||0)/60000),usage_ms:undefined}))},200,origin,env)}
-   if(path==="/api/admin/customers"&&req.method==="POST"){const p=await body(req),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase();if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");const exists=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=?").bind(email).first();if(exists)throw Error("customer_email_already_exists");const referral=await env.DB.prepare("SELECT id,affiliate_application_id FROM partner_referrals WHERE lower(lead_email)=? AND lead_status='lead' AND attribution_expires_at>=? LIMIT 1").bind(email,new Date().toISOString()).first();const id=crypto.randomUUID();await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,clerk_user_id,status,admin_notes,affiliate_partner_id) VALUES(?,?,?,?,?,?,?,?,?)").bind(id,business,String(p.contactName||"").slice(0,120),email,String(p.phone||"").slice(0,40),String(p.clerkUserId||"").trim()||null,"pending",String(p.notes||"").slice(0,2000),referral?.affiliate_application_id||null).run();if(referral)await env.DB.prepare("UPDATE partner_referrals SET lead_status='customer',customer_id=? WHERE id=?").bind(id,referral.id).run();await audit(env,u,"customer_created",id,{email,partnerAttributed:!!referral});return json({created:true,id,partnerAttributed:!!referral},201,origin,env)}
+   if(path==="/api/admin/customers"&&req.method==="POST"){const p=await body(req),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase();if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");const exists=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=?").bind(email).first();if(exists)throw Error("customer_email_already_exists");const referral=await env.DB.prepare("SELECT id,affiliate_application_id,offer_mode FROM partner_referrals WHERE lower(lead_email)=? AND lead_status='lead' AND attribution_expires_at>=? LIMIT 1").bind(email,new Date().toISOString()).first();const id=crypto.randomUUID();await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,clerk_user_id,status,admin_notes,affiliate_partner_id,affiliate_offer_mode) VALUES(?,?,?,?,?,?,?,?,?,?)").bind(id,business,String(p.contactName||"").slice(0,120),email,String(p.phone||"").slice(0,40),String(p.clerkUserId||"").trim()||null,"pending",String(p.notes||"").slice(0,2000),referral?.affiliate_application_id||null,referral?.offer_mode==="discount"?"discount":"standard").run();if(referral)await env.DB.prepare("UPDATE partner_referrals SET lead_status='customer',customer_id=? WHERE id=?").bind(id,referral.id).run();await audit(env,u,"customer_created",id,{email,partnerAttributed:!!referral});return json({created:true,id,partnerAttributed:!!referral},201,origin,env)}
    const workspaceMatch=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})\/workspace$/i);
    if(workspaceMatch&&req.method==="GET"){
     const id=workspaceMatch[1],customer=await env.DB.prepare("SELECT id,business_name,contact_name,email,phone,status,plan_key,included_minutes,subscription_status,stripe_customer_id,admin_notes,created_at,updated_at FROM avr_customers WHERE id=?").bind(id).first();

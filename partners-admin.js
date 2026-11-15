@@ -12,7 +12,7 @@
  [["Audience",item.audience],["Experience",item.experience],["Additional notes",item.notes]].forEach(([label,value])=>{if(value){const p=document.createElement("p");p.textContent=label+": "+value;card.append(p);}});
  const fields=document.createElement("div");fields.className="pa-fields";
  fields.append(field("APPLICATION STATUS","applicationStatus",item.applicationStatus,"select"));
- fields.append(field("COMMISSION TIER","commissionTier",item.commissionTier||"standard","select"));
+ const tierNote=document.createElement("p");tierNote.textContent="Commission rate is automatic: 20% for 1–4 active referrals, 25% for 5–14, and 30% for 15 or more.";fields.append(tierNote);
  const codeField=field("PARTNER CODE","partnerCode",item.partnerCode||"Assigned when the partner first signs in");const codeInput=codeField.querySelector("input");if(codeInput)codeInput.readOnly=true;fields.append(codeField);
  const linkField=field("PARTNER REFERRAL URL","referralUrl",item.referralUrl,"url",true);const linkInput=linkField.querySelector("input");if(linkInput)linkInput.readOnly=true;fields.append(linkField);
  fields.append(field("PRIVATE ADMIN NOTES","adminNote",item.adminNote,"textarea",true));

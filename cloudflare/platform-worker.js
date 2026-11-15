@@ -214,7 +214,7 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
  let amountCents;
  if(purpose==="setup_fee"){
   const eligiblePartnerDiscount=!!customer?.affiliate_partner_id&&customer?.affiliate_offer_mode==="discount";
-  amountCents=eligiblePartnerDiscount?8415:9900;
+  amountCents=eligiblePartnerDiscount?9900:9900;
   if(Number(onboarding.setup_amount_cents)!==amountCents){
    const changed=await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_amount_cents=?,updated_at=? WHERE id=? AND setup_status='pending'").bind(amountCents,new Date().toISOString(),onboarding.id).run();
    if(Number(changed.meta?.changes||0)!==1)throw Error("setup_fee_changed_after_payment_or_not_pending");
@@ -376,7 +376,7 @@ async function startPublicCheckout(req,env,origin){
  }
  const prepaidTotals={starter:{six_month:67050,annual:116220},growth:{six_month:112050,annual:194220},pro:{six_month:179550,annual:311220}};
  const prepaidCents=cadence==="monthly"?0:Number(prepaidTotals[plan][cadence]);
- const setupCents=cadence==="monthly"?(affiliateId&&offerMode==="discount"?8415:9900):0;
+ const setupCents=cadence==="monthly"?(affiliateId&&offerMode==="discount"?9900:9900):0;
  if(cadence==="monthly"){
   if(!env.STRIPE_SECRET_KEY||!env.STRIPE_WEBHOOK_SECRET)throw Error("stripe_monthly_billing_not_fully_configured");
   const monthlyPriceId=env[planInfo[plan].priceEnv];if(!monthlyPriceId)throw Error("stripe_price_id_missing_"+plan);
@@ -419,7 +419,7 @@ async function capturePublicSetup(req,env,origin){
  const purpose=ob.paypal_order_purpose||"setup_fee";if(purpose==="setup_fee"&&Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
  if(purpose==="setup_fee"&&ob.setup_status==="pending"){
   const referral=await env.DB.prepare("SELECT affiliate_partner_id,affiliate_offer_mode FROM avr_customers WHERE id=? LIMIT 1").bind(ob.customer_id).first();
-  const expectedSetupCents=referral?.affiliate_partner_id&&referral?.affiliate_offer_mode==="discount"?8415:9900;
+  const expectedSetupCents=referral?.affiliate_partner_id&&referral?.affiliate_offer_mode==="discount"?9900:9900;
   if(Number(ob.setup_amount_cents)!==expectedSetupCents){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_amount_cents=?,paypal_order_id=NULL,updated_at=? WHERE id=? AND setup_status='pending'").bind(expectedSetupCents,new Date().toISOString(),ob.id).run();
    throw Error("setup_offer_updated_please_resume_checkout");
@@ -436,7 +436,7 @@ async function capturePublicSetup(req,env,origin){
   const now=new Date().toISOString();
   if(purpose==="setup_fee"){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_status='paid',paypal_capture_id=?,status='awaiting_subscription',updated_at=? WHERE id=? AND setup_status='pending'").bind(capture.id||null,now,ob.id).run();
-   const base=9900,discount=base-Number(ob.setup_amount_cents),reason=discount>0?"partner_referral_15":"none";
+   const base=9900,discount=0,reason="none";
    await env.DB.prepare("INSERT OR IGNORE INTO avr_setup_invoices(id,customer_id,base_amount_cents,discount_amount_cents,amount_due_cents,discount_reason,status,created_by,created_at,updated_at,sent_at,paid_at,admin_note) VALUES(?,?,?,?,?,?,'paid','public_checkout',?,?,?,?,?)").bind(crypto.randomUUID(),ob.customer_id,base,discount,Number(ob.setup_amount_cents),reason,now,now,now,now,"PayPal order "+orderId+"; capture "+String(capture.id||"")).run();
    const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
    if(latest?.plan_payment_status==="paid")await env.DB.prepare("UPDATE avr_customers SET status='active',updated_at=? WHERE id=?").bind(now,ob.customer_id).run();

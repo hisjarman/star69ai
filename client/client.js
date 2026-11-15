@@ -9,7 +9,7 @@
  function safeHttps(v){try{const u=new URL(v);return u.protocol==="https:"?u.href:""}catch{return ""}}
  function money(v){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v)}
  function showPage(page){
-  const labels={overview:["Overview","A clear view of your receptionist and business activity."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Support center","Get help, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
+  const labels={overview:["Overview","A clear view of your receptionist and business activity."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],flex:["Flex wallet","Review prepaid credit and request a PayPal top-up when Flex is available."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Support center","Get help, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   const label=labels[page]||labels.overview;$("#client-page-title").textContent=label[0];$("#client-page-description").textContent=label[1];
@@ -144,6 +144,29 @@ function renderAgentRequests(items){
   catch(err){status.textContent=err.message}
   finally{button.disabled=false}
  }
+ async function loadFlexWallet(){
+  const balanceEl=$("#flex-balance");if(!balanceEl)return;
+  try{
+   const d=await api("/api/client/payg-wallet");
+   const cents=Number(d.balanceCents||0),minutes=Number(d.estimatedMinutes||0),gate=!!d.ingressGateEnabled;
+   balanceEl.textContent=money(cents/100);
+   $("#flex-estimated-minutes").textContent=minutes.toFixed(1)+" min";
+   $("#flex-wallet-status").textContent=String(d.walletStatus||"not_funded").replaceAll("_"," ");
+   $("#flex-call-status").textContent=d.canReceiveCalls?"Inbound calls enabled":"Calls are not enabled";
+   $("#flex-gate-notice").textContent=gate?"Flex balance checks are enabled. Request a PayPal invoice for a deposit; credit is added only after payment verification.":"Flex is not accepting deposits or inbound calls yet. The pre-answer balance gateway must be deployed and verified first.";
+   document.querySelectorAll("[data-flex-deposit]").forEach(b=>{
+    const amount=Number(b.dataset.flexDeposit||0)/100;
+    b.disabled=!gate;
+    b.textContent=gate?"Request "+money(amount)+" PayPal invoice":money(amount)+" · deposit unavailable";
+    b.onclick=()=>{const subject=encodeURIComponent("Star69AI Flex wallet deposit request");const body=encodeURIComponent("Please send a PayPal invoice for a Star69AI Flex wallet deposit.\n\nBusiness: "+(customer?.businessName||"") +"\nAccount email: "+(customer?.email||"")+"\nDeposit amount: "+money(amount)+"\n\nI understand wallet credit is added only after payment is verified.");location.href="mailto:support@star69ai.com?subject="+subject+"&body="+body};
+   });
+   const entries=d.ledger||[];
+   $("#flex-wallet-ledger").innerHTML=entries.length?'<table><thead><tr><th>DATE</th><th>ACTIVITY</th><th>DETAIL</th><th>AMOUNT</th></tr></thead><tbody>'+entries.map(x=>'<tr><td>'+safe(fmtDate(x.created_at))+'</td><td>'+safe(String(x.entry_type||"").replaceAll("_"," "))+'</td><td>'+safe(x.note||"—")+'</td><td>'+money(Number(x.amount_cents||0)/100)+'</td></tr>').join("")+'</tbody></table>':'<div class="empty">No wallet activity yet. Verified deposits and usage entries will appear here.</div>';
+  }catch(e){
+   $("#flex-gate-notice").textContent=e.message==="sign_in_required"?"Sign in to view your wallet.":"Wallet details are not available yet. Please contact support if this continues.";
+   $("#flex-wallet-ledger").innerHTML='<div class="empty">Wallet activity is not available yet.</div>';
+  }
+ }
  async function load(){
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
@@ -171,7 +194,7 @@ function renderAgentRequests(items){
    $("#agent-list").innerHTML=d.agents.length?d.agents.map(a=>'<div class="resource"><b>'+safe(a.agent_name||a.agent_id)+'</b><span class="small">Your assigned AI receptionist</span></div>').join(""):'<div class="empty">Your receptionist is being prepared or has not yet been assigned.</div>';
    $("#number-list").innerHTML=d.numbers.length?d.numbers.map(n=>'<div class="resource"><b>'+safe(n.phone_number)+'</b><span class="small">'+safe(n.nickname||"Business line")+'</span></div>').join(""):'<div class="empty">Your business phone number has not been assigned yet.</div>';
    renderCalls(d.calls||[],customer.email||"");
-   await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration()]);
+   await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration(),loadFlexWallet()]);
    renderAgentOptions();
   }catch(e){note(e.message,true)}
   finally{loading=false;$("#refresh-dashboard").disabled=false}
@@ -186,10 +209,11 @@ function renderAgentRequests(items){
   }catch(e){note(e.message,true)}
  }
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
- const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support"].includes(initialPage)?initialPage:"overview");
+ const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","flex","addons","calls","support","knowledge"].includes(initialPage)?initialPage:"overview");
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
+ $("#refresh-flex-wallet")?.addEventListener("click",loadFlexWallet);
  $("#support-ticket-form")?.addEventListener("submit",submitTicket);
  $("#call-email-settings-form")?.addEventListener("submit",saveCallEmailSettings);
  $("#refresh-tickets")?.addEventListener("click",loadTickets);

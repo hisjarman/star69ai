@@ -48,7 +48,7 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  const priceEnv=selected==="six_month"?p.sixMonthPriceEnv:selected==="annual"?p.annualPriceEnv:p.priceEnv;
  const price=env[priceEnv];if(!price||price==="price_replace_me")throw Error(selected==="monthly"?"stripe_price_id_missing_"+plan:"prepaid_price_not_configured");
  if(selected!=="monthly"){
-  const months=selected==="six_month"?6:12,discount=selected==="six_month"?0.25:0.35,expectedCents=Math.round(p.price*months*(1-discount)*100);
+  const months=selected==="six_month"?6:12,discount=selected==="six_month"?0.20:0.30,expectedCents=Math.round(p.price*months*(1-discount)*100);
   const stripePrice=await stripeRequest(env,"prices/"+encodeURIComponent(price),{},"GET");
   if(!stripePrice.active||stripePrice.currency!=="usd"||Number(stripePrice.unit_amount)!==expectedCents||stripePrice.recurring?.interval!=="month"||Number(stripePrice.recurring?.interval_count)!==months)throw Error("prepaid_price_configuration_mismatch");
  }
@@ -67,12 +67,12 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  
  const o=ev.data?.object||{},customerId=o.metadata?.avr_customer_id||null,stripeCustomer=o.customer||o.customer_id||null;
  if(ev.type==="checkout.session.completed"&&customerId){
-  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,new Date().toISOString(),customerId).run();
+  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,new Date().toISOString(),customerId).run();
   // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
  }
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
-  await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
+  await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
  }
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
@@ -601,15 +601,16 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     return json({saved:true},200,origin,env)
    }
    if(path==="/api/admin/setup-invoices"&&req.method==="GET"){
-    const r=await env.DB.prepare("SELECT i.id,i.customer_id,i.base_amount_cents,i.discount_amount_cents,i.amount_due_cents,i.discount_reason,i.status,i.paypal_invoice_url,i.admin_note,i.created_at,i.sent_at,i.paid_at,c.business_name,c.email,c.affiliate_offer_mode FROM avr_setup_invoices i JOIN avr_customers c ON c.id=i.customer_id ORDER BY CASE i.status WHEN 'draft' THEN 0 WHEN 'sent' THEN 1 WHEN 'paid' THEN 2 ELSE 3 END,i.created_at DESC LIMIT 300").all();
-    const customers=await env.DB.prepare("SELECT c.id,c.business_name,c.email,c.affiliate_offer_mode,c.affiliate_partner_id,i.id AS invoice_id,i.status AS invoice_status FROM avr_customers c LEFT JOIN avr_setup_invoices i ON i.customer_id=c.id AND i.status IN ('draft','sent','paid') ORDER BY c.created_at DESC LIMIT 500").all();
+    const r=await env.DB.prepare("SELECT i.id,i.customer_id,i.base_amount_cents,i.discount_amount_cents,i.amount_due_cents,i.discount_reason,i.status,i.paypal_invoice_url,i.admin_note,i.created_at,i.sent_at,i.paid_at,c.business_name,c.email,c.affiliate_offer_mode,c.billing_cadence FROM avr_setup_invoices i JOIN avr_customers c ON c.id=i.customer_id ORDER BY CASE i.status WHEN 'draft' THEN 0 WHEN 'sent' THEN 1 WHEN 'paid' THEN 2 ELSE 3 END,i.created_at DESC LIMIT 300").all();
+    const customers=await env.DB.prepare("SELECT c.id,c.business_name,c.email,c.affiliate_offer_mode,c.affiliate_partner_id,c.billing_cadence,i.id AS invoice_id,i.status AS invoice_status FROM avr_customers c LEFT JOIN avr_setup_invoices i ON i.customer_id=c.id AND i.status IN ('draft','sent','paid') ORDER BY c.created_at DESC LIMIT 500").all();
     return json({invoices:r.results||[],customers:customers.results||[]},200,origin,env);
    }
    if(path==="/api/admin/setup-invoices"&&req.method==="POST"){
     const p=await body(req,3000),customerId=String(p.customerId||"").trim();
     if(!/^[a-f0-9-]{36}$/i.test(customerId))throw Error("valid_customer_required");
-    const customer=await env.DB.prepare("SELECT id,business_name,email,affiliate_partner_id,affiliate_offer_mode FROM avr_customers WHERE id=?").bind(customerId).first();
+    const customer=await env.DB.prepare("SELECT id,business_name,email,affiliate_partner_id,affiliate_offer_mode,billing_cadence FROM avr_customers WHERE id=?").bind(customerId).first();
     if(!customer)throw Error("customer_not_found");
+     if(["six_month","annual"].includes(customer.billing_cadence))throw Error("prepaid_setup_fee_waived");
     const existing=await env.DB.prepare("SELECT id,status,amount_due_cents,discount_amount_cents,discount_reason FROM avr_setup_invoices WHERE customer_id=? AND status IN ('draft','sent','paid') LIMIT 1").bind(customerId).first();
     if(existing)return json({created:false,alreadyExists:true,invoice:existing},200,origin,env);
     const discounted=!!customer.affiliate_partner_id&&customer.affiliate_offer_mode==="discount";

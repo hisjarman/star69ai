@@ -101,7 +101,7 @@ async function customerFor(user,env){
  return c;
 }
 async function audit(env,user,action,customerId,detail={}){await env.DB.prepare("INSERT INTO avr_admin_audit(id,admin_user_id,action,customer_id,detail_json) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),user.id,action,customerId||null,JSON.stringify(detail)).run()}
-async function stripeRequest(env,path,params={},method="POST"){if(!env.STRIPE_SECRET_KEY)throw Error("stripe_not_configured");const form=new URLSearchParams();for(const [k,v] of Object.entries(params))if(v!==undefined&&v!==null)form.set(k,String(v));const r=await fetch("https://api.stripe.com/v1/"+path,{method,headers:{Authorization:"Bearer "+env.STRIPE_SECRET_KEY,"Content-Type":"application/x-www-form-urlencoded"},body:method==="GET"?undefined:form.toString()});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error?.message||"stripe_request_failed");return d}
+async function stripeRequest(env,path,params={},method="POST",idempotencyKey=null){if(!env.STRIPE_SECRET_KEY)throw Error("stripe_not_configured");const form=new URLSearchParams();for(const [k,v] of Object.entries(params))if(v!==undefined&&v!==null)form.set(k,String(v));const headers={Authorization:"Bearer "+env.STRIPE_SECRET_KEY,"Content-Type":"application/x-www-form-urlencoded"};if(idempotencyKey)headers["Idempotency-Key"]=String(idempotencyKey).slice(0,255);const r=await fetch("https://api.stripe.com/v1/"+path,{method,headers,body:method==="GET"?undefined:form.toString()});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error?.message||"stripe_request_failed");return d}
 async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",options={}){
  const p=planInfo[plan];if(!p)throw Error("invalid_plan");
  if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;if(selected!=="monthly")throw Error("prepaid_terms_are_paid_in_full_through_paypal_not_stripe");
@@ -113,7 +113,7 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",opt
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId});stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
  const extra=options.metadata||{};const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:options.successUrl||"https://star69ai.com/client/?billing=success",cancel_url:options.cancelUrl||"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"metadata[plan_key]":plan,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType,"subscription_data[metadata][plan_key]":plan};for(const [key,value] of Object.entries(extra))if(value!==undefined&&value!==null){params["metadata["+key+"]"]=String(value);params["subscription_data[metadata]["+key+"]"]=String(value)}
  coupons.forEach((coupon,index)=>{params["discounts["+index+"][coupon]"]=coupon;});
- const session=await stripeRequest(env,"checkout/sessions",params);return {url:session.url,id:session.id,cadence:selected,discountType};
+ const session=await stripeRequest(env,"checkout/sessions",params,"POST",options.idempotencyKey||null);return {url:session.url,id:session.id,cadence:selected,discountType};
 }
 
 async function sha256Hex(value){const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(String(value)));return Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,"0")).join("")}
@@ -147,11 +147,15 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
 }
 async function createPublicStripeSession(env,onboarding,customer,statusToken){
  if(onboarding.stripe_session_id){
-  try{const prior=await stripeRequest(env,"checkout/sessions/"+encodeURIComponent(onboarding.stripe_session_id),{},"GET");if(prior.status==="open"&&prior.url)return {stripeUrl:prior.url,sessionId:prior.id}}catch{}
+  try{
+   const prior=await stripeRequest(env,"checkout/sessions/"+encodeURIComponent(onboarding.stripe_session_id),{},"GET");
+   if(prior.status==="open"&&prior.url)return {stripeUrl:prior.url,sessionId:prior.id};
+   if(prior.status==="complete")return {completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),sessionId:prior.id};
+  }catch{}
  }
- const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),metadata:{avr_paid_onboarding_id:onboarding.id}};
+ const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),metadata:{avr_paid_onboarding_id:onboarding.id,idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)}};
  const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,"",urls);
- await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();
+ await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,stripe_attempts=stripe_attempts+1,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();
  return {stripeUrl:session.url,sessionId:session.id};
 }
 async function publicOnboardingAuth(env,id,token){
@@ -317,8 +321,8 @@ async function capturePublicSetup(req,env,origin){
  const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  const checkout=await createPublicStripeSession(env,latest,customer,p.statusToken);
- await sendMonthlySubscriptionFollowup(env,customer,latest,p.statusToken).catch(e=>console.error("monthly_checkout_followup_failed",e.message));
- return {captured:true,stripeUrl:checkout.stripeUrl};
+ if(checkout.stripeUrl)await sendMonthlySubscriptionFollowup(env,customer,latest,p.statusToken).catch(e=>console.error("monthly_checkout_followup_failed",e.message));
+ return checkout.completeUrl?{captured:true,completeUrl:checkout.completeUrl}:{captured:true,stripeUrl:checkout.stripeUrl};
 }
 async function resumePublicCheckout(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
@@ -331,7 +335,7 @@ async function resumePublicCheckout(req,env,origin){
  }
  if(ob.plan_payment_provider==="stripe"&&(ob.setup_status==="paid"||ob.setup_status==="not_required")){
   const checkout=await createPublicStripeSession(env,ob,customer,p.statusToken);
-  return {paymentStep:"subscription",stripeUrl:checkout.stripeUrl};
+  return checkout.completeUrl?{completeUrl:checkout.completeUrl}:{paymentStep:"subscription",stripeUrl:checkout.stripeUrl};
  }
  if(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status==="paid"){
   return {completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};

@@ -328,6 +328,7 @@ async function startPublicCheckout(req,env,origin){
  await maybeProvisionPaidOnboarding(env,onboardingId);
  const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(customerId).first();
+ if(subscribeNow&&!ob?.agent_id)return {accepted:true,paymentStep:"demo_review",completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboardingId)+"&status_token="+encodeURIComponent(statusToken),demoReady:false,subscribeLater:true,setupFeeDeferred:setupCents>0};
  if(subscribeNow){
   if(paymentProvider==="stripe"){
    const checkout=await createPublicStripeSession(env,ob,customer,statusToken);

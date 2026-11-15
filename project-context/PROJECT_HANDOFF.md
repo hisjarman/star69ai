@@ -1,3 +1,16 @@
+## Subscription overage protection — 2026-11-15
+
+- Feature branch: feature/75-percent-overage-protection-2026-11-15. Not merged or deployed.
+- New migration: cloudflare/migrations/20261115_overage_protection.sql adds per-customer overage_limit_minutes (0–2,000) and an idempotent warning/block notification ledger.
+- New and existing customers default to 0 authorized overage until the administrator explicitly sets an allowance. Zero means calls stop after included minutes and available Minute Vault minutes are exhausted.
+- The administrator can set an approved overage allowance in the customer workspace. Star69AI emails at 50% and blocks new inbound AI calls at 75% of that approved allowance.
+- Retell phone numbers use the pre-answer inbound webhook at https://avr-platform-api.hisjarman.workers.dev/webhooks/retell/inbound. New number assignments attach it automatically; Agency Admin includes a bulk action to attach it to existing assigned numbers.
+- The inbound handler verifies the Retell signature, maps the dialed number to its customer, checks account/subscription eligibility and current included/vault/overage usage, and returns the assigned agent only when eligible. A blocked call receives an empty inbound response.
+- Calls already connected are not terminated by this guard; their usage can exceed the threshold, and concurrent calls can increase the overrun. Test this before promising an exact ceiling.
+- The client portal displays the authorized overage allowance and the 75% stop point. The portal still correctly says overage amounts are estimates: Stripe metered usage reporting and automatic overage charging are not implemented by this branch.
+- Do not enable PAYG_INGRESS_GATE_ENABLED; Flex still requires its separate wallet deduction and ingress tests.
+- Before rollout: apply the migration, deploy the Worker, use Agency Admin → Agents & numbers → Enable call protection on assigned numbers, then test 0 allowance, 50% warning, 75% block, prepaid-term eligibility, suspended accounts, webhook retries, email failures and concurrency. No production D1 migration, Worker deployment, Retell number update or Stripe setting change was made by this branch.
+
 ## Prepaid pricing and setup-fee waiver update — 2026-11-14
 
 - Approved prepaid offers: six months at 20% off the standard subscription total; twelve months at 30% off. Totals: Starter $715.20 / $1,251.60; Growth $1,195.20 / $2,091.60; Pro $1,915.20 / $3,351.60.

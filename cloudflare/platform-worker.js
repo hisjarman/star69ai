@@ -287,12 +287,38 @@ async function maybeProvisionPaidOnboarding(env,onboardingId){
   if(env.RESEND_API_KEY&&env.RESEND_FROM_EMAIL)await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-paid-onboarding-alert/"+onboardingId},body:JSON.stringify({from:resendFrom(env),to:["support@star69ai.com"],subject:"Star69AI paid onboarding needs review",text:"Paid onboarding "+onboardingId+" needs review. Error: "+String(e.message||"unknown").slice(0,300)+". Check the Agency Admin and retry provisioning after correcting the issue."})}).catch(()=>{});
  }
 }
+async function startPublicFlexSignup(p,env,contact,email,phone,business,industry){
+ if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
+ if(!env.CLERK_SECRET_KEY)throw Error("account_invitation_not_configured");
+ const existing=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=? LIMIT 1").bind(email).first();
+ if(existing)throw Error("customer_email_already_registered_sign_in_or_contact_support");
+ const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID();
+ const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),notes:String(p.notes||"").slice(0,4000),planInterest:"flex",billingPreference:"pay_as_you_go",privacyConsent:true,submittedAt:now};
+ await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,payg_enabled,included_minutes,billing_cadence,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',NULL,1,0,'monthly',?,?,?)").bind(customerId,business,contact,email,phone,"Flex account. Prepaid PayPal wallet credit is required before calls can be accepted; Star69AI must assign the receptionist and number before live service.",now,now).run();
+ await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'new',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Flex pay-as-you-go activation request").slice(0,3000),"Public Flex signup",JSON.stringify(discovery),customerId,now,now).run();
+ await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status) VALUES(?,'pending') ON CONFLICT(customer_id) DO NOTHING").bind(customerId).run();
+ let accountDeliveryStatus="invitation_failed",invitationId=null;
+ try{
+  const lookup=await fetch("https://api.clerk.com/v1/users?email_address[]="+encodeURIComponent(email),{headers:{Authorization:"Bearer "+env.CLERK_SECRET_KEY,Accept:"application/json"}});
+  if(!lookup.ok)throw Error("clerk_user_lookup_failed");
+  const users=await lookup.json();
+  if(Array.isArray(users)&&users.length)accountDeliveryStatus="existing_account";
+  else{
+   const invite=await fetch("https://api.clerk.com/v1/invitations",{method:"POST",headers:{Authorization:"Bearer "+env.CLERK_SECRET_KEY,"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({email_address:email,notify:true,public_metadata:{avr_customer_id:customerId}})});
+   const data=await invite.json().catch(()=>({}));if(!invite.ok)throw Error("clerk_invitation_failed");
+   invitationId=data.id||null;accountDeliveryStatus="invitation_sent";
+  }
+ }catch(e){console.error("flex_account_invitation_failed",e.message)}
+ await env.DB.prepare("UPDATE avr_customers SET admin_notes=? WHERE id=?").bind("Flex account; "+accountDeliveryStatus+"; "+(invitationId||"")+"; "+String(p.notes||"").slice(0,1000),customerId).run();
+ return {accepted:true,paymentStep:"flex_wallet",completeUrl:"https://star69ai.com/checkout-complete.html?flex_signup=1&email="+encodeURIComponent(email),accountDeliveryStatus};
+}
 async function startPublicCheckout(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
  const p=await body(req,30000);
  if(String(p.websiteHoneypot||p.websiteTrap||"").trim())return {accepted:true};
  const contact=String(p.contactName||"").trim().slice(0,120),email=String(p.email||"").trim().toLowerCase(),phone=String(p.phone||"").trim().slice(0,40),business=String(p.businessName||"").trim().slice(0,160),industry=String(p.industry||"").trim().slice(0,100),plan=String(p.plan||"").toLowerCase(),cadence=String(p.cadence||"monthly"),subscribeNow=p.subscribeNow===true;
  if(contact.length<2||business.length<2||phone.length<5||! /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||industry.length<2)throw Error("complete_contact_business_and_industry_details_required");
+ if(plan==="flex")return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);
  if(!planInfo[plan]||!["monthly","six_month","annual"].includes(cadence))throw Error("valid_subscription_plan_required");
  if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
  if(!env.RETELL_API_KEY||!env.CLERK_SECRET_KEY)throw Error("automated_demo_and_account_provisioning_not_configured");
@@ -766,6 +792,7 @@ async function route(req,env){
    await env.DB.prepare("INSERT OR IGNORE INTO avr_payg_wallet_ledger(id,customer_id,amount_cents,entry_type,source_ref,note,created_by) VALUES(?,?,?,'top_up',?,?,?)").bind(crypto.randomUUID(),c.id,Number(topup.amount_cents),"paypal_topup_"+topup.id,"Verified PayPal top-up "+String(capture.id||""),"paypal_verified").run();
    await env.DB.prepare("UPDATE avr_payg_topups SET status='paid',paypal_capture_id=?,updated_at=? WHERE id=?").bind(capture.id||null,now,topup.id).run();
    await env.DB.prepare("UPDATE avr_payg_wallets SET status='funded',updated_at=? WHERE customer_id=?").bind(now,c.id).run();
+   await env.DB.prepare("UPDATE avr_customers SET status='active',updated_at=? WHERE id=? AND payg_enabled=1").bind(now,c.id).run();
    return json({captured:true,amountCents:Number(topup.amount_cents)},200,origin,env);
   }
   if(path==="/api/client/payg-wallet"&&req.method==="GET"){

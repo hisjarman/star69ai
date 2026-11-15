@@ -44,7 +44,7 @@ async function audit(env,user,action,customerId,detail={}){await env.DB.prepare(
 async function stripeRequest(env,path,params={},method="POST"){if(!env.STRIPE_SECRET_KEY)throw Error("stripe_not_configured");const form=new URLSearchParams();for(const [k,v] of Object.entries(params))if(v!==undefined&&v!==null)form.set(k,String(v));const r=await fetch("https://api.stripe.com/v1/"+path,{method,headers:{Authorization:"Bearer "+env.STRIPE_SECRET_KEY,"Content-Type":"application/x-www-form-urlencoded"},body:method==="GET"?undefined:form.toString()});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error?.message||"stripe_request_failed");return d}
 async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  const p=planInfo[plan];if(!p)throw Error("invalid_plan");
- const selected=["monthly","six_month","annual"].includes(cadence)?cadence:"monthly";
+ if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;
  const priceEnv=selected==="six_month"?p.sixMonthPriceEnv:selected==="annual"?p.annualPriceEnv:p.priceEnv;
  const price=env[priceEnv];if(!price||price==="price_replace_me")throw Error(selected==="monthly"?"stripe_price_id_missing_"+plan:"prepaid_price_not_configured");
  const affiliateId=c.affiliate_partner_id||"";let coupon="",discountType="none";
@@ -73,8 +73,8 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   const commissionableCents=lines.reduce((sum,line)=>{
    const subscriptionLine=line.type==="subscription"||!!line.subscription_item||line.parent?.type==="subscription_item_details";
    const proration=line.proration===true||line.parent?.subscription_item_details?.proration===true;
-   const amount=Number(line.amount||0);
-   return subscriptionLine&&!proration&&amount>0?sum+amount:sum;
+   const amount=Number(line.amount||0),discounts=Array.isArray(line.discount_amounts)?line.discount_amounts.reduce((n,item)=>n+Number(item.amount||0),0):0,netAmount=Math.max(0,amount-discounts);
+   return subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
   },0);
   if(customer&&partnerId&&commissionableCents>0){
    const paidAt=new Date(Number(ev.created||Math.floor(Date.now()/1000))*1000).toISOString();
@@ -239,7 +239,7 @@ async function route(req,env){
     additionalNeeds:Array.isArray(p.additionalNeeds)?p.additionalNeeds.slice(0,20).map(x=>String(x).slice(0,180)):[],
     outboundAiCalls:String(p.outboundAiCalls||"").slice(0,500),automatedSms:String(p.automatedSms||"").slice(0,500),
     humanEscalation:String(p.humanEscalation||"").slice(0,1000),phoneSetup:String(p.phoneSetup||"").slice(0,300),
-    planInterest:String(p.planInterest||"").slice(0,200),notes:String(p.notes||"").slice(0,4000),
+    planInterest:String(p.planInterest||"").slice(0,200),billingPreference:["monthly","six_month","annual"].includes(String(p.billingPreference||""))?String(p.billingPreference):"monthly",notes:String(p.notes||"").slice(0,4000),
     privacyConsent:p.privacyConsent===true,submittedAt:String(p.submittedAt||new Date().toISOString()).slice(0,50)
    }:null;
    const discoveryJson=discovery?JSON.stringify(discovery):null,now=new Date().toISOString();

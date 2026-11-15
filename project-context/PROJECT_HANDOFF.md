@@ -1,7 +1,7 @@
 ## Subscription overage protection — 2026-11-15
 
 - Feature branch: feature/75-percent-overage-protection-2026-11-15. Not merged or deployed.
-- New migration: cloudflare/migrations/20261115_overage_protection.sql adds per-customer overage_limit_minutes (0–10,000) and an idempotent warning/block notification ledger.
+- New migration: cloudflare/migrations/20261115_overage_protection.sql adds per-customer overage_limit_minutes (0–2,000) and an idempotent warning/block notification ledger.
 - New and existing customers default to 0 authorized overage until the administrator explicitly sets an allowance. Zero means calls stop after included minutes and available Minute Vault minutes are exhausted.
 - The administrator can set an approved overage allowance in the customer workspace. Star69AI emails at 50% and blocks new inbound AI calls at 75% of that approved allowance.
 - Retell phone numbers use the pre-answer inbound webhook at https://avr-platform-api.hisjarman.workers.dev/webhooks/retell/inbound. New number assignments attach it automatically; Agency Admin includes a bulk action to attach it to existing assigned numbers.

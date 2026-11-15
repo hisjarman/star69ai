@@ -50,14 +50,7 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode=""){
  const affiliateId=c.affiliate_partner_id||"",partnerDiscount=affiliateId&&c.affiliate_offer_mode==="discount";let coupons=[],discountType="none";
  const code=String(promoCode||"").trim().toUpperCase();
  if(selected!=="monthly"&&code)throw Error("prepaid_offer_cannot_be_combined_with_promo");
- if(selected==="monthly"&&code){
-  if(code!=="CALLSMART10")throw Error("invalid_promo_code");
-  if(partnerDiscount)throw Error("partner_discount_cannot_be_combined_with_challenge");
-  const challengeCoupon=env.STRIPE_COUPON_CALLSMART10;
-  if(!challengeCoupon)throw Error("challenge_offer_not_configured");
-  coupons.push(challengeCoupon);
-  discountType="challenge_10_first_month";
- }
+ if(selected==="monthly"&&code)throw Error("challenge_reward_redemption_not_yet_enabled");
  else if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType="partner_15_for_12_months";}
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId});stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
  const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:"https://star69ai.com/client/?billing=success",cancel_url:"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType};
@@ -601,6 +594,40 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     await env.DB.prepare("UPDATE avr_support_tickets SET status=?,admin_reply=COALESCE(?,admin_reply),updated_at=? WHERE id=?").bind(status,reply,new Date().toISOString(),id).run();
     await audit(env,u,"support_ticket_updated",exists.customer_id,{ticketId:id,status});
     return json({saved:true},200,origin,env)
+   }
+   if(path==="/api/admin/setup-invoices"&&req.method==="GET"){
+    const r=await env.DB.prepare("SELECT i.id,i.customer_id,i.base_amount_cents,i.discount_amount_cents,i.amount_due_cents,i.discount_reason,i.status,i.paypal_invoice_url,i.admin_note,i.created_at,i.sent_at,i.paid_at,c.business_name,c.email,c.affiliate_offer_mode FROM avr_setup_invoices i JOIN avr_customers c ON c.id=i.customer_id ORDER BY CASE i.status WHEN 'draft' THEN 0 WHEN 'sent' THEN 1 WHEN 'paid' THEN 2 ELSE 3 END,i.created_at DESC LIMIT 300").all();
+    const customers=await env.DB.prepare("SELECT c.id,c.business_name,c.email,c.affiliate_offer_mode,c.affiliate_partner_id,i.id AS invoice_id,i.status AS invoice_status FROM avr_customers c LEFT JOIN avr_setup_invoices i ON i.customer_id=c.id AND i.status IN ('draft','sent','paid') ORDER BY c.created_at DESC LIMIT 500").all();
+    return json({invoices:r.results||[],customers:customers.results||[]},200,origin,env);
+   }
+   if(path==="/api/admin/setup-invoices"&&req.method==="POST"){
+    const p=await body(req,3000),customerId=String(p.customerId||"").trim();
+    if(!/^[a-f0-9-]{36}$/i.test(customerId))throw Error("valid_customer_required");
+    const customer=await env.DB.prepare("SELECT id,business_name,email,affiliate_partner_id,affiliate_offer_mode FROM avr_customers WHERE id=?").bind(customerId).first();
+    if(!customer)throw Error("customer_not_found");
+    const existing=await env.DB.prepare("SELECT id,status,amount_due_cents,discount_amount_cents,discount_reason FROM avr_setup_invoices WHERE customer_id=? AND status IN ('draft','sent','paid') LIMIT 1").bind(customerId).first();
+    if(existing)return json({created:false,alreadyExists:true,invoice:existing},200,origin,env);
+    const discounted=!!customer.affiliate_partner_id&&customer.affiliate_offer_mode==="discount";
+    const base=9900,discount=discounted?4950:0,amount=base-discount,id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO avr_setup_invoices(id,customer_id,base_amount_cents,discount_amount_cents,amount_due_cents,discount_reason,status,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,'draft',?,?,?)").bind(id,customerId,base,discount,amount,discounted?"partner_referral_50":"none",u.email,now,now).run();
+    await audit(env,u,"setup_invoice_draft_created",customerId,{invoiceId:id,amountDueCents:amount,discountReason:discounted?"partner_referral_50":"none"});
+    return json({created:true,invoice:{id,customer_id:customerId,base_amount_cents:base,discount_amount_cents:discount,amount_due_cents:amount,discount_reason:discounted?"partner_referral_50":"none",status:"draft"}},201,origin,env);
+   }
+   const setupInvoiceMatch=path.match(/^\/api\/admin\/setup-invoices\/([a-f0-9-]{36})$/i);
+   if(setupInvoiceMatch&&req.method==="PATCH"){
+    const id=setupInvoiceMatch[1],p=await body(req,4000),status=String(p.status||"");
+    if(!["draft","sent","paid","void"].includes(status))throw Error("invalid_setup_invoice_status");
+    const existing=await env.DB.prepare("SELECT id,customer_id,status,paypal_invoice_url FROM avr_setup_invoices WHERE id=?").bind(id).first();
+    if(!existing)throw Error("setup_invoice_not_found");
+    const paypalUrl=p.paypalInvoiceUrl===undefined?existing.paypal_invoice_url:String(p.paypalInvoiceUrl||"").trim().slice(0,1000);
+    if(status==="sent"&&(!paypalUrl||!/^https:\/\//i.test(paypalUrl)))throw Error("paypal_invoice_url_required");
+    if(status==="paid"&&existing.status!=="sent"&&existing.status!=="paid")throw Error("mark_invoice_sent_before_paid");
+    if(existing.status==="paid"&&status!=="paid")throw Error("paid_setup_invoice_is_final");
+    if(existing.status==="void"&&status!=="void")throw Error("void_setup_invoice_is_final");
+    const now=new Date().toISOString(),note=p.adminNote===undefined?null:String(p.adminNote).trim().slice(0,1000);
+    await env.DB.prepare("UPDATE avr_setup_invoices SET status=?,paypal_invoice_url=?,admin_note=COALESCE(?,admin_note),sent_at=CASE WHEN ?='sent' THEN COALESCE(sent_at,?) ELSE sent_at END,paid_at=CASE WHEN ?='paid' THEN COALESCE(paid_at,?) ELSE paid_at END,updated_at=? WHERE id=?").bind(status,paypalUrl,note,status,now,status,now,now,id).run();
+    await audit(env,u,"setup_invoice_status_updated",existing.customer_id,{invoiceId:id,previousStatus:existing.status,status});
+    return json({saved:true},200,origin,env);
    }
    if(path==="/api/admin/overview"&&req.method==="GET"){const [cc,active,subs,calls,mins]=await Promise.all([env.DB.prepare("SELECT COUNT(*) n FROM avr_customers").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_customers WHERE status='active'").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_customers WHERE subscription_status IN ('active','trialing')").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_calls").first(),env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) n FROM avr_calls WHERE start_timestamp>=?").bind(new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).first()]);return json({customers:cc.n,activeCustomers:active.n,activeSubscriptions:subs.n,totalCalls:calls.n,minutesThisMonth:Math.ceil(Number(mins.n||0)/60000)},200,origin,env)}
    if(path==="/api/admin/customers"&&req.method==="GET"){const r=await env.DB.prepare("SELECT c.*, (SELECT COUNT(*) FROM avr_calls x WHERE x.customer_id=c.id) AS total_calls,(SELECT COALESCE(SUM(duration_ms),0) FROM avr_calls x WHERE x.customer_id=c.id AND x.start_timestamp>=?) AS usage_ms FROM avr_customers c ORDER BY c.created_at DESC LIMIT 500").bind(new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).all();return json({customers:(r.results||[]).map(c=>({...c,usage_minutes:Math.ceil(Number(c.usage_ms||0)/60000),usage_ms:undefined}))},200,origin,env)}

@@ -1,3 +1,16 @@
+## Partner setup invoice administration and offer corrections — 2026-11-14
+
+- Feature branch: `feature/verified-challenge-rewards-paypal-setup-2026-11-14`. Not merged or deployed.
+- Added D1 migration `cloudflare/migrations/20261114_setup_invoice_paypal_admin.sql` for an auditable setup-invoice ledger. Apply it to the existing `avr-trust-lab` D1 database before deploying the Worker.
+- Added admin-only Worker routes to list setup invoices, create server-priced drafts, and record sent/paid status. Server-side calculation is fixed at $99.00 standard or $49.50 for a customer whose stored attribution is a discounted partner referral. The client cannot submit or override the invoice amount.
+- Added an Agency Admin "Setup invoices" tab. The administrator creates the invoice in PayPal under SIMIAPP CLOUD, pastes the PayPal invoice URL, marks it sent, and confirms paid only after checking PayPal. This is a manual/admin-assisted workflow, NOT a PayPal API integration or automatic invoice creation.
+- Setup invoice commission remains zero: partner commissions continue to be calculated only on eligible collected subscription revenue, net of customer subscription discounts.
+- Public pricing prepaid terms corrected to 25% off six months and 35% off twelve months. Displayed totals: Starter $670.50 / $1,162.20; Growth $1,120.50 / $1,942.20; Pro $1,795.50 / $3,112.20.
+- Removed the legacy `CALLSMART10` first-month coupon path from monthly checkout. Any manually supplied promo code now fails closed with `challenge_reward_redemption_not_yet_enabled`. Partner 15%-for-12-months monthly checkout remains, and prepaid offers remain mutually exclusive.
+- AI Challenge reward verification is NOT complete in this branch. Browser localStorage remains learning progress only; challenge rewards are explicitly disclosed as not yet automatically applied. Do not issue or promise Starter/Pro/Expert reward discounts until server-side challenge-session verification, one-time customer redemption, Stripe 12-month coupons and the Expert setup-fee path are implemented and tested.
+- Validation so far: Admin JavaScript parses; Worker JavaScript parses after stripping the module export for syntax-only validation; static checks confirm the invoice UI, endpoints, pricing totals and legacy coupon rejection. No D1 migration has been applied, no live PayPal invoice has been created, and no browser/live checkout tests or deployment have been performed.
+- Next steps before merge: inspect the full PR diff; test the migration against a D1 staging copy; test admin endpoints for standard/discounted customers, idempotent invoice creation, invalid transitions and URL validation; test the setup invoice UI; then implement server-authoritative challenge sessions and Stripe reward redemption in a separate reviewed phase.
+
 # Star69AI — Project Context Handoff
 
 Last consolidated: 2026-11-11

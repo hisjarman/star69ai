@@ -895,3 +895,15 @@ Known prior issue to recheck against current source: a portal request reported `
 - Challenge levels all unlock the same 10% code; difficulty changes points/experience, not discount value. Public pages disclose first-month-only limits, excluded setup/overage/tax/third-party charges, and non-stacking terms. Partner link messaging dynamically shows the partner offer when the existing referral cookie is present.
 - Partner commissions continue to use eligible subscription invoice amounts actually collected, after any first-month discount; attribution is preserved even when a referred customer uses the challenge code instead of the partner discount.
 - Implementation branch: `feature/transparent-promotions-prepaid-partner-discounts-2026-11-14`. GitHub Pages publication and Cloudflare Worker deployment are separate; checkout fails closed when required Stripe price/coupon configuration is missing.
+
+
+## Partner referral discount choice — implementation branch (2026-11-14)
+
+- Feature branch: `feature/partner-link-discount-choice`; changes are not merged or deployed.
+- Partner Center provides two referral links: discounted (`?ref=CODE&offer=discount`) and standard (`?ref=CODE&offer=standard`). Both preserve the 90-day attribution window and are eligible for the same partner commission tiers.
+- Discounted link: 15% off the first monthly subscription payment. A valid 10% challenge code can stack with the partner offer for 25% off that first monthly payment. Prepaid billing offers remain separate and cannot be combined with promo codes. Standard link has no partner customer discount, but referral attribution and commission eligibility are preserved.
+- Commission tiers are automatic: 20% for 1–4 active referred customers, 25% for 5–14, and 30% for 15+. Commission is calculated on eligible subscription amounts actually received after discounts, excluding taxes, refunds, chargebacks, credits, unpaid invoices, setup fees, phone-number rental, carrier charges, usage overage and third-party pass-throughs. 30-day validation hold; $50 minimum payout; monthly review.
+- The Stripe commission calculation uses the already-discounted invoice line amount excluding tax; do not subtract Stripe discount allocations a second time.
+- New migration: `cloudflare/migrations/20261114_partner_discount_link_choice.sql`. Apply it to the existing `avr-trust-lab` D1 database before deploying updated Workers.
+- Required Stripe configuration: create a 15% first-month coupon and set its ID as Worker variable `STRIPE_COUPON_PARTNER15`. Existing challenge coupon remains `STRIPE_COUPON_CALLSMART10`. Confirm the two coupons are compatible for stacking in Stripe test mode.
+- Deploy `avr-trust-lab-api` and `avr-platform-api` separately after migration and configuration. Test both link types end-to-end, including a standard referral that still credits a commission, a discounted referral, stacked challenge + partner discount, invoice commission base, refund/reversal behavior and the 30-day payout hold. GitHub Pages deployment alone does not deploy Workers or apply D1 migrations.

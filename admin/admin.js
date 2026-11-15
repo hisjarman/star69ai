@@ -46,7 +46,7 @@ async function loadDemoRequests(){
   if(v.includes("dental")||v.includes("medical")||v.includes("health")||v.includes("clinic"))return ["A new patient asks about office services and requests a callback","An existing patient asks to reschedule without disclosing private information","A caller raises an urgent clinical concern and is directed to qualified staff or emergency services when appropriate"];
   return ["A new caller asks what services the business provides","A prospect requests an estimate or appointment and shares contact details","A caller asks a question not covered by the supplied FAQs; the agent should not guess"];
  };
- const planLines=["Starter — $149/month — 300 included voice minutes","Growth — $249/month — 600 included voice minutes","Pro — $399/month — 1,000 included voice minutes"];
+ const planLines=["Starter — $149/month — 300 included voice minutes","Growth — $249/month — 600 included voice minutes","Pro — $399/month — 1,200 included voice minutes"];
  const presentationText=r=>{
   const x=parseDiscovery(r),features=Array.isArray(x.additionalNeeds)?x.additionalNeeds:[];
   const value=v=>String(v||"Not provided").trim()||"Not provided";

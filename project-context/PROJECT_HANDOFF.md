@@ -944,3 +944,38 @@ This section supersedes the earlier activation-status notes above where they des
 - Each answered scenario opens a context-specific lesson in `learning-center/receptionist-architect-curriculum.html`. The curriculum covers triage, knowledge quality, lead intake, scheduling, human handoff, privacy/consent, AI/tool security, conversation design and quality assurance, with implementation checklists and external references.
 - IMPORTANT: local browser progress is not proof of eligibility. Do not activate or honor any challenge discount based solely on client-side storage. Server-side challenge attempt/progress verification, one-time customer redemption, Stripe promotion configuration for all three tiers, and end-to-end checkout/webhook tests remain required before advertising challenge rewards as redeemable.
 - No Worker, D1 or Stripe changes are made by this frontend/content branch. Keep it unmerged until backend reward verification and browser/accessibility testing are complete.
+
+
+## Partner-first navigation, private partner economics and technology timeline — 2026-11-15
+
+- Feature branch: `feature/partner-header-private-console-history-timeline-2026-11-15`.
+- Shared site header adds a visually prominent **Partner Login** action linking to `/partner-portal/`, while preserving Client Login and Get Started. The mobile navigation also exposes Partner Login.
+- Public `/partners/` page no longer publishes commission percentages, tier thresholds, earnings examples, referral-link options or customer discount details. It presents the application and a private Partner Center sign-in path instead.
+- Authenticated Partner Center now contains a private program disclosure covering the commission schedule (20% for 1–4 active referrals, 25% for 5–14, 30% for 15+), commission base/exclusions, 90-day intended attribution, validation/payout terms, the 15% subscription discount for 12 months, and non-stacking with AI Challenge or prepaid offers.
+- Important setup-fee limitation disclosed inside Partner Center: the approved 50% setup-fee discount is not yet integrated into the separate one-time setup invoice flow. Do not tell partners it is automatically applied until that backend/invoice work is completed and tested. The discounted referral link currently represents the subscription discount only.
+- Homepage top area now shows only a compact, seven-stop year timeline immediately below the shared header. Selecting a year opens the corresponding detailed history card in the technology section located after the homepage demo-intake form.
+- The historical chapters cover Bell and Watson / Bell Telephone Company (1876), George W. Coy / New Haven District Telephone Company (1878), Almon B. Strowger / automatic switching (1891), Bell Laboratories and Touch-Tone (1963), Martin Cooper / Motorola cellular prototype (1973), VocalTec / early VoIP (1995+), and the evolution from ELIZA and Transformer research to modern conversational voice AI.
+- Historical references are linked from the detail cards, including the U.S. patents, National Park Service, Bell System archive, Motorola history, IEEE Spectrum and the original ELIZA paper.
+- Static website files only. No Worker, D1, Stripe, Clerk or production configuration was changed. The partner setup-fee discount remains a known backend gap and is clearly disclosed in the private console.
+- QA still required before merge: desktop/mobile header layout on representative pages; partner public-page content audit; signed-in/approved and signed-out/unapproved Partner Center views; year-card scroll/accordion behavior; keyboard, reduced-motion and mobile timeline review; HTML and JavaScript validation. Do not merge without explicit user approval.
+
+
+## Partner offer exclusivity enforcement — 2026-11-15
+
+- In `cloudflare/platform-worker.js`, monthly checkout now rejects `CALLSMART10` when the customer is attributed to a discounted partner link (`partner_discount_cannot_be_combined_with_challenge`). A standard referral can still use the AI Challenge code; a discounted partner referral uses the partner subscription offer instead.
+- Removed the old Checkout-completion webhook behavior that attached a partner follow-up coupon after a stacked first-month challenge/partner coupon.
+- Prepaid checkout already rejects promo codes and does not apply the monthly partner coupon; prepaid prices remain their own standalone offer.
+- The partner setup-fee discount remains unimplemented because setup is invoiced separately; Partner Center warns partners not to promise automatic application until that invoice workflow is updated.
+- This is a source change only. It must be deployed to the existing `avr-platform-api` Worker separately from GitHub Pages. Do not claim production enforcement until the Worker deployment and Stripe test-mode checkout/webhook cases are verified.
+
+
+### Review and static validation — PR #144
+
+- Draft PR: https://github.com/hisjarman/star69ai/pull/144
+- Compared against current `main`: branch is 15 commits ahead and 0 behind; GitHub reports the PR mergeable with a clean merge state.
+- Static checks completed: JavaScript syntax passed for `site-header.js`, `phone-evolution.js`, `partner-portal/partner-portal.js`, and the ES-module platform Worker after normalizing its `export default` for parsing; modified CSS files have balanced braces.
+- Structural checks passed: homepage, public partner page and Partner Center have balanced key HTML tags. The homepage's pre-existing extra closing tags around the hero were corrected.
+- Content checks passed: the public partner page no longer contains commission rates, discount percentages, customer offer specifics, plan-level commission examples or referral URL fields. Partner economics and link choices remain within the hidden, authenticated Partner Center dashboard.
+- Timeline checks passed: seven top year links match seven detail cards, and the detailed history section appears after the homepage intake form.
+- Checkout source check passed: a discounted partner referral cannot use the AI Challenge promo code; the old stacked coupon and follow-up webhook code paths are removed. Prepaid checkout continues to reject promo codes.
+- Not yet completed: visual browser QA, live authenticated partner-account verification, Stripe test checkout/webhook tests, Cloudflare Worker deployment, and GitHub Pages publication. PR remains draft and unmerged.

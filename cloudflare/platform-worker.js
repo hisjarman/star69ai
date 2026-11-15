@@ -737,12 +737,42 @@ async function route(req,env){
    const order=await createPublicPaypalOrder(env,fresh,c,statusToken);
    return json({approvalUrl:order.approvalUrl,setupAmountCents:Number(ob.setup_amount_cents),paymentStep:"setup_fee"},200,origin,env);
   }
+  if(path==="/api/client/payg-wallet/topup"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");if(!isFlexCustomer(c))throw Error("flex_wallet_only");
+   const p=await body(req,2000),amount=Number(p.amount),amountCents=Math.round(amount*100);
+   if(!Number.isFinite(amount)||!Number.isInteger(amountCents)||amountCents<500||amountCents>50000||amountCents%500!==0)throw Error("topup_must_be_in_5_dollar_increments_between_5_and_500");
+   if(!env.PAYPAL_CLIENT_ID||!env.PAYPAL_CLIENT_SECRET)throw Error("paypal_not_configured");
+   const now=new Date().toISOString(),topupId=crypto.randomUUID();
+   await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status) VALUES(?,'pending') ON CONFLICT(customer_id) DO NOTHING").bind(c.id).run();
+   await env.DB.prepare("INSERT INTO avr_payg_topups(id,customer_id,amount_cents,status,created_at,updated_at) VALUES(?,?,?,'pending',?,?)").bind(topupId,c.id,amountCents,now,now).run();
+   try{
+    const order=await paypalRequest(env,"/v2/checkout/orders","POST",{intent:"CAPTURE",purchase_units:[{reference_id:topupId,custom_id:c.id,invoice_id:"S69FLEX-"+topupId.replace(/-/g,"").slice(0,24),description:"Star69AI Flex prepaid voice credit",amount:{currency_code:"USD",value:(amountCents/100).toFixed(2)}}],application_context:{brand_name:"Star69AI",user_action:"PAY_NOW",return_url:"https://star69ai.com/client/?payg_topup=1&topup_id="+encodeURIComponent(topupId),cancel_url:"https://star69ai.com/client/?payg_topup_cancelled=1"}},"S69-flex-topup-"+topupId);
+    const approval=(order.links||[]).find(x=>x.rel==="approve"||x.rel==="payer-action")?.href;if(!order.id||!approval)throw Error("paypal_approval_link_missing");
+    await env.DB.prepare("UPDATE avr_payg_topups SET paypal_order_id=?,updated_at=? WHERE id=?").bind(order.id,new Date().toISOString(),topupId).run();
+    return json({approvalUrl:approval,topupId,amountCents},200,origin,env);
+   }catch(e){await env.DB.prepare("UPDATE avr_payg_topups SET status='failed',updated_at=? WHERE id=?").bind(new Date().toISOString(),topupId).run();throw e}
+  }
+  if(path==="/api/client/payg-wallet/topup/capture"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");if(!isFlexCustomer(c))throw Error("flex_wallet_only");
+   const p=await body(req,3000),topup=await env.DB.prepare("SELECT * FROM avr_payg_topups WHERE id=? AND customer_id=?").bind(String(p.topupId||""),c.id).first();
+   if(!topup)throw Error("topup_not_found");if(topup.status==="paid")return json({captured:true,amountCents:Number(topup.amount_cents)},200,origin,env);
+   const orderId=String(p.orderId||"").trim();if(!orderId||orderId!==topup.paypal_order_id)throw Error("paypal_order_mismatch");
+   let order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId),"GET");
+   if(order.status!=="COMPLETED")order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId)+"/capture","POST",{},"S69-FLEX-CAPTURE-"+topup.id);
+   const purchase=(order.purchase_units||[])[0]||{},capture=purchase.payments?.captures?.[0],amount=capture?.amount||purchase.amount;
+   if(order.status!=="COMPLETED"||purchase.reference_id!==topup.id||purchase.custom_id!==c.id||capture?.status!=="COMPLETED"||amount?.currency_code!=="USD"||Number(amount?.value)!==Number(topup.amount_cents)/100)throw Error("paypal_payment_not_confirmed");
+   const now=new Date().toISOString();
+   await env.DB.prepare("INSERT OR IGNORE INTO avr_payg_wallet_ledger(id,customer_id,amount_cents,entry_type,source_ref,note,created_by) VALUES(?,?,?,'top_up',?,?,?)").bind(crypto.randomUUID(),c.id,Number(topup.amount_cents),"paypal_topup_"+topup.id,"Verified PayPal top-up "+String(capture.id||""),"paypal_verified").run();
+   await env.DB.prepare("UPDATE avr_payg_topups SET status='paid',paypal_capture_id=?,updated_at=? WHERE id=?").bind(capture.id||null,now,topup.id).run();
+   await env.DB.prepare("UPDATE avr_payg_wallets SET status='funded',updated_at=? WHERE customer_id=?").bind(now,c.id).run();
+   return json({captured:true,amountCents:Number(topup.amount_cents)},200,origin,env);
+  }
   if(path==="/api/client/payg-wallet"&&req.method==="GET"){
-   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);if(!isFlexCustomer(c))throw Error("flex_wallet_only");
    const wallet=await env.DB.prepare("SELECT status,currency,created_at,updated_at FROM avr_payg_wallets WHERE customer_id=?").bind(c.id).first();
    const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(c.id).first();
-   const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";
-   return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>0&&gateEnabled,ingressGateEnabled:gateEnabled,activationNote:gateEnabled?"Wallet balance is positive.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
+   const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";const transactions=await env.DB.prepare("SELECT id,amount_cents,entry_type,source_ref,note,created_at FROM avr_payg_wallet_ledger WHERE customer_id=? ORDER BY created_at DESC LIMIT 25").bind(c.id).all();
+   return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>0&&gateEnabled,ingressGateEnabled:gateEnabled,transactions:transactions.results||[],activationNote:gateEnabled?"Wallet balance and per-call duration limits are enforced before the AI answers.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
   }
   if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=isFlexCustomer(c)?{balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,currentUsedMinutes:0,currentIncludedMinutes:0}:await refreshMinuteVault(env,c);const onboarding=await env.DB.prepare("SELECT id,plan_key,billing_cadence,setup_amount_cents,setup_status,plan_payment_status,plan_payment_provider,status,demo_approved,agent_id,account_delivery_status FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({onboarding:onboarding?{...onboarding,demoApproved:Number(onboarding.demo_approved||0)===1,setupAmountCents:Number(onboarding.setup_amount_cents||0)}:null,customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:isFlexCustomer(c)?"flex":c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:isFlexCustomer(c)?0:(vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes),overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
 

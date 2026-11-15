@@ -498,13 +498,13 @@ async function route(req,env){
     const r=await env.DB.prepare("SELECT w.customer_id,w.status,w.currency,w.created_at,w.updated_at,c.business_name,c.email,COALESCE((SELECT SUM(l.amount_cents) FROM avr_payg_wallet_ledger l WHERE l.customer_id=w.customer_id),0) AS balance_cents FROM avr_payg_wallets w JOIN avr_customers c ON c.id=w.customer_id ORDER BY w.updated_at DESC LIMIT 500").all();
     return json({wallets:r.results||[],rateCentsPerMinute:65,ingressGateEnabled:env.PAYG_INGRESS_GATE_ENABLED==="true"},200,origin,env)
    }
-   const paygCreditMatch=path.match(/^\\/api\\/admin\\/payg-wallets\\/([a-f0-9-]{36})\\/credit$/i);
+   const paygCreditMatch=path.match(new RegExp("^/api/admin/payg-wallets/([a-f0-9-]{36})/credit$","i"));
    if(paygCreditMatch&&req.method==="POST"){
     const customerId=paygCreditMatch[1],p=await body(req,3000),amountCents=Math.floor(Number(p.amountCents)),reference=String(p.paypalReference||"").trim().slice(0,160),note=String(p.note||"").trim().slice(0,500);
     if(!Number.isInteger(amountCents)||amountCents<1||amountCents>1000000)throw Error("valid_credit_amount_cents_required");
     if(reference.length<4)throw Error("verified_paypal_reference_required");
     const customer=await env.DB.prepare("SELECT id,email FROM avr_customers WHERE id=?").bind(customerId).first();if(!customer)throw Error("customer_not_found");
-    const now=new Date().toISOString(),id="paypal:"+reference.toLowerCase();
+    const now=new Date().toISOString(),id=crypto.randomUUID();
     await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status,currency,created_at,updated_at) VALUES(?,'funded','usd',?,?) ON CONFLICT(customer_id) DO UPDATE SET status='funded',updated_at=excluded.updated_at").bind(customerId,now,now).run();
     await env.DB.prepare("INSERT INTO avr_payg_wallet_ledger(id,customer_id,amount_cents,entry_type,source_ref,note,created_by,created_at) VALUES(?,?,?,'top_up',?,?,?,?)").bind(id,customerId,amountCents,reference,note||"PayPal payment verified manually by administrator",u.email,now).run();
     await audit(env,u,"payg_wallet_funded",customerId,{amountCents,paypalReference:reference});

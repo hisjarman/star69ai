@@ -826,6 +826,7 @@ async function route(req,env){
     const id=createDemoMatch[1],lead=await env.DB.prepare("SELECT * FROM avr_demo_requests WHERE id=?").bind(id).first();
     if(!lead)throw Error("demo_request_not_found");
     if(lead.agent_id)return json({created:true,agentId:lead.agent_id,llmId:lead.llm_id,alreadyCreated:true},200,origin,env);
+    const paidOnboarding=await env.DB.prepare("SELECT id FROM avr_paid_onboardings WHERE demo_request_id=? LIMIT 1").bind(id).first();if(paidOnboarding)throw Error("paid_onboarding_requires_verified_payment_and_provisioning_retry");
     if(lead.status!=="approved")throw Error("approve_demo_request_before_creating_agent");
     if(Number(lead.discovery_complete)!==1||!lead.discovery_json)throw Error("full_business_discovery_required_before_creating_demo_agent");
     const lock=await env.DB.prepare("UPDATE avr_demo_requests SET status='creating_demo',updated_at=? WHERE id=? AND status='approved' AND agent_id IS NULL").bind(new Date().toISOString(),id).run();

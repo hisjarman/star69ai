@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS avr_paid_onboardings (
   plan_payment_provider TEXT NOT NULL CHECK(plan_payment_provider IN ('stripe','paypal')),
   plan_payment_status TEXT NOT NULL DEFAULT 'pending' CHECK(plan_payment_status IN ('pending','paid')),
   status TEXT NOT NULL DEFAULT 'awaiting_setup' CHECK(status IN ('awaiting_setup','awaiting_plan_payment','awaiting_subscription','awaiting_provisioning','provisioning','provisioned','provisioning_failed','checkout_failed')),
+  demo_approved INTEGER NOT NULL DEFAULT 0 CHECK(demo_approved IN (0,1)),
   public_token_hash TEXT NOT NULL,
   account_delivery_status TEXT,
   clerk_invitation_id TEXT,

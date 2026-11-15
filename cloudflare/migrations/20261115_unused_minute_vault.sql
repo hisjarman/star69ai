@@ -30,3 +30,15 @@ CREATE TABLE IF NOT EXISTS avr_minute_vault_events (
 );
 CREATE INDEX IF NOT EXISTS avr_minute_vault_events_customer_idx
   ON avr_minute_vault_events(customer_id, created_at DESC);
+
+-- FIFO audit map: each use is tied to the month in which those minutes were earned.
+CREATE TABLE IF NOT EXISTS avr_minute_vault_allocations (
+  customer_id TEXT NOT NULL,
+  usage_period_key TEXT NOT NULL,
+  grant_period_key TEXT NOT NULL,
+  minutes INTEGER NOT NULL CHECK(minutes > 0),
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  PRIMARY KEY(customer_id, usage_period_key, grant_period_key)
+);
+CREATE INDEX IF NOT EXISTS avr_minute_vault_allocations_customer_idx
+  ON avr_minute_vault_allocations(customer_id, usage_period_key);

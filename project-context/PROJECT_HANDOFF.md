@@ -1,6 +1,6 @@
 ## Overage billing and carryover policy — approved 2026-11-15
 
-- Monthly subscription charges remain on Stripe. Published monthly plans and overage rates remain Starter: 300 included minutes / $0.49 per additional minute; Growth: 600 / $0.39; Pro: 1,000 / $0.29.
+- Monthly subscription charges remain on Stripe. Published monthly plans and overage rates remain Starter: 300 included minutes / $0.49 per additional minute; Growth: 600 / $0.39; Pro: 1,200 / $0.29.
 - Customers may choose either (a) pay all overage at the end of the billing period, or (b) carry forward up to 50% of the next period's base included-minute allowance and pay the remainder.
 - Example: Growth includes 600 minutes. If the customer uses 1,000 minutes, the 400-minute overage is split into 300 carryover minutes (50% of 600) and 100 billable minutes. Next month's 600-minute allowance is reduced to 300 minutes. The 100-minute remainder is invoiced and due within 7 days of the new billing period.
 - If the carryover choice is selected, calculate the cap from the next period's plan allowance. Carryover minutes reduce the next period's included allowance. The remainder is not carried.
@@ -104,7 +104,7 @@ The form is for demo/discovery follow-up only; it does not create an account or 
 |---|---:|---:|---:|
 | Starter | $149 | 300 | $0.49/minute |
 | Growth | $249 | 600 | $0.39/minute |
-| Pro | $399 | 1,000 | $0.29/minute |
+| Pro | $399 | 1,200 | $0.29/minute |
 
 - One-time setup fee: $99, invoiced separately.
 - Do not silently change these published values in one page or portal surface without synchronizing all pricing displays and legal summaries.

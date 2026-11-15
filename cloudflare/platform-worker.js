@@ -87,12 +87,20 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
   const partnerId=customer?.affiliate_partner_id||o.metadata?.affiliate_partner_id||null;
   const lines=Array.isArray(o.lines?.data)?o.lines.data:[];
-  const commissionableCents=lines.reduce((sum,line)=>{
+  const eligiblePlanPriceIds=new Set(Object.values(planInfo).flatMap(p=>[env[p.priceEnv],env[p.sixMonthPriceEnv],env[p.annualPriceEnv]]).filter(Boolean));
+  const eligibleLinesCents=lines.reduce((sum,line)=>{
+   const rawPriceId=line.price?.id||line.price||line.pricing?.price_details?.price||line.parent?.subscription_item_details?.price?.id;
+   const priceId=typeof rawPriceId==="string"?rawPriceId:rawPriceId?.id;
+   const planSubscriptionLine=eligiblePlanPriceIds.has(priceId);
    const subscriptionLine=line.type==="subscription"||!!line.subscription_item||line.parent?.type==="subscription_item_details";
    const proration=line.proration===true||line.parent?.subscription_item_details?.proration===true;
    const amount=Number(line.amount_excluding_tax??line.amount??0),discounts=Array.isArray(line.discount_amounts)?line.discount_amounts.reduce((n,item)=>n+Number(item.amount||0),0):0,netAmount=Math.max(0,amount-discounts);
-   return subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
+   return planSubscriptionLine&&subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
   },0);
+  const invoiceTotalCents=Math.max(0,Number(o.total??o.amount_due??0));
+  const amountPaidCents=Math.max(0,Number(o.amount_paid??0));
+  const paidRatio=invoiceTotalCents>0?Math.min(1,amountPaidCents/invoiceTotalCents):0;
+  const commissionableCents=Math.round(eligibleLinesCents*paidRatio);
   if(customer&&partnerId&&commissionableCents>0){
    const paidAt=new Date(Number(ev.created||Math.floor(Date.now()/1000))*1000).toISOString();
    await env.DB.prepare("UPDATE partner_referrals SET lead_status='converted',customer_id=?,converted_at=COALESCE(converted_at,?) WHERE affiliate_application_id=? AND lower(lead_email)=lower(?)").bind(customer.id,paidAt,partnerId,customer.email).run();

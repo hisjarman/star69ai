@@ -3,3 +3,6 @@
 .p-brand{flex:0 0 auto;min-width:0}
 .p-brand img{display:block;width:190px;max-width:30vw;height:auto;max-height:48px;object-fit:contain;object-position:left center}
 @media(max-width:760px){.p-brand img{width:150px;max-width:38vw;max-height:42px}.p-top{gap:12px}}
+
+/* Public commission tiers and plain-language program economics. */
+.p-tier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:28px 0 20px}.p-tier-grid article{padding:22px;border:1px solid rgba(112,225,203,.24);border-radius:13px;background:linear-gradient(145deg,#203943,#192f38)}.p-tier-grid article>span{display:block;color:#9bb5b5;font:10px var(--mono);letter-spacing:.08em}.p-tier-grid article>strong{display:block;margin:12px 0 3px;color:var(--mint);font:800 48px/1 var(--display)}.p-tier-grid h3{margin:8px 0;font:700 16px var(--display)}.p-tier-grid p{margin:0;color:var(--muted);font-size:12px}.p-commission-note{margin:22px 0;padding:16px 18px;border-left:3px solid var(--mint);background:#1c333c;color:#c5d6d1;font-size:12px;line-height:1.8}@media(max-width:850px){.p-tier-grid{grid-template-columns:1fr}}

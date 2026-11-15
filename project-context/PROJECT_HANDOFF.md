@@ -967,3 +967,15 @@ This section supersedes the earlier activation-status notes above where they des
 - Prepaid checkout already rejects promo codes and does not apply the monthly partner coupon; prepaid prices remain their own standalone offer.
 - The partner setup-fee discount remains unimplemented because setup is invoiced separately; Partner Center warns partners not to promise automatic application until that invoice workflow is updated.
 - This is a source change only. It must be deployed to the existing `avr-platform-api` Worker separately from GitHub Pages. Do not claim production enforcement until the Worker deployment and Stripe test-mode checkout/webhook cases are verified.
+
+
+### Review and static validation — PR #144
+
+- Draft PR: https://github.com/hisjarman/star69ai/pull/144
+- Compared against current `main`: branch is 15 commits ahead and 0 behind; GitHub reports the PR mergeable with a clean merge state.
+- Static checks completed: JavaScript syntax passed for `site-header.js`, `phone-evolution.js`, `partner-portal/partner-portal.js`, and the ES-module platform Worker after normalizing its `export default` for parsing; modified CSS files have balanced braces.
+- Structural checks passed: homepage, public partner page and Partner Center have balanced key HTML tags. The homepage's pre-existing extra closing tags around the hero were corrected.
+- Content checks passed: the public partner page no longer contains commission rates, discount percentages, customer offer specifics, plan-level commission examples or referral URL fields. Partner economics and link choices remain within the hidden, authenticated Partner Center dashboard.
+- Timeline checks passed: seven top year links match seven detail cards, and the detailed history section appears after the homepage intake form.
+- Checkout source check passed: a discounted partner referral cannot use the AI Challenge promo code; the old stacked coupon and follow-up webhook code paths are removed. Prepaid checkout continues to reject promo codes.
+- Not yet completed: visual browser QA, live authenticated partner-account verification, Stripe test checkout/webhook tests, Cloudflare Worker deployment, and GitHub Pages publication. PR remains draft and unmerged.

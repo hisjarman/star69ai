@@ -242,7 +242,7 @@ function renderAgentRequests(items){
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
- $("#flex-topup-form")?.addEventListener("submit",async e=>{e.preventDefault();const button=$("#flex-topup-submit");button.disabled=true;try{const amount=Number($("#flex-topup-amount").value);if(!Number.isInteger(amount)||amount<5||amount>500||amount%5!==0)throw Error("Enter an amount from $5 to $500 in $5 increments.");const d=await api("/api/client/payg-wallet/topup",{method:"POST",body:JSON.stringify({amount})});location.assign(d.approvalUrl)}catch(err){note(err.message,true);button.disabled=false}});
+ $("#flex-topup-form")?.addEventListener("submit",async e=>{e.preventDefault();const button=$("#flex-topup-submit");button.disabled=true;try{const amount=Number($("#flex-topup-amount").value);if(!Number.isInteger(amount)||amount<5||amount%5!==0)throw Error("Enter an amount from $5 to $500 in $5 increments.");const d=await api("/api/client/payg-wallet/topup",{method:"POST",body:JSON.stringify({amount})});location.assign(d.approvalUrl)}catch(err){note(err.message,true);button.disabled=false}});
 
  $("#approve-demo")?.addEventListener("click",()=>handleOnboardingAction($("#approve-demo"),"/api/client/demo/approve","Demo approved."));
  $("#start-subscription")?.addEventListener("click",()=>handleOnboardingAction($("#start-subscription"),"/api/client/subscription/start","Preparing your plan payment."));

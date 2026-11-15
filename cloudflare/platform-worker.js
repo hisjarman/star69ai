@@ -178,6 +178,15 @@ async function recordPrepaidPartnerCommission(env,customer,captureId,amountCents
  const commissionCents=Math.round(Number(amountCents)*rate),validationUntil=new Date(Date.parse(paidAt)+30*86400000).toISOString();
  await env.DB.prepare("INSERT OR IGNORE INTO partner_commissions(id,affiliate_application_id,customer_id,stripe_invoice_id,stripe_subscription_id,invoice_amount_cents,commission_rate,commission_amount_cents,currency,status,invoice_paid_at,validation_until,payment_provider,payment_reference,admin_note) VALUES(?,?,?, ?,NULL,?,?,?,'usd','pending',?,?,'paypal',?,?)").bind(crypto.randomUUID(),partnerId,customer.id,externalId,Number(amountCents),rate,commissionCents,paidAt,validationUntil,String(captureId),"Prepaid subscription paid through PayPal; commission is based on the collected subscription amount, excluding the waived setup fee.").run();
 }
+async function sendMonthlySubscriptionFollowup(env,customer,onboarding,statusToken){
+ if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL||!customer?.email)return false;
+ const resumeUrl="https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken);
+ const amount=(Number(onboarding.setup_amount_cents||0)/100).toFixed(2);
+ const textBody="Your Star69AI setup payment of $"+amount+" was received. Your monthly plan will begin only after you complete the secure Stripe subscription checkout. If you closed the checkout page, continue here: "+resumeUrl+"\n\nYour demo receptionist and account invitation are created after the monthly plan payment is confirmed. For help, contact support@star69ai.com.";
+ const htmlBody="<h2>One step left to start your Star69AI plan</h2><p>Your one-time setup payment of <strong>$"+amount+"</strong> was received.</p><p>Your monthly plan begins after you complete the secure subscription checkout.</p><p><a href=\""+resumeUrl+"\">Continue secure checkout</a></p><p>Your demo receptionist and account invitation are created after the monthly plan payment is confirmed.</p><p>Questions? Contact support@star69ai.com.</p>";
+ const sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-monthly-checkout-resume/"+onboarding.id},body:JSON.stringify({from:resendFrom(env),to:[customer.email],subject:"Complete your Star69AI monthly plan",text:textBody,html:brandEmail(htmlBody)})});
+ return sent.ok;
+}
 async function maybeProvisionPaidOnboarding(env,onboardingId){
  const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=? LIMIT 1").bind(onboardingId).first();
  if(!ob||ob.status==="provisioned"||ob.status==="provisioning")return;
@@ -315,6 +324,7 @@ async function capturePublicSetup(req,env,origin){
  const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  const checkout=await createPublicStripeSession(env,latest,customer,p.statusToken);
+ await sendMonthlySubscriptionFollowup(env,customer,latest,p.statusToken).catch(e=>console.error("monthly_checkout_followup_failed",e.message));
  return {captured:true,stripeUrl:checkout.stripeUrl};
 }
 async function resumePublicCheckout(req,env,origin){

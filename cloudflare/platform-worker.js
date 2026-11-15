@@ -164,7 +164,7 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
  const order=await paypalRequest(env,"/v2/checkout/orders","POST",{
   intent:"CAPTURE",
   purchase_units:[{reference_id:onboarding.id,custom_id:customer.id,invoice_id:"S69-"+onboarding.id.slice(0,22)+"-"+attempt,description,amount:{currency_code:"USD",value:amount}}],
-  application_context:{brand_name:"Star69AI",user_action:"PAY_NOW",return_url:"https://star69ai.com/checkout.html?step=subscription&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),cancel_url:"https://star69ai.com/checkout.html?cancelled=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)}
+  application_context:{brand_name:"Star69AI",user_action:"PAY_NOW",return_url:(purpose==="setup_fee"?"https://star69ai.com/client/?setup_payment=1&onboarding_id=":"https://star69ai.com/checkout.html?step=subscription&onboarding_id=")+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),cancel_url:(purpose==="setup_fee"?"https://star69ai.com/client/?setup_payment_cancelled=1&onboarding_id=":"https://star69ai.com/checkout.html?cancelled=1&onboarding_id=")+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)}
  },(purpose==="setup_fee"?"S":"P")+onboarding.id.replace(/-/g,"").slice(0,30)+String(Number(onboarding.paypal_attempts||0)%10));
  const approval=(order.links||[]).find(x=>x.rel==="approve"||x.rel==="payer-action")?.href;
  if(!order.id||!approval)throw Error("paypal_approval_link_missing");
@@ -340,6 +340,10 @@ async function capturePublicSetup(req,env,origin){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_status='paid',paypal_capture_id=?,status='awaiting_subscription',updated_at=? WHERE id=? AND setup_status='pending'").bind(capture.id||null,now,ob.id).run();
    const base=9900,discount=base-Number(ob.setup_amount_cents),reason=discount>0?"partner_referral_50":"none";
    await env.DB.prepare("INSERT OR IGNORE INTO avr_setup_invoices(id,customer_id,base_amount_cents,discount_amount_cents,amount_due_cents,discount_reason,status,created_by,created_at,updated_at,sent_at,paid_at,admin_note) VALUES(?,?,?,?,?,?,'paid','public_checkout',?,?,?,?,?)").bind(crypto.randomUUID(),ob.customer_id,base,discount,Number(ob.setup_amount_cents),reason,now,now,now,now,"PayPal order "+orderId+"; capture "+String(capture.id||"")).run();
+   const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
+   if(latest?.plan_payment_status==="paid")await env.DB.prepare("UPDATE avr_customers SET status='active',updated_at=? WHERE id=?").bind(now,ob.customer_id).run();
+   await maybeProvisionPaidOnboarding(env,ob.id);
+   return {captured:true,completeUrl:"https://star69ai.com/client/"};
   }else{
    await env.DB.prepare("UPDATE avr_paid_onboardings SET plan_payment_status='paid',paypal_capture_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(capture.id||null,now,ob.id).run();
    const months=ob.billing_cadence==="six_month"?6:12,plan=planInfo[ob.plan_key];
@@ -350,35 +354,34 @@ async function capturePublicSetup(req,env,origin){
  }
  if(purpose==="prepaid_plan"){
   await maybeProvisionPaidOnboarding(env,ob.id);
-  return {captured:true,completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};
+  return {captured:true,completeUrl:"https://star69ai.com/client/"};
  }
- const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
- const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
- const checkout=await createPublicStripeSession(env,latest,customer,p.statusToken);
- if(checkout.stripeUrl)await sendMonthlySubscriptionFollowup(env,customer,latest,p.statusToken).catch(e=>console.error("monthly_checkout_followup_failed",e.message));
- return checkout.completeUrl?{captured:true,completeUrl:checkout.completeUrl}:{captured:true,stripeUrl:checkout.stripeUrl};
+ return {captured:true,completeUrl:"https://star69ai.com/client/"};
 }
 async function resumePublicCheckout(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  if(!customer)throw Error("customer_not_found");
- if(ob.setup_status==="pending"||(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status!=="paid")){
+ if(Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+ if(ob.setup_status==="pending"&&ob.plan_payment_status==="paid"){
   const order=await createPublicPaypalOrder(env,ob,customer,p.statusToken);
-  return {paymentStep:ob.paypal_order_purpose,approvalUrl:order.approvalUrl};
+  return {paymentStep:"setup_fee",approvalUrl:order.approvalUrl};
  }
- if(ob.plan_payment_provider==="stripe"&&(ob.setup_status==="paid"||ob.setup_status==="not_required")){
+ if(ob.plan_payment_provider==="stripe"&&ob.plan_payment_status!=="paid"){
   const checkout=await createPublicStripeSession(env,ob,customer,p.statusToken);
   return checkout.completeUrl?{completeUrl:checkout.completeUrl}:{paymentStep:"subscription",stripeUrl:checkout.stripeUrl};
  }
- if(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status==="paid"){
-  return {completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};
+ if(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status!=="paid"){
+  const order=await createPublicPaypalOrder(env,ob,customer,p.statusToken);
+  return {paymentStep:"prepaid_plan",approvalUrl:order.approvalUrl};
  }
- throw Error("checkout_not_resumable");
+ return {completeUrl:"https://star69ai.com/client/"};
 }
+
 async function publicCheckoutStatus(url,env){
  const ob=await publicOnboardingAuth(env,url.searchParams.get("onboarding_id"),url.searchParams.get("status_token"));
- return {status:ob.status,setupStatus:ob.setup_status,planPaymentStatus:ob.plan_payment_status,planPaymentProvider:ob.plan_payment_provider,accountDeliveryStatus:ob.account_delivery_status||"pending",agentReady:!!ob.agent_id,businessName:ob.customer_id?(await env.DB.prepare("SELECT business_name FROM avr_customers WHERE id=?").bind(ob.customer_id).first())?.business_name:null,plan:ob.plan_key,cadence:ob.billing_cadence};
+ return {status:ob.status,setupStatus:ob.setup_status,planPaymentStatus:ob.plan_payment_status,planPaymentProvider:ob.plan_payment_provider,accountDeliveryStatus:ob.account_delivery_status||"pending",agentReady:!!ob.agent_id,demoApproved:Number(ob.demo_approved||0)===1,setupAmountCents:Number(ob.setup_amount_cents||0),businessName:ob.customer_id?(await env.DB.prepare("SELECT business_name FROM avr_customers WHERE id=?").bind(ob.customer_id).first())?.business_name:null,plan:ob.plan_key,cadence:ob.billing_cadence};
 }
 
 async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers.get("Stripe-Signature")||"",secret=env.STRIPE_WEBHOOK_SECRET;if(!secret)throw Error("stripe_webhook_secret_missing");const parts=Object.fromEntries(sig.split(",").map(x=>x.split("=").map(y=>y.trim()))),ts=parts.t;if(!ts||!parts.v1||Math.abs(Date.now()/1000-Number(ts))>300)throw Error("invalid_stripe_signature");const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const mac=new Uint8Array(await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(ts+"."+raw)));const hex=Array.from(mac,x=>x.toString(16).padStart(2,"0")).join("");if(hex!==parts.v1)throw Error("invalid_stripe_signature");
@@ -674,6 +677,37 @@ async function route(req,env){
    return json({accepted:true,id,discoveryComplete,notificationSent,message:discoveryComplete?"Your complete business discovery brief has been received.":"Your demo request has been received."},201,origin,env);
   }
   if(path==="/api/me"&&req.method==="GET"){const u=await clerkUser(req,env);return json({user:u},200,origin,env)}
+  if(path==="/api/client/demo/approve"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
+   const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
+   if(!ob||!ob.agent_id||ob.status!=="provisioned")throw Error("demo_not_ready_for_approval");
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET demo_approved=1,updated_at=? WHERE id=?").bind(new Date().toISOString(),ob.id).run();
+   await env.DB.prepare("UPDATE avr_demo_requests SET status='customer_approved',updated_at=? WHERE id=?").bind(new Date().toISOString(),ob.demo_request_id).run();
+   return json({approved:true,subscriptionPaid:ob.plan_payment_status==="paid",setupRequired:ob.setup_status==="pending"},200,origin,env);
+  }
+  if(path==="/api/client/subscription/start"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
+   const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
+   if(!ob||Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+   if(ob.plan_payment_status==="paid")throw Error("subscription_already_paid");
+   const statusToken=crypto.randomUUID()+crypto.randomUUID();
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET public_token_hash=?,updated_at=? WHERE id=?").bind(await sha256Hex(statusToken),new Date().toISOString(),ob.id).run();
+   const fresh=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
+   const checkout=ob.plan_payment_provider==="stripe"?await createPublicStripeSession(env,fresh,c,statusToken):await createPublicPaypalOrder(env,fresh,c,statusToken);
+   return json({approvalUrl:checkout.approvalUrl||null,stripeUrl:checkout.stripeUrl||null,completeUrl:checkout.completeUrl||null,paymentStep:ob.plan_payment_provider==="stripe"?"subscription":"prepaid_plan"},200,origin,env);
+  }
+  if(path==="/api/client/setup-payment/start"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
+   const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
+   if(!ob||Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+   if(ob.plan_payment_status!=="paid")throw Error("subscription_payment_required_first");
+   if(ob.setup_status!=="pending"||Number(ob.setup_amount_cents||0)<1)throw Error("setup_payment_not_required");
+   const statusToken=crypto.randomUUID()+crypto.randomUUID();
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET public_token_hash=?,updated_at=? WHERE id=?").bind(await sha256Hex(statusToken),new Date().toISOString(),ob.id).run();
+   const fresh=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
+   const order=await createPublicPaypalOrder(env,fresh,c,statusToken);
+   return json({approvalUrl:order.approvalUrl,setupAmountCents:Number(ob.setup_amount_cents),paymentStep:"setup_fee"},200,origin,env);
+  }
   if(path==="/api/client/payg-wallet"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
    const wallet=await env.DB.prepare("SELECT status,currency,created_at,updated_at FROM avr_payg_wallets WHERE customer_id=?").bind(c.id).first();
@@ -681,7 +715,7 @@ async function route(req,env){
    const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";
    return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>0&&gateEnabled,ingressGateEnabled:gateEnabled,activationNote:gateEnabled?"Wallet balance is positive.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
   }
-  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
+  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const onboarding=await env.DB.prepare("SELECT id,plan_key,billing_cadence,setup_amount_cents,setup_status,plan_payment_status,plan_payment_provider,status,demo_approved,agent_id,account_delivery_status FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({onboarding:onboarding?{...onboarding,demoApproved:Number(onboarding.demo_approved||0)===1,setupAmountCents:Number(onboarding.setup_amount_cents||0)}:null,customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
 
   if(path==="/api/client/agent-configuration"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);

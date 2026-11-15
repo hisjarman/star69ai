@@ -158,11 +158,10 @@ async function billSubscriptionOverage(env,customer,usage){
  if(!monthly&&!customer.stripe_payment_method_id){await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='payment_method_required',updated_at=? WHERE id=?").bind(new Date().toISOString(),customer.id).run();return {queued:false,reason:"payment_method_required"};}
  if(customer.overage_payment_status==="past_due")return {queued:false,reason:"overage_payment_past_due"};
  const periodKey=new Date().toISOString().slice(0,7);
+ const existing=await env.DB.prepare("SELECT id,status,billed_minutes FROM avr_overage_billing_ledger WHERE customer_id=? AND period_key=? AND usage_minutes_total=? LIMIT 1").bind(customer.id,periodKey,totalMinutes).first();
  const billed=await env.DB.prepare("SELECT COALESCE(SUM(billed_minutes),0) AS total FROM avr_overage_billing_ledger WHERE customer_id=? AND period_key=? AND status IN ('processing','queued','invoiced','paid','failed')").bind(customer.id,periodKey).first();
- const already=Math.max(0,Number(billed?.total||0)),delta=Math.max(0,totalMinutes-already);if(!delta)return {queued:false,reason:"already_accounted"};
- const amount=delta*rate,now=new Date().toISOString();
- const existing=await env.DB.prepare("SELECT id,status FROM avr_overage_billing_ledger WHERE customer_id=? AND period_key=? AND usage_minutes_total=? LIMIT 1").bind(customer.id,periodKey,totalMinutes).first();
- const rowId=existing?.id||crypto.randomUUID();
+ const already=Math.max(0,Number(billed?.total||0)),delta=existing?.status==="failed"?Math.max(0,Number(existing.billed_minutes||0)):Math.max(0,totalMinutes-already);if(!delta)return {queued:false,reason:"already_accounted"};
+ const amount=delta*rate,now=new Date().toISOString(),rowId=existing?.id||crypto.randomUUID();
  if(existing){if(existing.status!=="failed")return {queued:false,reason:"snapshot_already_recorded"};await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='processing',failure_reason=NULL,updated_at=? WHERE id=? AND status='failed'").bind(now,rowId).run();}
  else {const ins=await env.DB.prepare("INSERT OR IGNORE INTO avr_overage_billing_ledger(id,customer_id,period_key,usage_minutes_total,billed_minutes,rate_cents,amount_cents,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'processing',?,?)").bind(rowId,customer.id,periodKey,totalMinutes,delta,rate,amount,now,now).run();if(Number(ins.meta?.changes||0)!==1)return {queued:false,reason:"snapshot_already_recorded"};}
  try{

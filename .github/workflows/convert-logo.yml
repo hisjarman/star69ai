@@ -1,0 +1,69 @@
+name: Convert updated logo to transparent PNG
+on:
+  push:
+    branches:
+      - fix/convert-transparent-logo-asset
+    paths:
+      - assets/tranparentlogo.jpeg
+      - .github/workflows/convert-logo.yml
+permissions:
+  contents: write
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pillow numpy
+      - name: Remove checkerboard and export transparent PNG
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          import numpy as np
+          src = Image.open("assets/tranparentlogo.jpeg").convert("RGB")
+          a = np.asarray(src).astype(np.int16)
+          h, w, _ = a.shape
+          gray = a.mean(axis=2)
+          signal = np.concatenate([gray[int(h*.05), :], gray[int(h*.95), :]])
+          best = min(((np.mean((signal[:-p]-signal[p:])**2),p) for p in range(24,100)), key=lambda x:x[0])
+          tile = best[1]
+          inset = max(3,tile//5)
+          palette = {}
+          for py in range(2):
+            for px in range(2):
+              samples=[]
+              for y0 in range(py*tile+inset,h-tile,2*tile):
+                for x0 in range(px*tile+inset,w-tile,2*tile):
+                  patch=a[y0:y0+max(2,tile//4),x0:x0+max(2,tile//4)]
+                  if patch.size: samples.append(np.median(patch.reshape(-1,3),axis=0))
+              palette[(py,px)] = np.median(samples,axis=0) if samples else np.array([238,238,238])
+          yy,xx=np.indices((h,w)); expected=np.empty_like(a)
+          for py in range(2):
+            for px in range(2):
+              m=((yy//tile)%2==py)&((xx//tile)%2==px)
+              expected[m]=palette[(py,px)]
+          dist=np.sqrt(((a-expected)**2).sum(axis=2))
+          very_white=(a.min(axis=2)>250)&((a.max(axis=2)-a.min(axis=2))<8)
+          bg=(dist<19)&~very_white
+          neutral=(a.max(axis=2)-a.min(axis=2)<10)&(a.mean(axis=2)>215)
+          outer=np.ones((h,w),dtype=bool)
+          outer[int(h*.30):int(h*.70),int(w*.04):int(w*.96)]=False
+          bg |= neutral & outer
+          alpha=np.where(bg,0,255).astype(np.uint8)
+          out=Image.fromarray(np.dstack([a.astype(np.uint8),alpha]),"RGBA")
+          bbox=out.getbbox()
+          if bbox: out=out.crop(bbox)
+          out.save("assets/star69ai-logo-transparent.png",optimize=True)
+          print(f"checker tile estimate: {tile}px; output: {out.size}")
+          PY
+      - name: Commit converted PNG
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/star69ai-logo-transparent.png
+          git commit -m "Add transparent PNG version of updated Star69AI logo" || exit 0
+          git push

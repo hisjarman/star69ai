@@ -23,6 +23,13 @@
     next:root.querySelector('[data-history-next]')
   };
   let current = 0;
+  const lesson = root.querySelector('.phone-history-lesson');
+  const openChapter = (index, focusStep) => {
+    if (lesson) lesson.hidden = false;
+    root.classList.add('is-expanded');
+    render(index, focusStep);
+    window.setTimeout(() => lesson?.scrollIntoView({behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'}), 0);
+  };
   const render = (index, focusStep) => {
     current = Math.max(0, Math.min(chapters.length - 1, index));
     const chapter = chapters[current];
@@ -44,14 +51,15 @@
     });
     if (focusStep) steps[current].focus();
   };
-  steps.forEach((step, i) => step.addEventListener('click', () => render(i, false)));
-  fields.prev.addEventListener('click', () => render(current - 1, false));
-  fields.next.addEventListener('click', () => render(current + 1, false));
+  steps.forEach((step, i) => step.addEventListener('click', () => openChapter(i, false)));
+  fields.prev.addEventListener('click', () => openChapter(current - 1, false));
+  fields.next.addEventListener('click', () => openChapter(current + 1, false));
   root.addEventListener('keydown', event => {
     if (event.target.matches('[data-history-step]') && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
       event.preventDefault();
-      render(current + (event.key === 'ArrowRight' ? 1 : -1), true);
+      openChapter(current + (event.key === 'ArrowRight' ? 1 : -1), true);
     }
   });
+  if (lesson) lesson.hidden = true;
   render(0, false);
 })();

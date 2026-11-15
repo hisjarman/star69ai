@@ -211,7 +211,7 @@ function renderAgentRequests(items){
    $("#subscription-status").textContent=customer.subscriptionStatus||"Not active";
    $("#billing-portal").disabled=!customer.hasBillingAccount;
    $("#billing-portal").textContent=customer.hasBillingAccount?"Manage subscription":"Billing not started";
-   document.querySelectorAll(".plan-btn").forEach(b=>{b.disabled=customer.plan==="flex"||["active","trialing","past_due"].includes(customer.subscriptionStatus)});const planActions=document.querySelector(".plan-actions");if(planActions)planActions.hidden=customer.plan==="flex";
+   const onboardingLocked=!!d.onboarding&&(!d.onboarding.demoApproved||d.onboarding.plan_payment_status!=="paid"||d.onboarding.setup_status==="pending");document.querySelectorAll(".plan-btn").forEach(b=>{b.disabled=customer.plan==="flex"||onboardingLocked||["active","trialing","past_due"].includes(customer.subscriptionStatus)});const planActions=document.querySelector(".plan-actions");if(planActions)planActions.hidden=customer.plan==="flex"||onboardingLocked;
    $("#renewal-date").textContent=customer.periodEnd?"Period ends "+fmtDate(customer.periodEnd):"Manage billing below";
    $("#business-name").value=customer.businessName||"";
    $("#contact-name").value=customer.contactName||"";

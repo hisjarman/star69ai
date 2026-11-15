@@ -10,9 +10,9 @@
 - **Partner commissions:** Preserve the current 20% / 25% / 30% active-referral tiers; calculate only on eligible subscription amounts actually collected after discounts. Exclude setup fees, taxes, usage, phone rental, carrier pass-through, unpaid invoices, refunds and chargebacks.
 - Promotion copy must agree across homepage, challenge, pricing, checkout, FAQ, Terms, partner portal, client dashboard and Agency Admin. Never expose private partner referral URLs/codes on public pages. Do not reactivate challenge coupons or claim redemption until server-side challenge verification and one-time redemption are implemented and tested.
 
-## Automatic overage billing implementation — review pending 2026-11-15
+## Automatic overage billing implementation — merged to main 2026-11-15
 
-- Feature branch: `feature/automatic-overage-billing-2026-11-15`. Not merged or deployed.
+- Feature branch: `feature/automatic-overage-billing-2026-11-15`. Merged through PR #159 (merge commit `aae320a9f6e25bef8e965b762a08c48c43d67aba`). The Worker, client portal and D1 migration are in `main`; production Worker deployment and D1 migration application are still pending.
 - All plan customers must separately authorize off-session overage collection in the client portal and save a card through Stripe Checkout Setup mode. Monthly overage invoice items attach to the active Stripe subscription and are charged on its next invoice; PayPal-prepaid six-/twelve-month overage is charged through a separate Stripe invoice. The saved method is set as the customer's default and, for monthly customers, the subscription's default payment method.
 - Rates: Starter $0.55/minute, Growth $0.45/minute, Pro $0.36/minute. The existing 75% hard overage cap and Minute Vault consumption order remain unchanged. Without an overage payment method, calls may use included and vaulted minutes but cannot reserve overage capacity.
 - The Worker stores a D1 billing ledger keyed by customer, period and cumulative overage minutes; Stripe idempotency keys prevent duplicate invoice items/invoices. Failed usage is retained in the ledger to prevent double billing; updating a card retries failed prepaid invoices where an invoice ID exists.

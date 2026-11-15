@@ -25,7 +25,7 @@ function fail(e,origin,env){const m=e?.message||"request_failed",status=m==="adm
 async function body(req,max=20000){const t=await req.text();if(t.length>max)throw Error("payload_too_large");try{return JSON.parse(t)}catch{throw Error("invalid_json")}}
 const planInfo={starter:{name:"Starter",price:149,minutes:300,priceEnv:"STRIPE_PRICE_STARTER",sixMonthPriceEnv:"STRIPE_PRICE_STARTER_6MO",annualPriceEnv:"STRIPE_PRICE_STARTER_12MO"},growth:{name:"Growth",price:249,minutes:600,priceEnv:"STRIPE_PRICE_GROWTH",sixMonthPriceEnv:"STRIPE_PRICE_GROWTH_6MO",annualPriceEnv:"STRIPE_PRICE_GROWTH_12MO"},pro:{name:"Pro",price:399,minutes:1200,priceEnv:"STRIPE_PRICE_PRO",sixMonthPriceEnv:"STRIPE_PRICE_PRO_6MO",annualPriceEnv:"STRIPE_PRICE_PRO_12MO"}};
 async function refreshMinuteVault(env,c){
- const active=c.status==="active"&&["active","trialing"].includes(c.subscription_status);
+ const active=c.status==="active"&&(["active","trialing"].includes(c.subscription_status)||["six_month","annual"].includes(c.billing_cadence));
  if(!active)return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,forfeited:false};
  const now=new Date(),currentKey=now.toISOString().slice(0,7),plan=planInfo[c.plan_key],currentAllowance=Number(plan?.minutes||c.included_minutes||0);
  let rows=(await env.DB.prepare("SELECT period_key,included_minutes FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key").bind(c.id).all()).results||[];
@@ -78,6 +78,12 @@ async function refreshMinuteVault(env,c){
   await env.DB.prepare("UPDATE avr_minute_vault_periods SET used_minutes=?,banked_minutes=?,bank_used_minutes=?,balance_after_minutes=?,finalized=?,updated_at=? WHERE customer_id=? AND period_key=?").bind(used,banked,bankUsed,balance,isCurrent?0:1,now.toISOString(),c.id,row.period_key).run();
  }
  return {balanceMinutes:balance,usedFromVaultThisMonth:currentBankUsed,billableOverageMinutes:billable,currentUsedMinutes:currentUsed,currentIncludedMinutes:Number(rows.find(x=>x.period_key===currentKey)?.included_minutes||currentAllowance),forfeited:false};
+}
+async function forfeitMinuteVault(env,customerId,reason,detail={}){
+ const total=await env.DB.prepare("SELECT COALESCE(MAX(balance_after_minutes),0) AS balance FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).first();
+ const periods=await env.DB.prepare("SELECT COUNT(*) AS total FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).first();
+ if(Number(periods?.total||0)>0)await env.DB.prepare("INSERT INTO avr_minute_vault_events(id,customer_id,event_type,minutes,detail_json) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),customerId,"forfeited_on_cancellation",Number(total?.balance||0),JSON.stringify({reason,...detail})).run();
+ await env.DB.prepare("DELETE FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).run();
 }
 async function customerFor(user,env){
  let c=await env.DB.prepare("SELECT * FROM avr_customers WHERE clerk_user_id=? LIMIT 1").bind(user.id).first();
@@ -162,7 +168,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    }
   }
  }
- if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(scid).first();if(customer){const total=await env.DB.prepare("SELECT COALESCE(MAX(balance_after_minutes),0) AS balance FROM avr_minute_vault_periods WHERE customer_id=?").bind(customer.id).first();await env.DB.prepare("INSERT INTO avr_minute_vault_events(id,customer_id,event_type,minutes,detail_json) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),customer.id,"forfeited_on_cancellation",Number(total?.balance||0),JSON.stringify({stripeEventId:ev.id,subscriptionId:o.id})).run();await env.DB.prepare("DELETE FROM avr_minute_vault_periods WHERE customer_id=?").bind(customer.id).run()}}\n if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
+ if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(scid).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}\n if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
  if(customerId||stripeCustomer){await env.DB.prepare("INSERT OR IGNORE INTO avr_billing_events(event_id,customer_id,event_type,event_created,payload_json) VALUES(?,?,?,?,?)").bind(ev.id,customerId,ev.type,ev.created,JSON.stringify(o).slice(0,50000)).run()}
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('stripe',?)").bind(ev.id).run();
  return {received:true};
@@ -729,10 +735,10 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
      await env.DB.prepare("INSERT INTO avr_call_email_settings(customer_id,enabled,recipients_json,updated_at) VALUES(?,?,?,?) ON CONFLICT(customer_id) DO UPDATE SET enabled=excluded.enabled,recipients_json=excluded.recipients_json,updated_at=excluded.updated_at")
       .bind(id,p.callEmail.enabled?1:0,JSON.stringify(recipients),new Date().toISOString()).run();
     }
-    await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,callEmailUpdated:!!p.callEmail});
+    if(status==="closed"||status==="suspended")await forfeitMinuteVault(env,id,"admin_account_"+status,{adminEmail:u.email});\n    await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,callEmailUpdated:!!p.callEmail});
     return json({saved:true},200,origin,env)
    }
-   const cm=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})$/i);if(cm&&req.method==="PATCH"){const p=await body(req),id=cm[1],c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(id).first();if(!c)throw Error("customer_not_found");const status=p.status,plan=p.plan;if(status&&!["pending","active","suspended","closed"].includes(status))throw Error("invalid_status");if(plan&&!planInfo[plan])throw Error("invalid_plan");await env.DB.prepare("UPDATE avr_customers SET status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?").bind(status||null,plan||null,plan||"",plan||"",plan||"",p.notes===undefined?null:String(p.notes).slice(0,2000),new Date().toISOString(),id).run();await audit(env,u,"customer_updated",id,p);return json({saved:true},200,origin,env)}
+   const cm=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})$/i);if(cm&&req.method==="PATCH"){const p=await body(req),id=cm[1],c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(id).first();if(!c)throw Error("customer_not_found");const status=p.status,plan=p.plan;if(status&&!["pending","active","suspended","closed"].includes(status))throw Error("invalid_status");if(plan&&!planInfo[plan])throw Error("invalid_plan");await env.DB.prepare("UPDATE avr_customers SET status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?").bind(status||null,plan||null,plan||"",plan||"",plan||"",p.notes===undefined?null:String(p.notes).slice(0,2000),new Date().toISOString(),id).run();if(status==="closed"||status==="suspended")await forfeitMinuteVault(env,id,"admin_account_"+status,{adminEmail:u.email});await audit(env,u,"customer_updated",id,p);return json({saved:true},200,origin,env)}
    if(path==="/api/admin/retell/sync"&&req.method==="POST"){const result=await syncRetell(env);await audit(env,u,"retell_sync",null,result);return json(result,200,origin,env)}
    if(path==="/api/admin/retell/resources"&&req.method==="GET"){
     const [a,n]=await Promise.all([env.DB.prepare("SELECT a.agent_id,a.agent_name,a.status,a.customer_id,a.client_visible_prompt,a.raw_json,c.business_name FROM avr_agents a LEFT JOIN avr_customers c ON c.id=a.customer_id ORDER BY a.agent_name").all(),env.DB.prepare("SELECT n.*,c.business_name FROM avr_numbers n LEFT JOIN avr_customers c ON c.id=n.customer_id ORDER BY n.phone_number").all()]);

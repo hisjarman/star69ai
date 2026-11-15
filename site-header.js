@@ -34,6 +34,7 @@
         <a class="site-global-mobile-start" href="/get-started.html">Get started ↗</a>
       </nav>
       <div class="site-global-actions">
+        <a class="site-global-partner" href="/partner-portal/">Partner Login</a>
         <a class="site-global-login" href="/client/">Client Login</a>
         <a class="site-global-start" href="/get-started.html">Get Started <span aria-hidden="true">↗</span></a>
       </div>

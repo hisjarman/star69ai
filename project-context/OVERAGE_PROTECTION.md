@@ -6,7 +6,7 @@
 - At 50% of the approved overage allowance, Star69AI emails the customer and configured administrators.
 - At 75% of the approved allowance, Star69AI stops accepting new AI calls for that billing period. The unused final 25% is a safety margin, not additional customer entitlement.
 - A limit of 0 means no overage is authorized: new calls stop when included minutes and the Minute Vault are exhausted.
-- The admin workspace allows an integer allowance from 0 to 10,000 minutes. Admin approval is required to increase it.
+- The admin workspace allows an integer allowance from 0 to 2,000 minutes. Admin approval is required to increase it.
 
 ## Enforcement
 - Retell's phone-number inbound_webhook_url points to https://avr-platform-api.hisjarman.workers.dev/webhooks/retell/inbound.

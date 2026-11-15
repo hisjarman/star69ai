@@ -327,7 +327,7 @@ function addMonthsIso(months){
 async function capturePublicSetup(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
- const purpose=ob.paypal_order_purpose||"setup_fee",waiting=purpose==="setup_fee"?ob.setup_status==="pending":ob.plan_payment_status!=="paid";
+ const purpose=ob.paypal_order_purpose||"setup_fee";if(purpose==="setup_fee"&&Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");const waiting=purpose==="setup_fee"?ob.setup_status==="pending":ob.plan_payment_status!=="paid";
  if(waiting){
   const orderId=String(p.orderId||"").trim();if(!orderId||orderId!==ob.paypal_order_id)throw Error("paypal_order_mismatch");
   let order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId),"GET");
@@ -393,7 +393,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   if(paymentConfirmed){
  
    const selectedPlan=o.metadata?.plan_key||null;
-   await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
+   await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',status=CASE WHEN EXISTS(SELECT 1 FROM avr_paid_onboardings po WHERE po.customer_id=avr_customers.id AND po.setup_status='pending') THEN 'pending' ELSE 'active' END,updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
    // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
   }
  }
@@ -406,7 +406,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  }
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
-  await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
+  await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,current_period_end=?,status=CASE WHEN (?='active' OR ?='trialing') AND NOT EXISTS(SELECT 1 FROM avr_paid_onboardings po WHERE po.customer_id=avr_customers.id AND po.setup_status='pending') THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
   if(["active","trialing"].includes(status)){
    const paidOnboarding=await env.DB.prepare("SELECT id FROM avr_paid_onboardings WHERE customer_id=(SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1) LIMIT 1").bind(scid).first();
    if(paidOnboarding){

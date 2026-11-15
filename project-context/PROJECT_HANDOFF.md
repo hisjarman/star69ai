@@ -855,3 +855,13 @@ Known prior issue to recheck against current source: a portal request reported `
 - Added the directory to the shared public navigation and sitemap. The page includes CollectionPage structured data, a research/pricing disclaimer, comparison guidance, FAQs and a Star69AI demo CTA.
 - Research inventory is a first release, not a guarantee of complete worldwide coverage. Some prices and plan details are reported by dated third-party comparisons rather than independently rechecked against each provider's pricing page. Every listing links to the provider's own website and a supporting evidence page; confirm prices, tax, setup and eligibility directly with each vendor before relying on them.
 - Branch: `feature/global-managed-ai-receptionist-directory-2026-11-14`. No merge or production publication has occurred. Before merge, validate every provider URL and pricing claim, inspect the directory on desktop/mobile, test all filters and links, and verify sitemap/navigation integration.
+
+
+## Industry Intelligence Hub — 2026-11-14
+
+- Added `/hub/` as the industry hub landing page, linking dental, plumbing, roofing, HVAC, legal, real estate, cleaning/property services and automotive use cases. Existing roofing, plumbing and HVAC pages remain the canonical industry detail pages.
+- Added detailed industry pages at `/industries/dental-ai-receptionist/`, `/industries/legal-ai-receptionist/`, and `/industries/real-estate-ai-receptionist/` with industry-specific intake examples and safety/human-handoff boundaries.
+- Added `/learning-center/` with pricing, missed-call, implementation and automation guides plus a browser-only missed-call gross-profit opportunity estimator. Calculator values are not submitted or stored; outputs are illustrative, not forecasts or promised recovery.
+- Added `/research/managed-ai-receptionists.html`, a neutral comparison of DIY AI receptionist software, traditional human answering services and agency-built managed AI, including buyer questions about setup, operations, costs, privacy and portability.
+- Shared styling is in `intelligence-hub.css`. Shared navigation now features Industry Hub and Learning Center, with Managed AI Research in More. All new public URLs are listed in `sitemap.xml`.
+- Changes are on branch `feature/industry-intelligence-hub-2026-11-14`; browser/mobile and live sitemap verification remain pending until preview/live testing.

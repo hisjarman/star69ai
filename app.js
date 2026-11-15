@@ -22,7 +22,7 @@ const partnerAttributionReady = (async () => {
   const params=new URLSearchParams(window.location.search);
   const incoming = String(params.get("ref") || "").trim().toUpperCase();
   if (!/^[A-Z0-9]{6,16}$/.test(incoming)) return readPartnerAttribution();
-  const offerMode=params.get("offer")==="discount"?"discount":"standard";
+  const offerMode=params.get("offer")==="standard"?"standard":"discount"; // Legacy partner links without an offer parameter retain the customer discount.
   const fallback={partnerCode:incoming,clickId:"",offerMode};writePartnerAttribution(fallback);
   try {
     const response = await fetch(API_BASE + "/api/partners/click", {

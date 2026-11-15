@@ -18,7 +18,7 @@ async function saveClientWorkspace(e){
  e.preventDefault();const id=$("#client-workspace-modal").dataset.customerId,button=e.submitter;button.disabled=true;$("#ws-save-status").textContent="Saving…";
  try{
   const recipients=$("#ws-email-recipients").value.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);
-  await api("/api/admin/customers/"+encodeURIComponent(id)+"/workspace",{method:"PUT",body:JSON.stringify({businessName:$("#ws-business-name").value,contactName:$("#ws-contact-name").value,phone:$("#ws-phone").value,status:$("#ws-status").value,plan:$("#ws-plan").value,overageLimitMinutes:Number($("#ws-overage-limit").value),adminNotes:$("#ws-admin-notes").value,callEmail:{enabled:$("#ws-email-enabled").checked,recipients}})});
+  await api("/api/admin/customers/"+encodeURIComponent(id)+"/workspace",{method:"PUT",body:JSON.stringify({businessName:$("#ws-business-name").value,contactName:$("#ws-contact-name").value,phone:$("#ws-phone").value,status:$("#ws-status").value,plan:$("#ws-plan").value,adminNotes:$("#ws-admin-notes").value,callEmail:{enabled:$("#ws-email-enabled").checked,recipients}})});
   $("#ws-save-status").textContent="Client settings saved.";note("Client workspace settings updated.");await refresh();await openClientWorkspace(id);
  }catch(err){$("#ws-save-status").textContent=err.message||"Could not save settings."}
  finally{button.disabled=false}

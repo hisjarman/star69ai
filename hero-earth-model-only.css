@@ -1,0 +1,40 @@
+/* Hero composition: keep Earth exclusively behind the receptionist, never behind copy. */
+body#top .reference-hero{
+  background-image:none!important;
+  background-color:#07111c!important;
+}
+body#top .reference-hero:before{
+  background:none!important;
+}
+body#top .reference-hero .hero-model-column{
+  position:relative;
+  isolation:isolate;
+  overflow:visible;
+}
+body#top .reference-hero .hero-model-column:before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:2% -2% 3%;
+  pointer-events:none;
+  border-radius:50% 50% 28% 28%;
+  background:
+    linear-gradient(180deg,rgba(5,13,24,.10),rgba(5,13,24,.12) 58%,rgba(5,13,24,.72)),
+    url("./assets/earth.jpeg") center 48% / cover no-repeat;
+  box-shadow:0 0 70px rgba(45,157,255,.16);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);
+}
+body#top .reference-hero .hero-model-glow{z-index:1}
+body#top .reference-hero .hero-orbit{z-index:2}
+body#top .reference-hero .hero-model-image{
+  position:relative;
+  z-index:3;
+}
+@media(max-width:760px){
+  body#top .reference-hero .hero-model-column:before{
+    inset:0 0 0;
+    border-radius:50% 50% 24% 24%;
+    background-position:center 48%;
+  }
+}

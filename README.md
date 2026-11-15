@@ -26,13 +26,23 @@ Star69AI handles agent configuration, call-flow customization, phone setup, test
 
 | Plan | Monthly subscription | Included voice minutes | Overage rate |
 |---|---:|---:|---:|
-| Starter | $149/month | 300 | $0.49/minute |
-| Growth | $249/month | 600 | $0.39/minute |
-| Pro | $399/month | 1,200 | $0.29/minute |
+| Starter | $149/month | 300 | $0.55/minute |
+| Growth | $249/month | 600 | $0.45/minute |
+| Pro | $399/month | 1,200 | $0.36/minute |
 
 A **$99 one-time setup fee** is invoiced separately by SIMIAPP CLOUD through PayPal for monthly customers (eligible discounted partner referrals may receive a 50% setup discount). Six-month prepayment saves 20%, twelve-month prepayment saves 30%, and both prepaid terms waive the setup fee completely. Prepaid offers cannot be combined with partner or AI Challenge discounts.
 
 **Billing implementation note:** The plan prices and overage rates above are published offer details. The approved overage policy lets a customer either pay all overage at period close or carry forward up to 50% of the next period's included allowance; any remainder is invoiced and due within 7 days of the new period. If that remainder is unpaid after 7 days, only additional overage coverage is paused—the subscription and included minutes remain active. Partner commissions exclude overage. This policy is not yet active: automated period closing, Stripe invoicing/payment reconciliation, the Retell call-coverage gate, and end-to-end tests must be completed before describing overage billing or pause enforcement as operational.
+
+
+### Enterprise and Voice Minute Bank
+
+- Enterprise customers can request a custom-tailored proposal for higher volume, multi-location operations, integrations, routing, support and negotiated usage terms. Enterprise pricing is not self-checkout; scope and price must be documented in a written proposal.
+- Approved product direction: unused included voice minutes should accumulate in a customer Voice Minute Bank without monthly expiration while the customer maintains an active, paid Star69AI subscription. Banked minutes are service credits only: non-cash, non-transferable and redeemable only for eligible Star69AI AI voice usage. The customer portal must show the balance and transaction history.
+- Intended consumption order: current-period included allowance, then the oldest banked minutes (FIFO), then billable overage. Unused current-period minutes are added to the bank at period close. Any overage carry-forward choice applies only after current and banked minutes have been consumed.
+- Plan changes preserve the existing minute balance; future monthly grants follow the new plan. No cash redemption or resale. Cancellation, non-payment, reactivation and legally required balance treatment must be clearly disclosed and reviewed before launch.
+- IMPORTANT — NOT ACTIVE: the minute-bank ledger, grant/consumption reconciliation, customer balance display, period-close processing, and accounting treatment have not been implemented or tested. Do not advertise the bank as live until the full workflow is implemented and reconciled.
+- Tokenomics recommendation: use a centralized, auditable usage-credit ledger, not a cryptocurrency or public blockchain. Do not make minutes transferable, tradeable, yield-bearing or cash-redeemable. Review the accounting treatment for unredeemed service credits with a qualified accountant before launch.
 
 ## Website and repository structure
 

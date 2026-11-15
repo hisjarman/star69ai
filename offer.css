@@ -1,0 +1,23 @@
+/* Star69AI offer disclosures and billing choices. Keep terms visible at decision points. */
+.offer-banner,.offer-disclosure{display:flex;flex-direction:column;gap:7px;border:1px solid rgba(20,210,81,.38);border-left:4px solid #14d251;border-radius:12px;background:linear-gradient(110deg,rgba(20,210,81,.12),rgba(33,183,255,.08));color:#f4f8fc;padding:14px 17px;margin:0 0 20px;max-width:100%}
+.offer-banner strong,.offer-disclosure strong{font-size:15px;color:#fff}
+.offer-banner span,.offer-disclosure span{font-size:13px;line-height:1.55;color:#d0deea}
+.offer-banner a,.offer-disclosure a{align-self:flex-start;color:#b8f34b;font-weight:800;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.offer-disclosure{margin:14px 0;padding:13px 15px}
+.challenge-offer{max-width:680px;margin:22px auto 0;text-align:left}
+.prepay-offers{padding:54px 0 26px;color:#f4f8fc}
+.prepay-offers h2{font:clamp(24px,3vw,36px) Michroma,Manrope,sans-serif;color:#fff;margin:12px 0}
+.prepay-offers>p{color:#cbd8e4;max-width:78ch;line-height:1.65}
+.prepay-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:24px 0}
+.prepay-grid article{border:1px solid #2c4355;border-radius:15px;background:#101d2a;padding:22px}
+.prepay-grid article>span{display:block;font:11px "IBM Plex Mono",monospace;letter-spacing:.12em;color:#91dcff}
+.prepay-grid article>strong{display:block;font-size:26px;color:#b8f34b;margin:9px 0}
+.prepay-grid ul{padding-left:19px;color:#d0deea;line-height:1.9}
+.prepay-grid li b{color:#fff}
+.prepay-grid small,.prepay-terms{display:block;color:#b9cad9;font-size:13px;line-height:1.6}
+.prepay-terms{padding:14px 16px;border:1px solid #34495b;border-radius:10px;background:#0e1a26}
+.billing-choice{display:grid;gap:8px;max-width:460px;margin:18px 0;padding:16px;border:1px solid #2d4353;border-radius:12px;background:#101c28}
+.billing-choice label{font-weight:700;color:inherit}
+.billing-choice select,.billing-choice input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #526779;border-radius:8px;background:#f7fafc;color:#172b40}
+.billing-choice .small{margin:0;color:#cbd8e4}
+@media(max-width:640px){.prepay-grid{grid-template-columns:1fr}.offer-banner,.offer-disclosure{padding:12px 13px}}

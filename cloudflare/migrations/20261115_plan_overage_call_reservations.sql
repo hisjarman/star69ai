@@ -1,5 +1,5 @@
 -- Per-call reservations make the fixed plan overage ceiling enforceable across concurrent inbound calls.
--- Reservations expire after the provider's maximum allowed call duration plus a safety buffer.
+-- Reservations release on the call-ended webhook. A 24-hour expiry is a fail-safe for delayed or missing provider events.
 CREATE TABLE IF NOT EXISTS avr_overage_call_reservations (
   call_id TEXT PRIMARY KEY,
   customer_id TEXT NOT NULL REFERENCES avr_customers(id) ON DELETE CASCADE,

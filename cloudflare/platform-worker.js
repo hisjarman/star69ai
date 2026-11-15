@@ -49,7 +49,9 @@ async function reserveSubscriptionCall(env,customer,usage,callId){
  if(!callId)return 0;
  const included=Math.max(0,Number(usage.currentIncludedMinutes||planInfo[customer.plan_key]?.minutes||customer.included_minutes||0));
  const vaultBudget=Math.max(0,Number(usage.balanceMinutes||0)+Number(usage.usedFromVaultThisMonth||0));
- const maxUsageMs=(included+vaultBudget+subscriptionOverageCap(customer))*60000;
+ const overageAuthorized=(customer.billing_cadence==="monthly"&&!!customer.stripe_subscription_id&&["active","trialing"].includes(customer.subscription_status))||!!customer.stripe_payment_method_id;
+ const overageBudget=overageAuthorized&&customer.overage_payment_status!=="past_due"?subscriptionOverageCap(customer):0;
+ const maxUsageMs=(included+vaultBudget+overageBudget)*60000;
  const monthStart=Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1);
  const rows=await env.DB.prepare("SELECT start_timestamp,duration_ms FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(customer.id,Math.floor(monthStart/1000)).all();
  let usedMs=0;
@@ -147,6 +149,37 @@ async function customerFor(user,env){
 }
 async function audit(env,user,action,customerId,detail={}){await env.DB.prepare("INSERT INTO avr_admin_audit(id,admin_user_id,action,customer_id,detail_json) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),user.id,action,customerId||null,JSON.stringify(detail)).run()}
 async function stripeRequest(env,path,params={},method="POST",idempotencyKey=null){if(!env.STRIPE_SECRET_KEY)throw Error("stripe_not_configured");const form=new URLSearchParams();for(const [k,v] of Object.entries(params))if(v!==undefined&&v!==null)form.set(k,String(v));const headers={Authorization:"Bearer "+env.STRIPE_SECRET_KEY,"Content-Type":"application/x-www-form-urlencoded"};if(idempotencyKey)headers["Idempotency-Key"]=String(idempotencyKey).slice(0,255);const r=await fetch("https://api.stripe.com/v1/"+path,{method,headers,body:method==="GET"?undefined:form.toString()});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error?.message||"stripe_request_failed");return d}
+
+const OVERAGE_RATE_CENTS={starter:55,growth:45,pro:36};
+async function billSubscriptionOverage(env,customer,usage){
+ const totalMinutes=Math.max(0,Math.floor(Number(usage.billableOverageMinutes||0))),rate=OVERAGE_RATE_CENTS[customer.plan_key];
+ if(!totalMinutes||!rate)return {queued:false,reason:"no_billable_overage"};
+ const monthly=customer.billing_cadence==="monthly"&&!!customer.stripe_subscription_id&&["active","trialing"].includes(customer.subscription_status);
+ if(!monthly&&!customer.stripe_payment_method_id){await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='payment_method_required',updated_at=? WHERE id=?").bind(new Date().toISOString(),customer.id).run();return {queued:false,reason:"payment_method_required"};}
+ if(customer.overage_payment_status==="past_due")return {queued:false,reason:"overage_payment_past_due"};
+ const periodKey=new Date().toISOString().slice(0,7);
+ const billed=await env.DB.prepare("SELECT COALESCE(SUM(billed_minutes),0) AS total FROM avr_overage_billing_ledger WHERE customer_id=? AND period_key=? AND status IN ('queued','invoiced','paid')").bind(customer.id,periodKey).first();
+ const already=Math.max(0,Number(billed?.total||0)),delta=Math.max(0,totalMinutes-already);if(!delta)return {queued:false,reason:"already_accounted"};
+ const amount=delta*rate,now=new Date().toISOString(),rowId=crypto.randomUUID();
+ const ins=await env.DB.prepare("INSERT OR IGNORE INTO avr_overage_billing_ledger(id,customer_id,period_key,usage_minutes_total,billed_minutes,rate_cents,amount_cents,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'processing',?,?)").bind(rowId,customer.id,periodKey,totalMinutes,delta,rate,amount,now,now).run();
+ if(Number(ins.meta?.changes||0)!==1)return {queued:false,reason:"duplicate_snapshot"};
+ try{
+  if(monthly){
+   const item=await stripeRequest(env,"invoiceitems",{customer:customer.stripe_customer_id,subscription:customer.stripe_subscription_id,amount,currency:"usd",description:"Star69AI voice overage — "+delta+" minute(s) at $"+(rate/100).toFixed(2)+"/min","metadata[avr_customer_id]":customer.id,"metadata[avr_overage_ledger_id]":rowId},"POST","avr-overage-item-"+rowId);
+   await env.DB.prepare("UPDATE avr_overage_billing_ledger SET stripe_invoice_item_id=?,status='queued',updated_at=? WHERE id=?").bind(item.id,new Date().toISOString(),rowId).run();
+   return {queued:true,minutes:delta,amountCents:amount};
+  }
+  const invoice=await stripeRequest(env,"invoices",{customer:customer.stripe_customer_id,collection_method:"charge_automatically",auto_advance:false,default_payment_method:customer.stripe_payment_method_id,pending_invoice_items_behavior:"exclude","metadata[avr_customer_id]":customer.id,"metadata[avr_overage_ledger_id]":rowId},"POST","avr-overage-invoice-"+rowId);
+  const item=await stripeRequest(env,"invoiceitems",{customer:customer.stripe_customer_id,invoice:invoice.id,amount,currency:"usd",description:"Star69AI voice overage — "+delta+" minute(s) at $"+(rate/100).toFixed(2)+"/min","metadata[avr_customer_id]":customer.id,"metadata[avr_overage_ledger_id]":rowId},"POST","avr-overage-item-"+rowId);
+  await env.DB.prepare("UPDATE avr_overage_billing_ledger SET stripe_invoice_item_id=?,stripe_invoice_id=?,status='invoiced',updated_at=? WHERE id=?").bind(item.id,invoice.id,new Date().toISOString(),rowId).run();
+  await stripeRequest(env,"invoices/"+encodeURIComponent(invoice.id)+"/finalize",{auto_advance:true},"POST","avr-overage-finalize-"+rowId);
+  return {queued:true,minutes:delta,amountCents:amount,invoiceId:invoice.id};
+ }catch(e){
+  await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='failed',failure_reason=?,updated_at=? WHERE id=?").bind(String(e.message||"stripe_billing_failed").slice(0,300),new Date().toISOString(),rowId).run();
+  throw e;
+ }
+}
+
 async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",options={}){
  const p=planInfo[plan];if(!p)throw Error("invalid_plan");
  if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;if(selected!=="monthly")throw Error("prepaid_terms_are_paid_in_full_through_paypal_not_stripe");
@@ -460,7 +493,13 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    }
   }
  }
+ if(ev.type==="setup_intent.succeeded"&&stripeCustomer&&o.payment_method){
+  const pm=typeof o.payment_method==="string"?o.payment_method:o.payment_method.id;
+  await stripeRequest(env,"customers/"+encodeURIComponent(stripeCustomer),{"invoice_settings[default_payment_method]":pm},"POST","avr-overage-default-pm-"+o.id);
+  await env.DB.prepare("UPDATE avr_customers SET stripe_payment_method_id=?,overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(pm,new Date().toISOString(),stripeCustomer).run();
+ }
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
+  for(const line of (o.lines?.data||[])){const ledgerId=line.metadata?.avr_overage_ledger_id;if(ledgerId)await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),ledgerId).run();}
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
   const partnerId=customer?.affiliate_partner_id||o.metadata?.affiliate_partner_id||null;
   const lines=Array.isArray(o.lines?.data)?o.lines.data:[];
@@ -494,7 +533,10 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   }
  }
  if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}
- if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
+ if(ev.type==="invoice.payment_failed"){
+  await env.DB.prepare("UPDATE avr_customers SET subscription_status=CASE WHEN billing_cadence='monthly' THEN 'past_due' ELSE subscription_status END,overage_payment_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();
+  for(const line of (o.lines?.data||[])){const ledgerId=line.metadata?.avr_overage_ledger_id;if(ledgerId)await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='failed',failure_reason='stripe_invoice_payment_failed',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),ledgerId).run();}
+ }
  if(customerId||stripeCustomer){await env.DB.prepare("INSERT OR IGNORE INTO avr_billing_events(event_id,customer_id,event_type,event_created,payload_json) VALUES(?,?,?,?,?)").bind(ev.id,customerId,ev.type,ev.created,JSON.stringify(o).slice(0,50000)).run()}
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('stripe',?)").bind(ev.id).run();
  return {received:true};
@@ -677,6 +719,7 @@ async function retellWebhook(req,env){
   const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(cid).first();
   if(customer&&customer.status==="active"&&!isFlexCustomer(customer)){
    const usage=await refreshMinuteVault(env,customer),limit=subscriptionOverageCap(customer),periodKey=new Date().toISOString().slice(0,7),over=Number(usage.billableOverageMinutes||0);
+   if(over>0){try{await billSubscriptionOverage(env,customer,usage)}catch(e){console.error("overage_billing_failed",customer.id,e.message)}}
    if(limit>0&&over>=Math.max(1,Math.ceil(limit*0.5)))await sendOverageProtectionNotice(env,customer,periodKey,"warning_50",over,limit,limit);
    if(over>=limit)await sendOverageProtectionNotice(env,customer,periodKey,"blocked_75",over,limit,limit);
   }
@@ -741,6 +784,14 @@ async function route(req,env){
    await env.DB.prepare("UPDATE avr_demo_requests SET status='customer_approved',updated_at=? WHERE id=?").bind(new Date().toISOString(),ob.demo_request_id).run();
    return json({approved:true,subscriptionPaid:ob.plan_payment_status==="paid",setupRequired:ob.setup_status==="pending"},200,origin,env);
   }
+  if(path==="/api/client/overage-payment-method/setup"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
+   if(!["active","pending"].includes(c.status)||!planInfo[c.plan_key])throw Error("active_subscription_plan_required");
+   let stripeId=c.stripe_customer_id;
+   if(!stripeId){const sc=await stripeRequest(env,"customers",{email:u.email,name:c.business_name,"metadata[avr_customer_id]":c.id},"POST","avr-overage-customer-"+c.id);stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run();}
+   const session=await stripeRequest(env,"checkout/sessions",{mode:"setup",customer:stripeId,"payment_method_types[0]":"card","setup_intent_data[usage]":"off_session","setup_intent_data[metadata][avr_customer_id]":c.id,success_url:"https://star69ai.com/client/?overage_card=success",cancel_url:"https://star69ai.com/client/?overage_card=cancelled","metadata[avr_customer_id]":c.id},"POST","avr-overage-card-setup-"+c.id+"-"+crypto.randomUUID());
+   return json({url:session.url},200,origin,env);
+  }
   if(path==="/api/client/subscription/start"&&req.method==="POST"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
    const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
@@ -803,7 +854,7 @@ async function route(req,env){
    const assigned=await env.DB.prepare("SELECT phone_number FROM avr_numbers WHERE customer_id=? AND agent_id IS NOT NULL LIMIT 1").bind(c.id).first();
    return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:c.status==="active"&&!!assigned&&!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>=65&&gateEnabled,assignedNumber:assigned?.phone_number||null,ingressGateEnabled:gateEnabled,transactions:transactions.results||[],activationNote:gateEnabled?"Wallet balance and per-call duration limits are enforced before the AI answers. Star69AI must assign a live number and agent before calls can connect.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
   }
-  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=isFlexCustomer(c)?{balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,currentUsedMinutes:0,currentIncludedMinutes:0}:await refreshMinuteVault(env,c);const onboarding=await env.DB.prepare("SELECT id,plan_key,billing_cadence,setup_amount_cents,setup_status,plan_payment_status,plan_payment_provider,status,demo_approved,agent_id,account_delivery_status FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({onboarding:onboarding?{...onboarding,demoApproved:Number(onboarding.demo_approved||0)===1,setupAmountCents:Number(onboarding.setup_amount_cents||0)}:null,customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:isFlexCustomer(c)?"flex":c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:isFlexCustomer(c)?0:(vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes),overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
+  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=isFlexCustomer(c)?{balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,currentUsedMinutes:0,currentIncludedMinutes:0}:await refreshMinuteVault(env,c);const onboarding=await env.DB.prepare("SELECT id,plan_key,billing_cadence,setup_amount_cents,setup_status,plan_payment_status,plan_payment_provider,status,demo_approved,agent_id,account_delivery_status FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({onboarding:onboarding?{...onboarding,demoApproved:Number(onboarding.demo_approved||0)===1,setupAmountCents:Number(onboarding.setup_amount_cents||0)}:null,customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:isFlexCustomer(c)?"flex":c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:isFlexCustomer(c)?0:(vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes),overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasOveragePaymentMethod:!!c.stripe_payment_method_id||(c.billing_cadence==="monthly"&&!!c.stripe_subscription_id&&["active","trialing"].includes(c.subscription_status)),overagePaymentStatus:c.overage_payment_status||"not_setup",billingCadence:c.billing_cadence,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
 
   if(path==="/api/client/agent-configuration"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);

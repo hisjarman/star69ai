@@ -24,6 +24,23 @@ async function requireAdmin(req,env){const u=await clerkUser(req,env),allowed=(e
 function fail(e,origin,env){const m=e?.message||"request_failed",status=m==="admin_access_required"||m==="customer_account_already_linked"?403:m==="customer_account_match_ambiguous_contact_support"?409:m==="clerk_backend_not_configured"||m==="call_email_not_configured_contact_support"||m==="email_sender_not_configured_check_resend"||m==="email_provider_temporarily_unavailable_try_again"?503:m==="email_provider_rate_limited_try_again"?429:m==="email_provider_rejected_request_contact_support"?502:m==="sign_in_required"||m.includes("session")||m.includes("signature")?401:m==="email_verification_required"?403:400;return json({error:m},status,origin,env)}
 async function body(req,max=20000){const t=await req.text();if(t.length>max)throw Error("payload_too_large");try{return JSON.parse(t)}catch{throw Error("invalid_json")}}
 const planInfo={starter:{name:"Starter",price:149,minutes:300,priceEnv:"STRIPE_PRICE_STARTER",sixMonthPriceEnv:"STRIPE_PRICE_STARTER_6MO",annualPriceEnv:"STRIPE_PRICE_STARTER_12MO"},growth:{name:"Growth",price:249,minutes:600,priceEnv:"STRIPE_PRICE_GROWTH",sixMonthPriceEnv:"STRIPE_PRICE_GROWTH_6MO",annualPriceEnv:"STRIPE_PRICE_GROWTH_12MO"},pro:{name:"Pro",price:399,minutes:1200,priceEnv:"STRIPE_PRICE_PRO",sixMonthPriceEnv:"STRIPE_PRICE_PRO_6MO",annualPriceEnv:"STRIPE_PRICE_PRO_12MO"}};
+function isFlexCustomer(customer){return Number(customer?.payg_enabled||0)===1||customer?.plan_key==="flex"}
+async function reserveFlexCall(env,customer,balanceCents,callId){
+ if(!callId)return 0;
+ const now=Date.now();
+ await env.DB.prepare("DELETE FROM avr_overage_call_reservations WHERE customer_id=? AND period_key='flex' AND expires_at<=?").bind(customer.id,now).run();
+ const existing=await env.DB.prepare("SELECT reserved_ms FROM avr_overage_call_reservations WHERE call_id=? AND customer_id=? AND period_key='flex'").bind(callId,customer.id).first();
+ if(existing)return Math.max(0,Number(existing.reserved_ms||0));
+ const baseRemainingMs=Math.floor(Math.max(0,Number(balanceCents||0))/65)*60000;
+ const active=await env.DB.prepare("SELECT COALESCE(SUM(reserved_ms),0) AS reserved_ms FROM avr_overage_call_reservations WHERE customer_id=? AND period_key='flex' AND expires_at>?").bind(customer.id,now).first();
+ const available=Math.max(0,baseRemainingMs-Number(active?.reserved_ms||0));
+ const reserveMs=Math.min(3600000,Math.floor(available/60000)*60000);
+ if(reserveMs<60000)return 0;
+ const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_overage_call_reservations(call_id,customer_id,period_key,reserved_ms,expires_at,created_at) SELECT ?,?,'flex',?,?,? WHERE COALESCE((SELECT SUM(reserved_ms) FROM avr_overage_call_reservations WHERE customer_id=? AND period_key='flex' AND expires_at>?),0)+? <= ?")
+ .bind(callId,customer.id,reserveMs,now+65*60*1000,now,customer.id,now,reserveMs,baseRemainingMs).run();
+ if(Number(inserted.meta?.changes||0)!==1)return 0;
+ return reserveMs;
+}
 function subscriptionOverageCap(customer){
  const included=Math.max(0,Math.floor(Number(planInfo[customer.plan_key]?.minutes||customer.included_minutes||0)));
  return Math.floor(included*0.75);
@@ -52,6 +69,7 @@ async function reserveSubscriptionCall(env,customer,usage,callId){
  return reserveMs;
 }
 async function refreshMinuteVault(env,c){
+ if(isFlexCustomer(c))return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,currentUsedMinutes:0,currentIncludedMinutes:0,forfeited:false};
  const active=c.status==="active"&&(["active","trialing"].includes(c.subscription_status)||["six_month","annual"].includes(c.billing_cadence));
  if(!active)return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,forfeited:false};
  const now=new Date(),currentKey=now.toISOString().slice(0,7),plan=planInfo[c.plan_key],currentAllowance=Number(plan?.minutes||c.included_minutes||0);
@@ -579,11 +597,13 @@ async function retellInboundWebhook(req,env){
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(number.customer_id).first();
  if(!customer||customer.status!=="active")return {};
  const agentId=String(incoming.agent_id||number.agent_id||"");if(!agentId)return {};
- if(customer.plan_key==="flex"){
+ if(isFlexCustomer(customer)){
   const wallet=await env.DB.prepare("SELECT status FROM avr_payg_wallets WHERE customer_id=?").bind(customer.id).first();
   const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(customer.id).first();
   if(env.PAYG_INGRESS_GATE_ENABLED!=="true"||wallet?.status!=="funded"||Number(balance?.balance_cents||0)<=0)return {};
-  return {call_inbound:{override_agent_id:agentId}};
+  const callId=String(incoming.call_id||payload.call_id||"").trim(),reservedMs=await reserveFlexCall(env,customer,Number(balance?.balance_cents||0),callId);
+  if(reservedMs<60000)return {};
+  return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:reservedMs}}}};
  }
  const prepaid=["six_month","annual"].includes(customer.billing_cadence);
  if(!["active","trialing"].includes(customer.subscription_status)&&!prepaid)return {};
@@ -616,10 +636,19 @@ async function retellWebhook(req,env){
  const analysis=call.call_analysis||{};
  await env.DB.prepare("INSERT INTO avr_calls(call_id,customer_id,agent_id,phone_number,from_number,to_number,direction,call_status,duration_ms,start_timestamp,end_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason,raw_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(call_id) DO UPDATE SET customer_id=COALESCE(excluded.customer_id,avr_calls.customer_id),agent_id=COALESCE(excluded.agent_id,avr_calls.agent_id),phone_number=COALESCE(excluded.phone_number,avr_calls.phone_number),from_number=COALESCE(excluded.from_number,avr_calls.from_number),to_number=COALESCE(excluded.to_number,avr_calls.to_number),direction=COALESCE(excluded.direction,avr_calls.direction),call_status=excluded.call_status,duration_ms=COALESCE(excluded.duration_ms,avr_calls.duration_ms),start_timestamp=COALESCE(excluded.start_timestamp,avr_calls.start_timestamp),end_timestamp=COALESCE(excluded.end_timestamp,avr_calls.end_timestamp),transcript=COALESCE(excluded.transcript,avr_calls.transcript),recording_url=COALESCE(excluded.recording_url,avr_calls.recording_url),call_summary=COALESCE(excluded.call_summary,avr_calls.call_summary),user_sentiment=COALESCE(excluded.user_sentiment,avr_calls.user_sentiment),disconnection_reason=COALESCE(excluded.disconnection_reason,avr_calls.disconnection_reason),raw_json=excluded.raw_json")
  .bind(id,cid,agent,line,call.from_number||null,to,direction,callStatus,duration,start,end,call.transcript||null,call.recording_url||null,analysis.call_summary||null,analysis.user_sentiment||null,call.disconnection_reason||null,JSON.stringify(p).slice(0,100000)).run();
- if(event==="call_ended")await env.DB.prepare("DELETE FROM avr_overage_call_reservations WHERE call_id=?").bind(id).run();
+ if(event==="call_ended"){
+  const flexReservation=await env.DB.prepare("SELECT customer_id,reserved_ms FROM avr_overage_call_reservations WHERE call_id=? AND period_key='flex'").bind(id).first();
+  if(flexReservation){
+   const reservedMinutes=Math.max(1,Math.floor(Number(flexReservation.reserved_ms||60000)/60000)),actualMinutes=Math.max(1,Math.ceil(Math.max(0,Number(duration||flexReservation.reserved_ms||0))/60000)),chargedCents=Math.min(reservedMinutes,actualMinutes)*65;
+   await env.DB.prepare("INSERT OR IGNORE INTO avr_payg_wallet_ledger(id,customer_id,amount_cents,entry_type,source_ref,note,created_by) VALUES(?,?,?,'call_usage',?,?,?)").bind(crypto.randomUUID(),flexReservation.customer_id,-chargedCents,"retell_call_"+id,"Flex voice usage: "+Math.min(reservedMinutes,actualMinutes)+" minute(s) at $0.65/minute","retell_webhook").run();
+   const remaining=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(flexReservation.customer_id).first();
+   await env.DB.prepare("UPDATE avr_payg_wallets SET status=CASE WHEN ? > 0 THEN 'funded' ELSE 'pending' END,updated_at=? WHERE customer_id=?").bind(Number(remaining?.balance_cents||0),new Date().toISOString(),flexReservation.customer_id).run();
+  }
+  await env.DB.prepare("DELETE FROM avr_overage_call_reservations WHERE call_id=?").bind(id).run();
+ }
  if(cid&&(event==="call_ended"||event==="call_analyzed")){
   const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(cid).first();
-  if(customer&&customer.status==="active"&&customer.plan_key!=="flex"){
+  if(customer&&customer.status==="active"&&!isFlexCustomer(customer)){
    const usage=await refreshMinuteVault(env,customer),limit=subscriptionOverageCap(customer),periodKey=new Date().toISOString().slice(0,7),over=Number(usage.billableOverageMinutes||0);
    if(limit>0&&over>=Math.max(1,Math.ceil(limit*0.5)))await sendOverageProtectionNotice(env,customer,periodKey,"warning_50",over,limit,limit);
    if(over>=limit)await sendOverageProtectionNotice(env,customer,periodKey,"blocked_75",over,limit,limit);
@@ -715,7 +744,7 @@ async function route(req,env){
    const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";
    return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>0&&gateEnabled,ingressGateEnabled:gateEnabled,activationNote:gateEnabled?"Wallet balance is positive.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
   }
-  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const onboarding=await env.DB.prepare("SELECT id,plan_key,billing_cadence,setup_amount_cents,setup_status,plan_payment_status,plan_payment_provider,status,demo_approved,agent_id,account_delivery_status FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({onboarding:onboarding?{...onboarding,demoApproved:Number(onboarding.demo_approved||0)===1,setupAmountCents:Number(onboarding.setup_amount_cents||0)}:null,customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
+  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=isFlexCustomer(c)?{balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,currentUsedMinutes:0,currentIncludedMinutes:0}:await refreshMinuteVault(env,c);const onboarding=await env.DB.prepare("SELECT id,plan_key,billing_cadence,setup_amount_cents,setup_status,plan_payment_status,plan_payment_provider,status,demo_approved,agent_id,account_delivery_status FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({onboarding:onboarding?{...onboarding,demoApproved:Number(onboarding.demo_approved||0)===1,setupAmountCents:Number(onboarding.setup_amount_cents||0)}:null,customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:isFlexCustomer(c)?"flex":c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:isFlexCustomer(c)?0:(vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes),overageLimitMinutes:subscriptionOverageCap(c),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:subscriptionOverageCap(c),overageStopAtMinutes:subscriptionOverageCap(c)}},200,origin,env)}
 
   if(path==="/api/client/agent-configuration"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);

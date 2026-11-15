@@ -1071,6 +1071,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
    if(workspaceMatch&&req.method==="GET"){
     const id=workspaceMatch[1],customer=await env.DB.prepare("SELECT id,business_name,contact_name,email,phone,status,plan_key,included_minutes,subscription_status,stripe_customer_id,overage_limit_minutes,admin_notes,created_at,updated_at FROM avr_customers WHERE id=?").bind(id).first();
     if(!customer)throw Error("customer_not_found");
+    customer.overage_limit_minutes=subscriptionOverageCap(customer);
     const [agents,nums,emailRow,tickets,orders,calls]=await Promise.all([
      env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=? ORDER BY agent_name").bind(id).all(),
      env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=? ORDER BY phone_number").bind(id).all(),
@@ -1093,10 +1094,8 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     const contact=p.contactName===undefined?null:String(p.contactName).trim().slice(0,120);
     const phone=p.phone===undefined?null:String(p.phone).trim().slice(0,40);
     const notes=p.adminNotes===undefined?null:String(p.adminNotes).slice(0,2000);
-    const overageLimit=p.overageLimitMinutes===undefined?null:Number(p.overageLimitMinutes);
-    if(overageLimit!==null&&(!Number.isInteger(overageLimit)||overageLimit<0||overageLimit>2000))throw Error("overage_limit_must_be_integer_0_to_2000");
-    await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,overage_limit_minutes=COALESCE(?,overage_limit_minutes),admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
-     .bind(business,contact,phone,status||null,plan||null,plan||"",plan||"",plan||"",overageLimit,notes,new Date().toISOString(),id).run();
+     await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
+      .bind(business,contact,phone,status||null,plan||null,plan||"",plan||"",plan||"",notes,new Date().toISOString(),id).run();
     if(p.callEmail&&typeof p.callEmail==="object"){
      const recipients=Array.isArray(p.callEmail.recipients)?[...new Set(p.callEmail.recipients.map(x=>String(x).trim().toLowerCase()).filter(Boolean))]:[];
      if(recipients.length>10)throw Error("maximum_10_email_recipients");
@@ -1105,7 +1104,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
       .bind(id,p.callEmail.enabled?1:0,JSON.stringify(recipients),new Date().toISOString()).run();
     }
     if(status==="closed")await forfeitMinuteVault(env,id,"admin_account_closed",{adminEmail:u.email});
-    await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,overageLimitMinutes:overageLimit,callEmailUpdated:!!p.callEmail});
+    await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,callEmailUpdated:!!p.callEmail});
     return json({saved:true},200,origin,env)
    }
    const cm=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})$/i);if(cm&&req.method==="PATCH"){const p=await body(req),id=cm[1],c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(id).first();if(!c)throw Error("customer_not_found");const status=p.status,plan=p.plan;if(status&&!["pending","active","suspended","closed"].includes(status))throw Error("invalid_status");if(plan&&!planInfo[plan])throw Error("invalid_plan");await env.DB.prepare("UPDATE avr_customers SET status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?").bind(status||null,plan||null,plan||"",plan||"",plan||"",p.notes===undefined?null:String(p.notes).slice(0,2000),new Date().toISOString(),id).run();if(status==="closed")await forfeitMinuteVault(env,id,"admin_account_closed",{adminEmail:u.email});await audit(env,u,"customer_updated",id,p);return json({saved:true},200,origin,env)}

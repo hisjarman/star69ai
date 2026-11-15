@@ -310,7 +310,7 @@ async function retellInboundWebhook(req,env){
  const usage=await refreshMinuteVault(env,customer);
  const limit=Math.max(0,Math.floor(Number(customer.overage_limit_minutes||0)));
  const stopAt=limit>0?Math.max(1,Math.ceil(limit*0.75)):0;
- const noOverageAuthorized=limit===0&&(Number(usage.billableOverageMinutes||0)>0||(Number(usage.currentIncludedMinutes||0)>0&&Number(usage.currentUsedMinutes||0)>=Number(usage.currentIncludedMinutes||0)&&Number(usage.balanceMinutes||0)<=0));
+ const noOverageAuthorized=limit===0&&(Number(usage.billableOverageMinutes||0)>0||(Number(usage.currentUsedMinutes||0)>=Number(usage.currentIncludedMinutes||0)&&Number(usage.balanceMinutes||0)<=0));
  const blocked=noOverageAuthorized||(limit>0&&Number(usage.billableOverageMinutes||0)>=stopAt);
  const periodKey=new Date().toISOString().slice(0,7);
  if(limit>0&&Number(usage.billableOverageMinutes||0)>=Math.max(1,Math.ceil(limit*0.5))){
@@ -348,7 +348,7 @@ async function retellWebhook(req,env){
   if(customer&&customer.status==="active"&&customer.plan_key!=="flex"){
    const usage=await refreshMinuteVault(env,customer),limit=Math.max(0,Math.floor(Number(customer.overage_limit_minutes||0))),stopAt=limit>0?Math.max(1,Math.ceil(limit*0.75)):0,periodKey=new Date().toISOString().slice(0,7),over=Number(usage.billableOverageMinutes||0);
    if(limit>0&&over>=Math.max(1,Math.ceil(limit*0.5)))await sendOverageProtectionNotice(env,customer,periodKey,"warning_50",over,limit,stopAt);
-   const noAuth=limit===0&&(over>0||(Number(usage.currentIncludedMinutes||0)>0&&Number(usage.currentUsedMinutes||0)>=Number(usage.currentIncludedMinutes||0)&&Number(usage.balanceMinutes||0)<=0));
+   const noAuth=limit===0&&(over>0||(Number(usage.currentUsedMinutes||0)>=Number(usage.currentIncludedMinutes||0)&&Number(usage.balanceMinutes||0)<=0));
    if(noAuth||limit>0&&over>=stopAt)await sendOverageProtectionNotice(env,customer,periodKey,limit>0?"blocked_75":"blocked_no_overage_authorization",over,limit,stopAt);
   }
  }

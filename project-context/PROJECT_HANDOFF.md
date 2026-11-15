@@ -1,6 +1,16 @@
+## Enterprise plan and Voice Minute Bank — approved product direction 2026-11-15
+
+- Public monthly overage rates are now proposed as Starter $0.55/minute, Growth $0.45/minute, Pro $0.36/minute. Each is above its effective included-minute rate ($149/300 = $0.497, $249/600 = $0.415, $399/1,200 = $0.3325).
+- Add an enterprise consultation path, not a self-service Enterprise checkout. Tailor monthly minute pool, usage pricing, multi-location/department routing, integrations, support and service levels through discovery and a written proposal.
+- Voice Minute Bank policy direction: unused included minutes accumulate without monthly expiration while the customer maintains an active, paid subscription. Credits are service-only, non-cash, non-transferable and redeemable only for eligible Star69AI AI voice usage. Show the balance and a transaction ledger in the client portal.
+- Consumption order: current-period included allowance first, then oldest banked minutes (FIFO), then billable overage. At period close, unused included minutes are granted to the bank. The existing overage payment/carryover preference applies only after current and banked minutes are exhausted.
+- Plan upgrades/downgrades preserve the existing bank; future grants follow the new plan. Cancellation, failed payments, suspension, reactivation, refunds and any legally protected balances require clear customer terms and accountant/legal review before launch.
+- Tokenomics recommendation: use an auditable first-party usage-credit ledger. Do not issue a cryptocurrency, put balances on a public blockchain, or allow transfer, trading, yield or cash redemption. A centralized ledger is simpler for a single-provider closed-loop service and avoids unnecessary wallet, custody and token-regulatory complexity.
+- IMPORTANT — NOT ACTIVE: no minute-bank ledger, FIFO consumption, grant/reconciliation job, customer balance display, or accounting reconciliation is implemented. Do not market this as live until code, migration, tests and financial controls are complete.
+
 ## Overage billing and carryover policy — approved 2026-11-15
 
-- Monthly subscription charges remain on Stripe. Published monthly plans and overage rates remain Starter: 300 included minutes / $0.49 per additional minute; Growth: 600 / $0.39; Pro: 1,200 / $0.29.
+- Monthly subscription charges remain on Stripe. Published monthly plans and overage rates remain Starter: 300 included minutes / $0.55 per additional minute; Growth: 600 / $0.45; Pro: 1,200 / $0.36.
 - Customers may choose either (a) pay all overage at the end of the billing period, or (b) carry forward up to 50% of the next period's base included-minute allowance and pay the remainder.
 - Example: Growth includes 600 minutes. If the customer uses 1,000 minutes, the 400-minute overage is split into 300 carryover minutes (50% of 600) and 100 billable minutes. Next month's 600-minute allowance is reduced to 300 minutes. The 100-minute remainder is invoiced and due within 7 days of the new billing period.
 - If the carryover choice is selected, calculate the cap from the next period's plan allowance. Carryover minutes reduce the next period's included allowance. The remainder is not carried.
@@ -102,9 +112,9 @@ The form is for demo/discovery follow-up only; it does not create an account or 
 
 | Plan | Monthly price | Included voice minutes | Advertised overage |
 |---|---:|---:|---:|
-| Starter | $149 | 300 | $0.49/minute |
-| Growth | $249 | 600 | $0.39/minute |
-| Pro | $399 | 1,200 | $0.29/minute |
+| Starter | $149 | 300 | $0.55/minute |
+| Growth | $249 | 600 | $0.45/minute |
+| Pro | $399 | 1,200 | $0.36/minute |
 
 - One-time setup fee: $99, invoiced separately.
 - Do not silently change these published values in one page or portal surface without synchronizing all pricing displays and legal summaries.

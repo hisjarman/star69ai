@@ -2,7 +2,7 @@
   const markup = `
     <header class="site-global-header" data-site-global-header>
       <a class="site-global-brand" href="/" aria-label="Star69AI home">
-        <img src="/assets/star69ai-logo-transparent.png" alt="Star69AI — Smarter Calls. Bigger Opportunity.">
+        <img src="/assets/star69ai-logo.svg" alt="Star69AI — Smarter Calls. Bigger Opportunity.">
       </a>
       <button class="site-global-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="site-global-navigation">
         <span></span><span></span><span></span>

@@ -293,7 +293,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  const ev=JSON.parse(raw);const seen=await env.DB.prepare("SELECT event_id FROM avr_webhook_events WHERE provider='stripe' AND event_id=?").bind(ev.id).first();if(seen)return {received:true,duplicate:true};
  
  const o=ev.data?.object||{},customerId=o.metadata?.avr_customer_id||null,stripeCustomer=o.customer||o.customer_id||null;
- if(ev.type==="checkout.session.completed"&&customerId){
+ if((ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded")&&customerId){
   const selectedPlan=o.metadata?.plan_key||null;
   await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
   // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
@@ -308,6 +308,13 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
   await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
+  if(["active","trialing"].includes(status)){
+   const paidOnboarding=await env.DB.prepare("SELECT id FROM avr_paid_onboardings WHERE customer_id=(SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1) LIMIT 1").bind(scid).first();
+   if(paidOnboarding){
+    await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_status='paid',status='awaiting_provisioning',updated_at=? WHERE id=?").bind(new Date().toISOString(),paidOnboarding.id).run();
+    await maybeProvisionPaidOnboarding(env,paidOnboarding.id);
+   }
+  }
  }
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
@@ -342,7 +349,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    }
   }
  }
- if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(scid).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}
+ if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}
  if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
  if(customerId||stripeCustomer){await env.DB.prepare("INSERT OR IGNORE INTO avr_billing_events(event_id,customer_id,event_type,event_created,payload_json) VALUES(?,?,?,?,?)").bind(ev.id,customerId,ev.type,ev.created,JSON.stringify(o).slice(0,50000)).run()}
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('stripe',?)").bind(ev.id).run();

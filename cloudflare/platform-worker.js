@@ -23,7 +23,67 @@ async function clerkUser(req,env){
 async function requireAdmin(req,env){const u=await clerkUser(req,env),allowed=(env.ADMIN_EMAILS||"").split(",").map(x=>x.trim().toLowerCase());if(!allowed.includes(u.email))throw Error("admin_access_required");return u}
 function fail(e,origin,env){const m=e?.message||"request_failed",status=m==="admin_access_required"||m==="customer_account_already_linked"?403:m==="customer_account_match_ambiguous_contact_support"?409:m==="clerk_backend_not_configured"||m==="call_email_not_configured_contact_support"||m==="email_sender_not_configured_check_resend"||m==="email_provider_temporarily_unavailable_try_again"?503:m==="email_provider_rate_limited_try_again"?429:m==="email_provider_rejected_request_contact_support"?502:m==="sign_in_required"||m.includes("session")||m.includes("signature")?401:m==="email_verification_required"?403:400;return json({error:m},status,origin,env)}
 async function body(req,max=20000){const t=await req.text();if(t.length>max)throw Error("payload_too_large");try{return JSON.parse(t)}catch{throw Error("invalid_json")}}
-const planInfo={starter:{name:"Starter",price:149,minutes:300,priceEnv:"STRIPE_PRICE_STARTER",sixMonthPriceEnv:"STRIPE_PRICE_STARTER_6MO",annualPriceEnv:"STRIPE_PRICE_STARTER_12MO"},growth:{name:"Growth",price:249,minutes:600,priceEnv:"STRIPE_PRICE_GROWTH",sixMonthPriceEnv:"STRIPE_PRICE_GROWTH_6MO",annualPriceEnv:"STRIPE_PRICE_GROWTH_12MO"},pro:{name:"Pro",price:399,minutes:1000,priceEnv:"STRIPE_PRICE_PRO",sixMonthPriceEnv:"STRIPE_PRICE_PRO_6MO",annualPriceEnv:"STRIPE_PRICE_PRO_12MO"}};
+const planInfo={starter:{name:"Starter",price:149,minutes:300,priceEnv:"STRIPE_PRICE_STARTER",sixMonthPriceEnv:"STRIPE_PRICE_STARTER_6MO",annualPriceEnv:"STRIPE_PRICE_STARTER_12MO"},growth:{name:"Growth",price:249,minutes:600,priceEnv:"STRIPE_PRICE_GROWTH",sixMonthPriceEnv:"STRIPE_PRICE_GROWTH_6MO",annualPriceEnv:"STRIPE_PRICE_GROWTH_12MO"},pro:{name:"Pro",price:399,minutes:1200,priceEnv:"STRIPE_PRICE_PRO",sixMonthPriceEnv:"STRIPE_PRICE_PRO_6MO",annualPriceEnv:"STRIPE_PRICE_PRO_12MO"}};
+async function refreshMinuteVault(env,c){
+ const active=c.status==="active"&&(["active","trialing"].includes(c.subscription_status)||["six_month","annual"].includes(c.billing_cadence));
+ if(!active)return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,forfeited:false};
+ const now=new Date(),currentKey=now.toISOString().slice(0,7),plan=planInfo[c.plan_key],currentAllowance=Number(plan?.minutes||c.included_minutes||0);
+ let rows=(await env.DB.prepare("SELECT period_key,included_minutes,plan_key FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key").bind(c.id).all()).results||[];
+ if(!rows.length){
+  await env.DB.prepare("INSERT OR IGNORE INTO avr_minute_vault_periods(customer_id,period_key,plan_key,included_minutes) VALUES(?,?,?,?)").bind(c.id,currentKey,c.plan_key||"custom",currentAllowance).run();
+ }else{
+  const last=rows[rows.length-1],parts=last.period_key.split("-").map(Number);
+  let cursor=new Date(Date.UTC(parts[0],parts[1],1));
+  const currentDate=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),1));
+  let guard=0;
+  while(cursor<currentDate&&++guard<=36){
+   const key=cursor.toISOString().slice(0,7);
+   const allowance=key===currentKey?currentAllowance:Number(last.included_minutes||currentAllowance);
+   await env.DB.prepare("INSERT OR IGNORE INTO avr_minute_vault_periods(customer_id,period_key,plan_key,included_minutes) VALUES(?,?,?,?)").bind(c.id,key,key===currentKey?(c.plan_key||"custom"):(last.plan_key||"custom"),allowance).run();
+   cursor=new Date(Date.UTC(cursor.getUTCFullYear(),cursor.getUTCMonth()+1,1));
+  }
+  if(guard>36)throw Error("minute_vault_period_backfill_limit");
+  if(!rows.some(x=>x.period_key===currentKey))await env.DB.prepare("INSERT OR IGNORE INTO avr_minute_vault_periods(customer_id,period_key,plan_key,included_minutes) VALUES(?,?,?,?)").bind(c.id,currentKey,c.plan_key||"custom",currentAllowance).run();
+ }
+ rows=(await env.DB.prepare("SELECT period_key,plan_key,included_minutes FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key").bind(c.id).all()).results||[];
+ if(!rows.length)return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,forfeited:false};
+ const first=rows[0].period_key+"-01T00:00:00.000Z",startMs=Date.parse(first);
+ const calls=await env.DB.prepare("SELECT start_timestamp,duration_ms FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,startMs).all();
+ const usageByMonth={};
+ for(const call of calls.results||[]){
+  const raw=Number(call.start_timestamp||0),stamp=raw>1e12?raw:raw*1000;
+  if(!Number.isFinite(stamp)||stamp<startMs)continue;
+  const key=new Date(stamp).toISOString().slice(0,7);
+  usageByMonth[key]=(usageByMonth[key]||0)+Math.max(0,Number(call.duration_ms||0));
+ }
+ await env.DB.prepare("DELETE FROM avr_minute_vault_allocations WHERE customer_id=?").bind(c.id).run();
+ const lots=[];
+ let balance=0,currentUsed=0,currentBankUsed=0,billable=0;
+ for(const row of rows){
+  const used=Math.ceil((usageByMonth[row.period_key]||0)/60000),included=Math.max(0,Number(row.included_minutes||0)),isCurrent=row.period_key===currentKey;
+  let remainingOverage=Math.max(0,used-included),bankUsed=0;
+  while(remainingOverage>0&&lots.length){
+   const lot=lots[0],take=Math.min(lot.remaining,remainingOverage);
+   if(take>0){
+    await env.DB.prepare("INSERT INTO avr_minute_vault_allocations(customer_id,usage_period_key,grant_period_key,minutes) VALUES(?,?,?,?)").bind(c.id,row.period_key,lot.periodKey,take).run();
+    lot.remaining-=take;remainingOverage-=take;bankUsed+=take;
+   }
+   if(lot.remaining<=0)lots.shift();
+  }
+  const banked=isCurrent?0:Math.max(0,included-used);
+  if(banked>0)lots.push({periodKey:row.period_key,remaining:banked});
+  balance=lots.reduce((sum,lot)=>sum+lot.remaining,0);
+  if(isCurrent){currentUsed=used;currentBankUsed=bankUsed;billable=remainingOverage}
+  await env.DB.prepare("UPDATE avr_minute_vault_periods SET used_minutes=?,banked_minutes=?,bank_used_minutes=?,balance_after_minutes=?,finalized=?,updated_at=? WHERE customer_id=? AND period_key=?").bind(used,banked,bankUsed,balance,isCurrent?0:1,now.toISOString(),c.id,row.period_key).run();
+ }
+ return {balanceMinutes:balance,usedFromVaultThisMonth:currentBankUsed,billableOverageMinutes:billable,currentUsedMinutes:currentUsed,currentIncludedMinutes:Number(rows.find(x=>x.period_key===currentKey)?.included_minutes||currentAllowance),forfeited:false};
+}
+async function forfeitMinuteVault(env,customerId,reason,detail={}){
+ const total=await env.DB.prepare("SELECT COALESCE(balance_after_minutes,0) AS balance FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key DESC LIMIT 1").bind(customerId).first();
+ const periods=await env.DB.prepare("SELECT COUNT(*) AS total FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).first();
+ if(Number(periods?.total||0)>0)await env.DB.prepare("INSERT INTO avr_minute_vault_events(id,customer_id,event_type,minutes,detail_json) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),customerId,"forfeited_on_cancellation",Number(total?.balance||0),JSON.stringify({reason,...detail})).run();
+ await env.DB.prepare("DELETE FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).run();
+}
 async function customerFor(user,env){
  let c=await env.DB.prepare("SELECT * FROM avr_customers WHERE clerk_user_id=? LIMIT 1").bind(user.id).first();
  if(c)return c;
@@ -72,7 +132,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  }
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
-  await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
+  await env.DB.prepare("UPDATE avr_customers SET stripe_subscription_id=?,subscription_status=?,billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,current_period_end=?,status=CASE WHEN ?='active' OR ?='trialing' THEN 'active' WHEN ?='canceled' THEN 'suspended' ELSE status END,updated_at=? WHERE stripe_customer_id=?").bind(sid,status,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,plan,plan,plan,plan,period,status,status,status,new Date().toISOString(),scid).run();
  }
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
@@ -107,6 +167,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    }
   }
  }
+ if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(scid).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}
  if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
  if(customerId||stripeCustomer){await env.DB.prepare("INSERT OR IGNORE INTO avr_billing_events(event_id,customer_id,event_type,event_created,payload_json) VALUES(?,?,?,?,?)").bind(ev.id,customerId,ev.type,ev.created,JSON.stringify(o).slice(0,50000)).run()}
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('stripe',?)").bind(ev.id).run();
@@ -274,7 +335,7 @@ async function route(req,env){
    return json({accepted:true,id,discoveryComplete,notificationSent,message:discoveryComplete?"Your complete business discovery brief has been received.":"Your demo request has been received."},201,origin,env);
   }
   if(path==="/api/me"&&req.method==="GET"){const u=await clerkUser(req,env);return json({user:u},200,origin,env)}
-  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).first();const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:c.included_minutes,hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0)}},200,origin,env)}
+  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes}},200,origin,env)}
 
   if(path==="/api/client/agent-configuration"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
@@ -665,7 +726,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     const contact=p.contactName===undefined?null:String(p.contactName).trim().slice(0,120);
     const phone=p.phone===undefined?null:String(p.phone).trim().slice(0,40);
     const notes=p.adminNotes===undefined?null:String(p.adminNotes).slice(0,2000);
-    await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
+    await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
      .bind(business,contact,phone,status||null,plan||null,plan||"",plan||"",plan||"",notes,new Date().toISOString(),id).run();
     if(p.callEmail&&typeof p.callEmail==="object"){
      const recipients=Array.isArray(p.callEmail.recipients)?[...new Set(p.callEmail.recipients.map(x=>String(x).trim().toLowerCase()).filter(Boolean))]:[];
@@ -674,10 +735,11 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
      await env.DB.prepare("INSERT INTO avr_call_email_settings(customer_id,enabled,recipients_json,updated_at) VALUES(?,?,?,?) ON CONFLICT(customer_id) DO UPDATE SET enabled=excluded.enabled,recipients_json=excluded.recipients_json,updated_at=excluded.updated_at")
       .bind(id,p.callEmail.enabled?1:0,JSON.stringify(recipients),new Date().toISOString()).run();
     }
+    if(status==="closed")await forfeitMinuteVault(env,id,"admin_account_closed",{adminEmail:u.email});
     await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,callEmailUpdated:!!p.callEmail});
     return json({saved:true},200,origin,env)
    }
-   const cm=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})$/i);if(cm&&req.method==="PATCH"){const p=await body(req),id=cm[1],c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(id).first();if(!c)throw Error("customer_not_found");const status=p.status,plan=p.plan;if(status&&!["pending","active","suspended","closed"].includes(status))throw Error("invalid_status");if(plan&&!planInfo[plan])throw Error("invalid_plan");await env.DB.prepare("UPDATE avr_customers SET status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1000 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?").bind(status||null,plan||null,plan||"",plan||"",plan||"",p.notes===undefined?null:String(p.notes).slice(0,2000),new Date().toISOString(),id).run();await audit(env,u,"customer_updated",id,p);return json({saved:true},200,origin,env)}
+   const cm=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})$/i);if(cm&&req.method==="PATCH"){const p=await body(req),id=cm[1],c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(id).first();if(!c)throw Error("customer_not_found");const status=p.status,plan=p.plan;if(status&&!["pending","active","suspended","closed"].includes(status))throw Error("invalid_status");if(plan&&!planInfo[plan])throw Error("invalid_plan");await env.DB.prepare("UPDATE avr_customers SET status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?").bind(status||null,plan||null,plan||"",plan||"",plan||"",p.notes===undefined?null:String(p.notes).slice(0,2000),new Date().toISOString(),id).run();if(status==="closed")await forfeitMinuteVault(env,id,"admin_account_closed",{adminEmail:u.email});await audit(env,u,"customer_updated",id,p);return json({saved:true},200,origin,env)}
    if(path==="/api/admin/retell/sync"&&req.method==="POST"){const result=await syncRetell(env);await audit(env,u,"retell_sync",null,result);return json(result,200,origin,env)}
    if(path==="/api/admin/retell/resources"&&req.method==="GET"){
     const [a,n]=await Promise.all([env.DB.prepare("SELECT a.agent_id,a.agent_name,a.status,a.customer_id,a.client_visible_prompt,a.raw_json,c.business_name FROM avr_agents a LEFT JOIN avr_customers c ON c.id=a.customer_id ORDER BY a.agent_name").all(),env.DB.prepare("SELECT n.*,c.business_name FROM avr_numbers n LEFT JOIN avr_customers c ON c.id=n.customer_id ORDER BY n.phone_number").all()]);

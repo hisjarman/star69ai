@@ -1,3 +1,16 @@
+## Overage billing and carryover policy — approved 2026-11-15
+
+- Monthly subscription charges remain on Stripe. Published monthly plans and overage rates remain Starter: 300 included minutes / $0.49 per additional minute; Growth: 600 / $0.39; Pro: 1,000 / $0.29.
+- Customers may choose either (a) pay all overage at the end of the billing period, or (b) carry forward up to 50% of the next period's base included-minute allowance and pay the remainder.
+- Example: Growth includes 600 minutes. If the customer uses 1,000 minutes, the 400-minute overage is split into 300 carryover minutes (50% of 600) and 100 billable minutes. Next month's 600-minute allowance is reduced to 300 minutes. The 100-minute remainder is invoiced and due within 7 days of the new billing period.
+- If the carryover choice is selected, calculate the cap from the next period's plan allowance. Carryover minutes reduce the next period's included allowance. The remainder is not carried.
+- If the overage remainder is unpaid after the 7-day due window, pause only additional overage coverage. Do not cancel, suspend, or otherwise alter the underlying subscription; remaining included minutes continue to be available.
+- Partner commissions remain based only on eligible subscription revenue actually collected after customer discounts. Overage invoices and usage charges are excluded from partner commission.
+- Feature branch: `feature/paypal-prepaid-stripe-overage-20261115`.
+- Added migration `cloudflare/migrations/20261115_overage_carryover_policy.sql`, D1 schema documentation, customer preference API, and a billing-page preference selector. The Worker now records Stripe subscription period start when the webhook supplies it.
+- IMPORTANT — NOT ACTIVE: this is an initial preference/schema foundation only. The migration has not been applied to production; Stripe overage invoice creation/collection and payment reconciliation are not yet implemented; scheduled period close and 7-day enforcement are not implemented; and a verified Retell inbound-call coverage gate has not been configured. The portal explicitly labels enforcement as pending. Do not merge, deploy, or claim the policy is operational until those pieces and end-to-end tests are complete.
+- Retell call events are post-call; do not attempt to enforce a hard overage stop solely from `call_ended`. Confirm and implement the provider's supported inbound call webhook/agent-routing behavior before activating a pause that could affect live business calls.
+ 
 ## Prepaid pricing and setup-fee waiver update — 2026-11-14
 
 - Approved prepaid offers: six months at 20% off the standard subscription total; twelve months at 30% off. Totals: Starter $715.20 / $1,251.60; Growth $1,195.20 / $2,091.60; Pro $1,915.20 / $3,351.60.

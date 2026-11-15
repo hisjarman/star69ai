@@ -54,7 +54,28 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   note("PayPal approved the setup payment. Verifying it securely…");
   try{await api("/api/public/checkout/capture",{method:"POST",body:JSON.stringify({onboardingId:q.get("onboarding_id"),statusToken:q.get("status_token"),orderId:q.get("token")})});history.replaceState(null,"",location.pathname+"#overview");note("Setup payment verified. Your account is ready for managed launch.")}
   catch(e){note("Payment verification did not complete: "+e.message,true)}
+ } async function captureWalletTopupReturn(){
+  const q=new URLSearchParams(location.search);
+  if(q.get("payg_topup_cancelled")==="1"){note("The PayPal top-up was cancelled. No wallet credit was added.");history.replaceState(null,"",location.pathname+"#billing");return}
+  if(q.get("payg_topup")!=="1"||!q.get("token")||!q.get("topup_id"))return;
+  note("PayPal approved your wallet top-up. Verifying the payment before adding credit…");
+  try{const d=await api("/api/client/payg-wallet/topup/capture",{method:"POST",body:JSON.stringify({topupId:q.get("topup_id"),orderId:q.get("token")})});history.replaceState(null,"",location.pathname+"#billing");note("PayPal verified. "+money(Number(d.amountCents||0)/100)+" has been added to your Flex wallet.")}
+  catch(e){note("Wallet top-up verification did not complete: "+e.message,true)}
  }
+ async function loadFlexWallet(){
+  const panel=$("#flex-wallet-panel");if(!panel)return;
+  if(customer?.plan!=="flex"){panel.hidden=true;return}
+  panel.hidden=false;
+  try{
+   const d=await api("/api/client/payg-wallet");
+   $("#flex-wallet-balance").textContent=money(Number(d.balanceCents||0)/100);
+   $("#flex-wallet-status").textContent=d.walletStatus||"not funded";
+   $("#flex-wallet-eligibility").textContent=d.canReceiveCalls?"Ready":"Paused";
+   const rows=d.transactions||[];
+   $("#flex-wallet-history").innerHTML=rows.length?'<table><thead><tr><th>DATE</th><th>ACTIVITY</th><th>AMOUNT</th><th>DETAIL</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+safe(fmtDate(x.created_at))+'</td><td>'+safe(x.entry_type||"wallet")+'</td><td>'+money(Number(x.amount_cents||0)/100)+'</td><td>'+safe(x.note||x.source_ref||"—")+'</td></tr>').join("")+'</tbody></table>':'<div class="empty">No wallet activity yet. Add credit to enable Flex calls.</div>';
+  }catch(e){$("#flex-wallet-history").innerHTML='<div class="empty">'+safe(e.message)+'</div>'}
+ }
+
  function renderUsage(usage,included,plan){
   const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;
   const overageLimit=Math.max(0,Number(usage.overageLimitMinutes||0)),overageStopAt=Math.max(0,Number(usage.overageStopAtMinutes||0));
@@ -64,8 +85,8 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   $("#usage-left").textContent=allowance?Math.max(0,allowance-used)+" minutes remaining": "No included minutes on this account";
   $("#usage-total").textContent=used+" of "+allowance+" included minutes";
   const overageRate=OVERAGE_RATES[String(plan||"").toLowerCase()];
-  $("#overage-rate").textContent=overageRate===undefined?"See your plan":money(overageRate)+" / minute";
-  $("#overage-estimate").textContent="Estimated overage after vault: "+(overageRate===undefined?"—":money(over*overageRate));
+  $("#overage-rate").textContent=String(plan||"").toLowerCase()==="flex"?money(0.65)+" / minute":overageRate===undefined?"See your plan":money(overageRate)+" / minute";
+  $("#overage-estimate").textContent=String(plan||"").toLowerCase()==="flex"?"Prepaid wallet balance controls call access":"Estimated overage after vault: "+(overageRate===undefined?"—":money(over*overageRate));
   if($("#vault-balance"))$("#vault-balance").textContent=vault.toLocaleString();
   if($("#vault-used"))$("#vault-used").textContent=vaultUsed.toLocaleString()+" min";
   if($("#vault-overage"))$("#vault-overage").textContent=over.toLocaleString()+" min";
@@ -174,14 +195,14 @@ function renderAgentRequests(items){
  async function load(){
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
-   await captureSetupReturn();const d=await api("/api/client/dashboard");customer=d.customer;
+   await captureSetupReturn();await captureWalletTopupReturn();const d=await api("/api/client/dashboard");customer=d.customer;
    $("#auth").classList.add("hidden");$("#app").classList.remove("hidden");$("#session-pill").textContent="Signed in";
    if(!customer){$("#no-account").classList.remove("hidden");$("#workspace").classList.add("hidden");return}
    $("#no-account").classList.add("hidden");$("#workspace").classList.remove("hidden");
    $("#business-title").textContent=customer.businessName||"Your dashboard";
    renderOnboarding(d.onboarding);
    $("#account-status").textContent=customer.status||"Pending";$("#account-status").className="status "+(customer.status||"pending");
-   const plans={starter:["Starter","$149 / month"],growth:["Growth","$249 / month"],pro:["Pro","$399 / month"]};
+   const plans={starter:["Starter","$149 / month"],growth:["Growth","$249 / month"],pro:["Pro","$399 / month"],flex:["Flex","$0.65 per AI minute"]};
    $("#plan-name").textContent=plans[customer.plan]?.[0]||"Not selected";
     const offerNote=$("#billing-offer-note");if(offerNote&&customer.hasPartnerReferral)offerNote.textContent="Your partner referral makes you eligible for 5% off the first monthly payment once the offer is active in checkout. It is applied automatically unless you enter CALLSMART10. Discounts do not stack; prepaid savings replace first-month offers.";
    $("#plan-price").textContent=plans[customer.plan]?.[1]||"Select a monthly plan";
@@ -190,7 +211,7 @@ function renderAgentRequests(items){
    $("#subscription-status").textContent=customer.subscriptionStatus||"Not active";
    $("#billing-portal").disabled=!customer.hasBillingAccount;
    $("#billing-portal").textContent=customer.hasBillingAccount?"Manage subscription":"Billing not started";
-   document.querySelectorAll(".plan-btn").forEach(b=>{b.disabled=["active","trialing","past_due"].includes(customer.subscriptionStatus)});
+   document.querySelectorAll(".plan-btn").forEach(b=>{b.disabled=customer.plan==="flex"||["active","trialing","past_due"].includes(customer.subscriptionStatus)});const planActions=document.querySelector(".plan-actions");if(planActions)planActions.hidden=customer.plan==="flex";
    $("#renewal-date").textContent=customer.periodEnd?"Period ends "+fmtDate(customer.periodEnd):"Manage billing below";
    $("#business-name").value=customer.businessName||"";
    $("#contact-name").value=customer.contactName||"";
@@ -202,7 +223,7 @@ function renderAgentRequests(items){
    $("#receptionist-status").innerHTML=hasLive?'<b>Live receptionist configured</b><p class="small">Your managed receptionist is configured. Check the phone-number section below for the assigned business line.</p>':hasDemo?'<b>Demo receptionist ready</b><p class="small">Your personalized demo agent has been created from your business details. You can review its setup here. It is not connected to your live business number and cannot answer production calls yet.</p><p class="small">Next: our team completes configuration, assigns your phone number and tests the live call route.</p>':'<b>Demo receptionist in preparation</b><p class="small">Your account is ready. Your personalized demo agent will appear here as soon as provisioning is complete.</p>';
    $("#number-list").innerHTML=d.numbers.length?d.numbers.map(n=>'<div class="resource"><b>'+safe(n.phone_number)+'</b><span class="small">'+safe(n.nickname||"Business line")+'</span></div>').join(""):'<div class="empty"><b>Phone number not assigned yet</b><p class="small">That is expected at this stage. Your demo can be reviewed before a business number is assigned. We will complete number assignment and live-call testing during managed launch.</p></div>';
    renderCalls(d.calls||[],customer.email||"");
-   await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration()]);
+   await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration(),loadFlexWallet()]);
    renderAgentOptions();
   }catch(e){note(e.message,true)}
   finally{loading=false;$("#refresh-dashboard").disabled=false}
@@ -221,6 +242,8 @@ function renderAgentRequests(items){
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
+ $("#flex-topup-form")?.addEventListener("submit",async e=>{e.preventDefault();const button=$("#flex-topup-submit");button.disabled=true;try{const amount=Number($("#flex-topup-amount").value);if(!Number.isInteger(amount)||amount<5||amount>500||amount%5!==0)throw Error("Enter an amount from $5 to $500 in $5 increments.");const d=await api("/api/client/payg-wallet/topup",{method:"POST",body:JSON.stringify({amount})});location.assign(d.approvalUrl)}catch(err){note(err.message,true);button.disabled=false}});
+
  $("#approve-demo")?.addEventListener("click",()=>handleOnboardingAction($("#approve-demo"),"/api/client/demo/approve","Demo approved."));
  $("#start-subscription")?.addEventListener("click",()=>handleOnboardingAction($("#start-subscription"),"/api/client/subscription/start","Preparing your plan payment."));
  $("#pay-setup-fee")?.addEventListener("click",()=>handleOnboardingAction($("#pay-setup-fee"),"/api/client/setup-payment/start","Preparing your PayPal setup payment."));

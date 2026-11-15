@@ -60,3 +60,20 @@
  .phone-history-conclusion{padding:12px;font-size:13px}
 }
 @media(prefers-reduced-motion:reduce){.phone-history-step{transition:none}}
+
+/* Timeline-first interaction: compact milestone rail, expandable knowledge section. */
+.phone-history{background:linear-gradient(135deg,#081522 0%,#0c1d2c 55%,#10283a 100%);color:#eaf4fa;border-bottom:1px solid rgba(92,190,222,.2)}
+.phone-history:before{opacity:.12;background-image:radial-gradient(#8db7c8 .6px,transparent .6px)}
+.phone-history-heading h2{color:#f1f8fc}.phone-history-heading h2 em{color:#64d9c6}.phone-history-heading>p{color:#aec2cf}.phone-history-kicker{color:#72d9ca}
+.phone-history-rail{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0;margin:30px 0 0;padding:0 8px}
+.phone-history-rail:before{content:"";position:absolute;top:13px;left:7%;right:7%;height:2px;background:linear-gradient(90deg,#2e6d86,#4ed9c1);opacity:.75}
+.phone-history-step{z-index:1;display:flex;min-height:82px;align-items:center;justify-content:flex-start;gap:8px;padding:0 5px;border:0;border-radius:0;background:transparent;color:#dbeaf1;text-align:center;cursor:pointer}
+.phone-history-step:after{content:"";position:absolute;top:7px;left:calc(50% - 7px);right:auto;bottom:auto;width:14px;height:14px;border:2px solid #5fcdbd;border-radius:50%;background:#0a1927;box-shadow:0 0 0 4px rgba(95,205,189,.08)}
+.phone-history-step span{margin-top:25px;color:#82a9bb;font-size:9px}.phone-history-step b{color:#f2f8fb;font-size:14px}.phone-history-step small{color:#b0c3ce;font-size:10px}
+.phone-history-step:hover{transform:translateY(-2px);background:transparent}.phone-history-step.is-active{background:transparent;box-shadow:none}.phone-history-step.is-active:after{background:#65e4c6;box-shadow:0 0 0 5px rgba(101,228,198,.18),0 0 18px rgba(101,228,198,.45)}
+.phone-history-step.is-active span,.phone-history-step.is-active b{color:#78f0d1}
+.phone-history-lesson{margin-top:26px;border:1px solid rgba(107,190,215,.25);border-left:4px solid #5edcc5;border-radius:16px;background:linear-gradient(145deg,rgba(16,42,61,.98),rgba(8,24,39,.98));box-shadow:0 22px 60px rgba(0,0,0,.28);scroll-margin-top:95px}
+.phone-history-lesson[hidden]{display:none}.phone-history-lesson-meta{color:#8bb6c7}.phone-history-year{color:#6ce2cb}.phone-history-copy h3{color:#f1f7fb}.phone-history-copy p{color:#c0d1dc}.phone-history-copy .phone-history-significance{color:#d7e8ee}.phone-history-significance strong{color:#71e6ce}
+.phone-history-controls{border-color:rgba(143,191,207,.2)}.phone-history-progress{color:#9ebbc9}.phone-history-control-buttons button{border-color:#3d687d;background:#112d42;color:#eaf5fa}.phone-history-control-buttons [data-history-next]{border-color:#51d7bd;background:#51d7bd;color:#06211d}
+.phone-history-conclusion{background:rgba(37,110,98,.2);border-left-color:#55d9bd;color:#c8e8e2}.phone-history-conclusion span,.phone-history-conclusion strong{color:#7be6d0}.phone-history button:focus-visible{outline-color:#73e8d2}
+@media(max-width:760px){.phone-history-rail{grid-template-columns:repeat(7,minmax(82px,1fr));overflow-x:auto;gap:4px;padding:0 4px 12px;scroll-snap-type:x proximity}.phone-history-step{scroll-snap-align:center}.phone-history-rail:before{left:42px;right:42px;width:calc(100% - 84px)}}

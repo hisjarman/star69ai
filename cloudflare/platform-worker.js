@@ -238,6 +238,17 @@ async function startPublicCheckout(req,env,origin){
  const prepaidTotals={starter:{six_month:71520,annual:125160},growth:{six_month:119520,annual:209160},pro:{six_month:191520,annual:335160}};
  const prepaidCents=cadence==="monthly"?0:Number(prepaidTotals[plan][cadence]);
  const setupCents=cadence==="monthly"?(affiliateId&&offerMode==="discount"?4950:9900):0;
+ if(cadence==="monthly"){
+  if(!env.STRIPE_SECRET_KEY||!env.STRIPE_WEBHOOK_SECRET)throw Error("stripe_monthly_billing_not_fully_configured");
+  const monthlyPriceId=env[planInfo[plan].priceEnv];if(!monthlyPriceId)throw Error("stripe_price_id_missing_"+plan);
+  const configuredPrice=await stripeRequest(env,"prices/"+encodeURIComponent(monthlyPriceId),{},"GET");
+  if(!configuredPrice.active||configuredPrice.currency!=="usd"||Number(configuredPrice.unit_amount)!==Number(planInfo[plan].price)*100||configuredPrice.recurring?.interval!=="month"||Number(configuredPrice.recurring?.interval_count||1)!==1)throw Error("stripe_monthly_price_configuration_mismatch");
+  if(affiliateId&&offerMode==="discount"){
+   if(!env.STRIPE_COUPON_PARTNER15)throw Error("partner_offer_not_configured");
+   const coupon=await stripeRequest(env,"coupons/"+encodeURIComponent(env.STRIPE_COUPON_PARTNER15),{},"GET");
+   if(coupon.valid===false)throw Error("partner_offer_not_active");
+  }
+ }
  const paymentProvider=cadence==="monthly"?"stripe":"paypal",orderPurpose=cadence==="monthly"?"setup_fee":"prepaid_plan";
  const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID(),onboardingId=crypto.randomUUID(),statusToken=crypto.randomUUID()+crypto.randomUUID();
  const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),recordingPreference:String(p.recordingPreference||"").slice(0,500),additionalNeeds:Array.isArray(p.additionalNeeds)?p.additionalNeeds.slice(0,20).map(x=>String(x).slice(0,180)):[],outboundAiCalls:String(p.outboundAiCalls||"").slice(0,500),automatedSms:String(p.automatedSms||"").slice(0,500),humanEscalation:String(p.humanEscalation||"").slice(0,1000),phoneSetup:String(p.phoneSetup||"").slice(0,300),planInterest:plan,billingPreference:cadence,notes:String(p.notes||"").slice(0,4000),privacyConsent:true,submittedAt:now};

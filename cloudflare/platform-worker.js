@@ -172,7 +172,7 @@ async function maybeProvisionPaidOnboarding(env,onboardingId){
  if(!ob||ob.status==="provisioned"||ob.status==="provisioning")return;
  if(ob.setup_status!=="paid"&&ob.setup_status!=="not_required")return;
  if(ob.plan_payment_status!=="paid")return;
- const lock=await env.DB.prepare("UPDATE avr_paid_onboardings SET status='provisioning',updated_at=? WHERE id=? AND status IN ('awaiting_setup','awaiting_subscription','awaiting_provisioning','provisioning_failed','paid')").bind(new Date().toISOString(),onboardingId).run();
+ const lock=await env.DB.prepare("UPDATE avr_paid_onboardings SET status='provisioning',updated_at=? WHERE id=? AND status IN ('awaiting_setup','awaiting_plan_payment','awaiting_subscription','awaiting_provisioning','provisioning_failed','paid')").bind(new Date().toISOString(),onboardingId).run();
  if(!lock.meta?.changes)return;
  try{
   const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(ob.customer_id).first();
@@ -284,6 +284,10 @@ async function capturePublicSetup(req,env,origin){
    await maybeProvisionPaidOnboarding(env,ob.id);
    return {captured:true,completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};
   }
+ }
+ if(purpose==="prepaid_plan"){
+  await maybeProvisionPaidOnboarding(env,ob.id);
+  return {captured:true,completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};
  }
  const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();

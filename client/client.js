@@ -30,6 +30,31 @@
 document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-category-grid a");if(link){const target=document.querySelector(link.getAttribute("href"));if(target){document.querySelectorAll(".knowledge-group").forEach(g=>g.hidden=false);const input=$("#knowledge-search");if(input){input.value="";input.dispatchEvent(new Event("input"))}}}});
 
  function showSignedOut(){$("#auth").classList.remove("hidden");$("#app").classList.add("hidden");$("#session-pill").textContent="Signed out"}
+ function renderOnboarding(onboarding){
+  const root=$("#onboarding-panel");if(!root)return;
+  const stage=$("#onboarding-stage"),message=$("#onboarding-message"),approve=$("#approve-demo"),subscribe=$("#start-subscription"),setup=$("#pay-setup-fee");
+  approve.hidden=true;subscribe.hidden=true;setup.hidden=true;
+  if(!onboarding){root.hidden=true;return}root.hidden=false;
+  const ready=!!onboarding.agent_id&&onboarding.status==="provisioned",approved=!!onboarding.demoApproved,paid=onboarding.plan_payment_status==="paid",setupPaid=onboarding.setup_status==="paid"||onboarding.setup_status==="not_required";
+  if(!ready){stage.textContent="Demo in preparation";message.textContent="We are building your personalized demo receptionist and preparing your client account. Refresh this page shortly.";return}
+  if(!approved){stage.textContent="Demo ready for review";message.textContent="Your personalized demo receptionist is ready. Review it in the Receptionist section. When you are satisfied, approve the demo to continue. No setup fee has been charged.";approve.hidden=false;return}
+  if(!paid){stage.textContent="Demo approved";message.textContent="Your demo is approved. Start your "+(onboarding.billing_cadence==="monthly"?"monthly Stripe subscription":"prepaid plan payment")+". The setup fee is not due until your plan payment is confirmed.";subscribe.hidden=false;return}
+  if(!setupPaid){stage.textContent="Setup payment due";message.textContent="Your plan payment is confirmed. Complete the one-time $"+(Number(onboarding.setupAmountCents||0)/100).toFixed(2)+" setup payment through PayPal to authorize managed live-service activation.";setup.hidden=false;return}
+  stage.textContent="Payments verified";message.textContent="Your demo is approved and required payments are verified. Our team can now complete live agent configuration, phone-number assignment and final call testing. Your receptionist will not answer production calls until that work is complete.";
+ }
+ async function handleOnboardingAction(button,path,successMessage){
+  button.disabled=true;const original=button.textContent;button.textContent="Please wait…";
+  try{const d=await api(path,{method:"POST",body:"{}"});if(d.approvalUrl)location.assign(d.approvalUrl);else if(d.stripeUrl)location.assign(d.stripeUrl);else if(d.completeUrl)location.assign(d.completeUrl);else{note(successMessage||"Updated.");await load()}}
+  catch(e){note(e.message,true);button.disabled=false;button.textContent=original}
+ }
+ async function captureSetupReturn(){
+  const q=new URLSearchParams(location.search);
+  if(q.get("setup_payment_cancelled")==="1"){note("The PayPal setup payment was cancelled. You can retry it from your launch checklist.");history.replaceState(null,"",location.pathname+"#overview");return}
+  if(q.get("setup_payment")!=="1"||!q.get("token"))return;
+  note("PayPal approved the setup payment. Verifying it securely…");
+  try{await api("/api/public/checkout/capture",{method:"POST",body:JSON.stringify({onboardingId:q.get("onboarding_id"),statusToken:q.get("status_token"),orderId:q.get("token")})});history.replaceState(null,"",location.pathname+"#overview");note("Setup payment verified. Your account is ready for managed launch.")}
+  catch(e){note("Payment verification did not complete: "+e.message,true)}
+ }
  function renderUsage(usage,included,plan){
   const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;
   const overageLimit=Math.max(0,Number(usage.overageLimitMinutes||0)),overageStopAt=Math.max(0,Number(usage.overageStopAtMinutes||0));
@@ -149,11 +174,12 @@ function renderAgentRequests(items){
  async function load(){
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
-   const d=await api("/api/client/dashboard");customer=d.customer;
+   await captureSetupReturn();const d=await api("/api/client/dashboard");customer=d.customer;
    $("#auth").classList.add("hidden");$("#app").classList.remove("hidden");$("#session-pill").textContent="Signed in";
    if(!customer){$("#no-account").classList.remove("hidden");$("#workspace").classList.add("hidden");return}
    $("#no-account").classList.add("hidden");$("#workspace").classList.remove("hidden");
    $("#business-title").textContent=customer.businessName||"Your dashboard";
+   renderOnboarding(d.onboarding);
    $("#account-status").textContent=customer.status||"Pending";$("#account-status").className="status "+(customer.status||"pending");
    const plans={starter:["Starter","$149 / month"],growth:["Growth","$249 / month"],pro:["Pro","$399 / month"]};
    $("#plan-name").textContent=plans[customer.plan]?.[0]||"Not selected";
@@ -195,6 +221,10 @@ function renderAgentRequests(items){
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
+ $("#approve-demo")?.addEventListener("click",()=>handleOnboardingAction($("#approve-demo"),"/api/client/demo/approve","Demo approved."));
+ $("#start-subscription")?.addEventListener("click",()=>handleOnboardingAction($("#start-subscription"),"/api/client/subscription/start","Preparing your plan payment."));
+ $("#pay-setup-fee")?.addEventListener("click",()=>handleOnboardingAction($("#pay-setup-fee"),"/api/client/setup-payment/start","Preparing your PayPal setup payment."));
+
  $("#support-ticket-form")?.addEventListener("submit",submitTicket);
  $("#call-email-settings-form")?.addEventListener("submit",saveCallEmailSettings);
  $("#refresh-tickets")?.addEventListener("click",loadTickets);

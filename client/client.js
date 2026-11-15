@@ -245,7 +245,7 @@ function renderAgentRequests(items){
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
- $("#overage-card-setup")?.addEventListener("click",async()=>{const b=$("#overage-card-setup");b.disabled=true;try{const d=await api("/api/client/overage-payment-method/setup",{method:"POST",body:"{}"});if(!d.url)throw Error("Stripe did not return a setup link.");location.assign(d.url)}catch(e){note(e.message,true);b.disabled=false}});
+ $("#overage-card-setup")?.addEventListener("click",async()=>{const b=$("#overage-card-setup");if(!$("#overage-card-consent")?.checked){note("Please confirm the automatic overage billing authorization before continuing.",true);return}b.disabled=true;try{const d=await api("/api/client/overage-payment-method/setup",{method:"POST",body:"{}"});if(!d.url)throw Error("Stripe did not return a setup link.");location.assign(d.url)}catch(e){note(e.message,true);b.disabled=false}});
  $("#flex-topup-form")?.addEventListener("submit",async e=>{e.preventDefault();const button=$("#flex-topup-submit");button.disabled=true;try{const amount=Number($("#flex-topup-amount").value);if(!Number.isInteger(amount)||amount<5||amount%5!==0)throw Error("Enter an amount from $5 to $500 in $5 increments.");const d=await api("/api/client/payg-wallet/topup",{method:"POST",body:JSON.stringify({amount})});location.assign(d.approvalUrl)}catch(err){note(err.message,true);button.disabled=false}});
 
  $("#approve-demo")?.addEventListener("click",()=>handleOnboardingAction($("#approve-demo"),"/api/client/demo/approve","Demo approved."));

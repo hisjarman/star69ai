@@ -79,7 +79,7 @@ async function refreshMinuteVault(env,c){
  return {balanceMinutes:balance,usedFromVaultThisMonth:currentBankUsed,billableOverageMinutes:billable,currentUsedMinutes:currentUsed,currentIncludedMinutes:Number(rows.find(x=>x.period_key===currentKey)?.included_minutes||currentAllowance),forfeited:false};
 }
 async function forfeitMinuteVault(env,customerId,reason,detail={}){
- const total=await env.DB.prepare("SELECT COALESCE(MAX(balance_after_minutes),0) AS balance FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).first();
+ const total=await env.DB.prepare("SELECT COALESCE(balance_after_minutes,0) AS balance FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key DESC LIMIT 1").bind(customerId).first();
  const periods=await env.DB.prepare("SELECT COUNT(*) AS total FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).first();
  if(Number(periods?.total||0)>0)await env.DB.prepare("INSERT INTO avr_minute_vault_events(id,customer_id,event_type,minutes,detail_json) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),customerId,"forfeited_on_cancellation",Number(total?.balance||0),JSON.stringify({reason,...detail})).run();
  await env.DB.prepare("DELETE FROM avr_minute_vault_periods WHERE customer_id=?").bind(customerId).run();

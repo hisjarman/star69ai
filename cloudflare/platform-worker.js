@@ -815,7 +815,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     const phone=p.phone===undefined?null:String(p.phone).trim().slice(0,40);
     const notes=p.adminNotes===undefined?null:String(p.adminNotes).slice(0,2000);
     const overageLimit=p.overageLimitMinutes===undefined?null:Number(p.overageLimitMinutes);
-    if(overageLimit!==null&&(!Number.isInteger(overageLimit)||overageLimit<0||overageLimit>10000))throw Error("overage_limit_must_be_integer_0_to_10000");
+    if(overageLimit!==null&&(!Number.isInteger(overageLimit)||overageLimit<0||overageLimit>2000))throw Error("overage_limit_must_be_integer_0_to_2000");
     await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,overage_limit_minutes=COALESCE(?,overage_limit_minutes),admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
      .bind(business,contact,phone,status||null,plan||null,plan||"",plan||"",plan||"",overageLimit,notes,new Date().toISOString(),id).run();
     if(p.callEmail&&typeof p.callEmail==="object"){

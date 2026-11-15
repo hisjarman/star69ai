@@ -17,6 +17,16 @@ These standards are the source of truth for visual consistency. Do not introduce
 
 ## 2. Typography
 
+**Star69AI signature typography system — Starfleet-inspired, original execution**
+
+- **Display / major headings:** Michroma. Use for H1 and H2 to create a precise, geometric science-fiction identity. Keep its regular weight; do not artificially bold it. Allow headings to wrap naturally on mobile.
+- **Body / interface:** Manrope. Use for paragraphs, navigation, cards, buttons, forms, tables and dashboard controls. Prioritize legibility over decoration.
+- **Technical / system labels:** IBM Plex Mono. Use selectively for eyebrow labels, status indicators, metrics, timestamps and technical metadata. Do not use it for long paragraphs.
+- Load the shared font stylesheet through the site-wide readability layer; do not introduce competing font imports or page-specific font stacks.
+- The visual reference is a polished starship command interface: cinematic geometric headings and restrained technical labels, not a replica of any protected Star Trek logo, type treatment or interface.
+- Preserve existing text-size, line-height, contrast and responsive requirements below.
+
+
 Use the following defaults unless a specific component has a documented, tested reason to differ:
 
 | Element | Standard |

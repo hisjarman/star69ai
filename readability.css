@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&family=Michroma&display=swap');
 /* Star69AI site-wide readability guardrails.
    Loaded last on every public, partner, client and admin page.
    Keep body copy readable; metadata may be smaller but never tiny. */
@@ -90,3 +91,32 @@ body.story-page a:not(.button):not(.btn){color:#91dcff!important}
 body :where(.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) :where(p,li,dd,dt,label,legend,small,.small,.muted,.hint,td,th){color:#d0deea!important}
 body :where(.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) :where(h1,h2,h3,h4,strong,b){color:#f4f8fb}
 body :where(.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) a:not(.button):not(.btn){color:#91dcff}
+
+
+/* Star69AI Starfleet typography system.
+   Display: Michroma. Reading/UI: Manrope. Technical labels: IBM Plex Mono.
+   Keep this layer in the shared final-loaded readability stylesheet so public,
+   client and admin pages use one consistent type system. */
+:root{
+  --font-display:"Michroma","Arial",sans-serif;
+  --font-body:"Manrope","Arial",sans-serif;
+  --font-technical:"IBM Plex Mono","Courier New",monospace;
+}
+body{font-family:var(--font-body)!important}
+body :where(h1,h2){
+  font-family:var(--font-display)!important;
+  font-weight:400!important;
+  letter-spacing:-.035em;
+  line-height:1.28;
+}
+body :where(h3,h4,h5,h6){
+  font-family:var(--font-body)!important;
+  font-weight:750;
+}
+body :where(.eyebrow,.kicker,.section-kicker,.conversation-eyebrow,.meta,.metadata,.timestamp,.status,.pill,.client-page-label,.sidebar-caption,.sidebar-status-dot,.video-label,.stage-top,.stage-caption,.console-bar,.speaker,.capture-head,.capture-items small,.calc-result-label,.usage-percent){
+  font-family:var(--font-technical)!important;
+}
+body :where(button,input,select,textarea){font-family:var(--font-body)!important}
+@media(max-width:700px){
+  body :where(h1,h2){letter-spacing:-.025em;line-height:1.3}
+}

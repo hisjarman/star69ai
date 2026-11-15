@@ -865,3 +865,12 @@ Known prior issue to recheck against current source: a portal request reported `
 - Added `/research/managed-ai-receptionists.html`, a neutral comparison of DIY AI receptionist software, traditional human answering services and agency-built managed AI, including buyer questions about setup, operations, costs, privacy and portability.
 - Shared styling is in `intelligence-hub.css`. Shared navigation now features Industry Hub and Learning Center, with Managed AI Research in More. All new public URLs are listed in `sitemap.xml`.
 - Changes are on branch `feature/industry-intelligence-hub-2026-11-14`; browser/mobile and live sitemap verification remain pending until preview/live testing.
+
+
+## Starfleet-inspired typography system — 2026-11-14
+
+- Approved brand typography: Michroma for major H1/H2 display headings; Manrope for body copy and UI; IBM Plex Mono for restrained technical labels and statuses.
+- Shared implementation lives in `readability.css`, which is already the final-loaded global readability layer across public, client and admin pages. Keep it last in page heads.
+- The intended feel is premium, original starship-command-interface typography. Do not copy Star Trek logos, wordmarks or protected interface artwork.
+- Preserve the existing readability standards: 15–17px ordinary copy, accessible contrast, responsive wrapping and comfortable line-height. Avoid applying Michroma to body paragraphs or dense data.
+- Typography update branch: `design/star69ai-starfleet-typography-2026-11-14`; PR review required before merging.

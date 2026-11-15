@@ -1,5 +1,8 @@
 -- Server-authoritative, non-cash unused-minute vault.
 -- Apply to the existing avr-trust-lab D1 database before deploying the platform Worker.
+-- Correct the existing Pro allowance without changing plan prices.
+UPDATE avr_customers SET included_minutes=1200 WHERE plan_key='pro';
+
 CREATE TABLE IF NOT EXISTS avr_minute_vault_periods (
   customer_id TEXT NOT NULL REFERENCES avr_customers(id) ON DELETE CASCADE,
   period_key TEXT NOT NULL,

@@ -55,7 +55,7 @@ function renderOfferContext(){
   document.querySelectorAll("[data-offer-context]").forEach(node=>{
     if(attribution?.partnerCode){
       node.innerHTML=attribution.offerMode==="discount"
-        ?"<strong>Partner referral offer: 15% off your first monthly subscription payment.</strong><span>Your referral is tracked. The partner discount applies only when checkout confirms the offer; it excludes setup, overages, taxes and third-party charges. A valid 10% challenge code may be combined for 25% off that first monthly payment. Prepaid offers are separate and cannot be combined with promo codes.</span><a href=\"./pricing.html\">View pricing ↗</a>"
+        ?"<strong>Partner referral offer: 15% off monthly subscription payments for the first 12 months.</strong><span>Your referral is tracked. The partner discount applies only when checkout confirms the offer; it excludes setup, overages, taxes and third-party charges. A valid 10% challenge code adds a further first-month discount: 25% total off month one, then 15% off months 2–12. Prepaid offers are separate and cannot be combined with promo codes.</span><a href=\"./pricing.html\">View pricing ↗</a>"
         :"<strong>Partner referral tracked — standard pricing.</strong><span>Your introduction is attributed to your partner, who may earn a commission if you become a paying customer. This link does not apply a customer discount. You can still review generally available billing offers at checkout.</span><a href=\"./pricing.html\">View pricing ↗</a>";
     }
   });

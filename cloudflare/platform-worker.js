@@ -330,7 +330,7 @@ async function startPublicCheckout(req,env,origin){
   const referral=await env.DB.prepare("SELECT a.id,r.offer_mode FROM partner_referrals r JOIN affiliate_applications a ON a.id=r.affiliate_application_id WHERE lower(r.lead_email)=? AND a.partner_code=? AND a.application_status='approved' AND r.attribution_expires_at>=? ORDER BY r.created_at DESC LIMIT 1").bind(email,partnerCode,new Date().toISOString()).first();
   if(referral){affiliateId=referral.id;offerMode=referral.offer_mode==="discount"?"discount":"standard"}
  }
- const prepaidTotals={starter:{six_month:71520,annual:125160},growth:{six_month:119520,annual:209160},pro:{six_month:191520,annual:335160}};
+ const prepaidTotals={starter:{six_month:67050,annual:116220},growth:{six_month:112050,annual:194220},pro:{six_month:179550,annual:311220}};
  const prepaidCents=cadence==="monthly"?0:Number(prepaidTotals[plan][cadence]);
  const setupCents=cadence==="monthly"?(affiliateId&&offerMode==="discount"?4950:9900):0;
  if(cadence==="monthly"){

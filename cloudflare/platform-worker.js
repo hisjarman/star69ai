@@ -137,15 +137,19 @@ async function paypalRequest(env,path,method="GET",data,requestId){
  const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||d.name||"paypal_request_failed");return d;
 }
 async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
- const amount=(Number(onboarding.setup_amount_cents)/100).toFixed(2);
+ const purpose=onboarding.paypal_order_purpose||"setup_fee";
+ const amountCents=purpose==="setup_fee"?Number(onboarding.setup_amount_cents):Number(onboarding.prepaid_amount_cents);
+ if(!Number.isInteger(amountCents)||amountCents<1)throw Error("invalid_paypal_checkout_amount");
+ const amount=(amountCents/100).toFixed(2),description=purpose==="setup_fee"?"Star69AI one-time receptionist setup fee":"Star69AI "+(onboarding.billing_cadence==="six_month"?"six-month":"twelve-month")+" prepaid managed receptionist plan";
  const order=await paypalRequest(env,"/v2/checkout/orders","POST",{
   intent:"CAPTURE",
-  purchase_units:[{reference_id:onboarding.id,custom_id:customer.id,invoice_id:"S69-"+onboarding.id.slice(0,28),description:"Star69AI one-time receptionist setup fee",amount:{currency_code:"USD",value:amount}}],
+  purchase_units:[{reference_id:onboarding.id,custom_id:customer.id,invoice_id:"S69-"+onboarding.id.slice(0,28),description,amount:{currency_code:"USD",value:amount}}],
   application_context:{brand_name:"Star69AI",user_action:"PAY_NOW",return_url:"https://star69ai.com/checkout.html?step=subscription&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),cancel_url:"https://star69ai.com/checkout.html?cancelled=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)}
- },"S69-setup-"+onboarding.id+"-"+String(onboarding.paypal_attempts||0));
+ },"S69-"+purpose+"-"+onboarding.id+"-"+String(onboarding.paypal_attempts||0));
  const approval=(order.links||[]).find(x=>x.rel==="approve"||x.rel==="payer-action")?.href;
  if(!order.id||!approval)throw Error("paypal_approval_link_missing");
- await env.DB.prepare("UPDATE avr_paid_onboardings SET paypal_order_id=?,paypal_attempts=paypal_attempts+1,status='awaiting_setup',updated_at=? WHERE id=?").bind(order.id,new Date().toISOString(),onboarding.id).run();
+ const nextStatus=purpose==="setup_fee"?"awaiting_setup":"awaiting_plan_payment";
+ await env.DB.prepare("UPDATE avr_paid_onboardings SET paypal_order_id=?,paypal_attempts=paypal_attempts+1,status=?,updated_at=? WHERE id=?").bind(order.id,nextStatus,new Date().toISOString(),onboarding.id).run();
  return {approvalUrl:approval,orderId:order.id};
 }
 async function createPublicStripeSession(env,onboarding,customer,statusToken){
@@ -167,7 +171,7 @@ async function maybeProvisionPaidOnboarding(env,onboardingId){
  const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=? LIMIT 1").bind(onboardingId).first();
  if(!ob||ob.status==="provisioned"||ob.status==="provisioning")return;
  if(ob.setup_status!=="paid"&&ob.setup_status!=="not_required")return;
- if(ob.stripe_status!=="paid")return;
+ if(ob.plan_payment_status!=="paid")return;
  const lock=await env.DB.prepare("UPDATE avr_paid_onboardings SET status='provisioning',updated_at=? WHERE id=? AND status IN ('awaiting_setup','awaiting_subscription','awaiting_provisioning','provisioning_failed','paid')").bind(new Date().toISOString(),onboardingId).run();
  if(!lock.meta?.changes)return;
  try{
@@ -231,38 +235,55 @@ async function startPublicCheckout(req,env,origin){
   const referral=await env.DB.prepare("SELECT a.id,r.offer_mode FROM partner_referrals r JOIN affiliate_applications a ON a.id=r.affiliate_application_id WHERE lower(r.lead_email)=? AND a.partner_code=? AND a.application_status='approved' AND r.attribution_expires_at>=? ORDER BY r.created_at DESC LIMIT 1").bind(email,partnerCode,new Date().toISOString()).first();
   if(referral){affiliateId=referral.id;offerMode=referral.offer_mode==="discount"?"discount":"standard"}
  }
- const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID(),onboardingId=crypto.randomUUID(),statusToken=crypto.randomUUID()+crypto.randomUUID();
+ const prepaidTotals={starter:{six_month:71520,annual:125160},growth:{six_month:119520,annual:209160},pro:{six_month:191520,annual:335160}};
+ const prepaidCents=cadence==="monthly"?0:Number(prepaidTotals[plan][cadence]);
  const setupCents=cadence==="monthly"?(affiliateId&&offerMode==="discount"?4950:9900):0;
+ const paymentProvider=cadence==="monthly"?"stripe":"paypal",orderPurpose=cadence==="monthly"?"setup_fee":"prepaid_plan";
+ const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID(),onboardingId=crypto.randomUUID(),statusToken=crypto.randomUUID()+crypto.randomUUID();
  const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),recordingPreference:String(p.recordingPreference||"").slice(0,500),additionalNeeds:Array.isArray(p.additionalNeeds)?p.additionalNeeds.slice(0,20).map(x=>String(x).slice(0,180)):[],outboundAiCalls:String(p.outboundAiCalls||"").slice(0,500),automatedSms:String(p.automatedSms||"").slice(0,500),humanEscalation:String(p.humanEscalation||"").slice(0,1000),phoneSetup:String(p.phoneSetup||"").slice(0,300),planInterest:plan,billingPreference:cadence,notes:String(p.notes||"").slice(0,4000),privacyConsent:true,submittedAt:now};
  await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,affiliate_partner_id,affiliate_offer_mode,billing_cadence,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?,?,?,?,?,?)").bind(customerId,business,contact,email,phone,plan,affiliateId,offerMode,cadence,"Paid website onboarding started. No phone number or production routing is active until managed setup is complete.",now,now).run();
  await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'approved',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Paid customer demo agent request").slice(0,3000),"Paid website checkout",JSON.stringify(discovery),customerId,now,now).run();
- await env.DB.prepare("INSERT INTO avr_paid_onboardings(id,customer_id,demo_request_id,email,plan_key,billing_cadence,setup_amount_cents,setup_status,stripe_status,status,public_token_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,'pending',?,?,?,?)").bind(onboardingId,customerId,leadId,email,plan,cadence,setupCents,setupCents===0?"not_required":"pending",setupCents===0?"awaiting_subscription":"awaiting_setup",await sha256Hex(statusToken),now,now).run();
+ const initialStatus=paymentProvider==="stripe"?"awaiting_setup":"awaiting_plan_payment";
+ await env.DB.prepare("INSERT INTO avr_paid_onboardings(id,customer_id,demo_request_id,email,plan_key,billing_cadence,setup_amount_cents,prepaid_amount_cents,setup_status,paypal_order_purpose,plan_payment_provider,plan_payment_status,status,public_token_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'pending',?,?,?,?)").bind(onboardingId,customerId,leadId,email,plan,cadence,setupCents,prepaidCents,setupCents===0?"not_required":"pending",orderPurpose,paymentProvider,initialStatus,await sha256Hex(statusToken),now,now).run();
  const onboarding=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(customerId).first();
- if(setupCents>0){
-  try{
-   const order=await createPublicPaypalOrder(env,onboarding,customer,statusToken);
-   return {accepted:true,paymentStep:"setup_fee",approvalUrl:order.approvalUrl,onboardingId,statusToken,setupAmountCents:setupCents};
-  }catch(e){await env.DB.prepare("DELETE FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).run();await env.DB.prepare("DELETE FROM avr_demo_requests WHERE id=?").bind(leadId).run();await env.DB.prepare("DELETE FROM avr_customers WHERE id=?").bind(customerId).run();throw e}
+ try{
+  const order=await createPublicPaypalOrder(env,onboarding,customer,statusToken);
+  return {accepted:true,paymentStep:orderPurpose,approvalUrl:order.approvalUrl,onboardingId,statusToken,setupAmountCents:setupCents,prepaidAmountCents:prepaidCents};
+ }catch(e){
+  await env.DB.prepare("DELETE FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).run();
+  await env.DB.prepare("DELETE FROM avr_demo_requests WHERE id=?").bind(leadId).run();
+  await env.DB.prepare("DELETE FROM avr_customers WHERE id=?").bind(customerId).run();
+  throw e;
  }
- let checkout;
- try{checkout=await createPublicStripeSession(env,onboarding,customer,statusToken)}catch(e){await env.DB.prepare("DELETE FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).run();await env.DB.prepare("DELETE FROM avr_demo_requests WHERE id=?").bind(leadId).run();await env.DB.prepare("DELETE FROM avr_customers WHERE id=?").bind(customerId).run();throw e}
- return {accepted:true,paymentStep:"subscription",stripeUrl:checkout.stripeUrl,onboardingId,statusToken,setupAmountCents:0};
+}
+function addMonthsIso(months){
+ const d=new Date(),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+months);
+ const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,last));return d.toISOString();
 }
 async function capturePublicSetup(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
- if(ob.setup_status==="pending"){
+ const purpose=ob.paypal_order_purpose||"setup_fee",waiting=purpose==="setup_fee"?ob.setup_status==="pending":ob.plan_payment_status!=="paid";
+ if(waiting){
   const orderId=String(p.orderId||"").trim();if(!orderId||orderId!==ob.paypal_order_id)throw Error("paypal_order_mismatch");
   let order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId),"GET");
   if(order.status!=="COMPLETED")order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId)+"/capture","POST",{},"S69-capture-"+ob.id);
   const purchase=(order.purchase_units||[])[0]||{},capture=purchase.payments?.captures?.[0],amount=capture?.amount||purchase.amount;
-  if(order.status!=="COMPLETED"||purchase.reference_id!==ob.id||purchase.custom_id!==ob.customer_id||capture?.status!=="COMPLETED"||amount?.currency_code!=="USD"||Number(amount?.value)!==Number(ob.setup_amount_cents)/100)throw Error("paypal_payment_not_confirmed");
+  const expectedCents=purpose==="setup_fee"?Number(ob.setup_amount_cents):Number(ob.prepaid_amount_cents);
+  if(order.status!=="COMPLETED"||purchase.reference_id!==ob.id||purchase.custom_id!==ob.customer_id||capture?.status!=="COMPLETED"||amount?.currency_code!=="USD"||Number(amount?.value)!==expectedCents/100)throw Error("paypal_payment_not_confirmed");
   const now=new Date().toISOString();
-  await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_status='paid',paypal_capture_id=?,status='awaiting_subscription',updated_at=? WHERE id=? AND setup_status='pending'").bind(capture.id||null,now,ob.id).run();
-  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
-  const base=9900,discount=base-Number(ob.setup_amount_cents),reason=discount>0?"partner_referral_50":"none";
-  await env.DB.prepare("INSERT OR IGNORE INTO avr_setup_invoices(id,customer_id,base_amount_cents,discount_amount_cents,amount_due_cents,discount_reason,status,created_by,created_at,updated_at,sent_at,paid_at,admin_note) VALUES(?,?,?,?,?,?,'paid','public_checkout',?,?,?,?,?)").bind(crypto.randomUUID(),ob.customer_id,base,discount,Number(ob.setup_amount_cents),reason,now,now,now,now,"PayPal order "+orderId+"; capture "+String(capture.id||"")).run();
+  if(purpose==="setup_fee"){
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_status='paid',paypal_capture_id=?,status='awaiting_subscription',updated_at=? WHERE id=? AND setup_status='pending'").bind(capture.id||null,now,ob.id).run();
+   const base=9900,discount=base-Number(ob.setup_amount_cents),reason=discount>0?"partner_referral_50":"none";
+   await env.DB.prepare("INSERT OR IGNORE INTO avr_setup_invoices(id,customer_id,base_amount_cents,discount_amount_cents,amount_due_cents,discount_reason,status,created_by,created_at,updated_at,sent_at,paid_at,admin_note) VALUES(?,?,?,?,?,?,'paid','public_checkout',?,?,?,?,?)").bind(crypto.randomUUID(),ob.customer_id,base,discount,Number(ob.setup_amount_cents),reason,now,now,now,now,"PayPal order "+orderId+"; capture "+String(capture.id||"")).run();
+  }else{
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET plan_payment_status='paid',paypal_capture_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(capture.id||null,now,ob.id).run();
+   const months=ob.billing_cadence==="six_month"?6:12,plan=planInfo[ob.plan_key];
+   await env.DB.prepare("UPDATE avr_customers SET status='active',subscription_status='active',plan_key=?,included_minutes=?,billing_cadence=?,current_period_end=?,updated_at=? WHERE id=?").bind(ob.plan_key,Number(plan?.minutes||0),ob.billing_cadence,addMonthsIso(months),now,ob.customer_id).run();
+   await maybeProvisionPaidOnboarding(env,ob.id);
+   return {captured:true,completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};
+  }
  }
  const latest=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(ob.id).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
@@ -274,19 +295,22 @@ async function resumePublicCheckout(req,env,origin){
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  if(!customer)throw Error("customer_not_found");
- if(ob.setup_status==="pending"){
+ if(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status!=="paid"){
   const order=await createPublicPaypalOrder(env,ob,customer,p.statusToken);
-  return {paymentStep:"setup_fee",approvalUrl:order.approvalUrl};
+  return {paymentStep:ob.paypal_order_purpose,approvalUrl:order.approvalUrl};
  }
- if(ob.setup_status==="paid"||ob.setup_status==="not_required"){
+ if(ob.plan_payment_provider==="stripe"&&(ob.setup_status==="paid"||ob.setup_status==="not_required")){
   const checkout=await createPublicStripeSession(env,ob,customer,p.statusToken);
   return {paymentStep:"subscription",stripeUrl:checkout.stripeUrl};
+ }
+ if(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status==="paid"){
+  return {completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(ob.id)+"&status_token="+encodeURIComponent(p.statusToken)};
  }
  throw Error("checkout_not_resumable");
 }
 async function publicCheckoutStatus(url,env){
  const ob=await publicOnboardingAuth(env,url.searchParams.get("onboarding_id"),url.searchParams.get("status_token"));
- return {status:ob.status,setupStatus:ob.setup_status,stripeStatus:ob.stripe_status,accountDeliveryStatus:ob.account_delivery_status||"pending",agentReady:!!ob.agent_id,businessName:ob.customer_id?(await env.DB.prepare("SELECT business_name FROM avr_customers WHERE id=?").bind(ob.customer_id).first())?.business_name:null,plan:ob.plan_key,cadence:ob.billing_cadence};
+ return {status:ob.status,setupStatus:ob.setup_status,planPaymentStatus:ob.plan_payment_status,planPaymentProvider:ob.plan_payment_provider,accountDeliveryStatus:ob.account_delivery_status||"pending",agentReady:!!ob.agent_id,businessName:ob.customer_id?(await env.DB.prepare("SELECT business_name FROM avr_customers WHERE id=?").bind(ob.customer_id).first())?.business_name:null,plan:ob.plan_key,cadence:ob.billing_cadence};
 }
 
 async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers.get("Stripe-Signature")||"",secret=env.STRIPE_WEBHOOK_SECRET;if(!secret)throw Error("stripe_webhook_secret_missing");const parts=Object.fromEntries(sig.split(",").map(x=>x.split("=").map(y=>y.trim()))),ts=parts.t;if(!ts||!parts.v1||Math.abs(Date.now()/1000-Number(ts))>300)throw Error("invalid_stripe_signature");const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const mac=new Uint8Array(await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(ts+"."+raw)));const hex=Array.from(mac,x=>x.toString(16).padStart(2,"0")).join("");if(hex!==parts.v1)throw Error("invalid_stripe_signature");
@@ -301,7 +325,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  if(ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded"){
   const onboardingId=o.metadata?.avr_paid_onboarding_id;
   if(onboardingId&&(o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded")){
-   await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_status='paid',stripe_session_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),onboardingId).run();
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET plan_payment_status='paid',stripe_session_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),onboardingId).run();
    await maybeProvisionPaidOnboarding(env,onboardingId);
   }
  }
@@ -311,7 +335,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   if(["active","trialing"].includes(status)){
    const paidOnboarding=await env.DB.prepare("SELECT id FROM avr_paid_onboardings WHERE customer_id=(SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1) LIMIT 1").bind(scid).first();
    if(paidOnboarding){
-    await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_status='paid',status='awaiting_provisioning',updated_at=? WHERE id=?").bind(new Date().toISOString(),paidOnboarding.id).run();
+    await env.DB.prepare("UPDATE avr_paid_onboardings SET plan_payment_status='paid',status='awaiting_provisioning',updated_at=? WHERE id=?").bind(new Date().toISOString(),paidOnboarding.id).run();
     await maybeProvisionPaidOnboarding(env,paidOnboarding.id);
    }
   }

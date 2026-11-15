@@ -125,7 +125,7 @@ async function paypalAccessToken(env){
 }
 async function paypalRequest(env,path,method="GET",data,requestId){
  const token=await paypalAccessToken(env),headers={Authorization:"Bearer "+token,Accept:"application/json","Content-Type":"application/json"};
- if(requestId)headers["PayPal-Request-Id"]=String(requestId).slice(0,100);
+ if(requestId)headers["PayPal-Request-Id"]=String(requestId).slice(0,38);
  const r=await fetch(paypalBase(env)+path,{method,headers,body:data===undefined?undefined:JSON.stringify(data)});
  const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||d.name||"paypal_request_failed");return d;
 }
@@ -138,7 +138,7 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
   intent:"CAPTURE",
   purchase_units:[{reference_id:onboarding.id,custom_id:customer.id,invoice_id:"S69-"+onboarding.id.slice(0,22)+"-"+attempt,description,amount:{currency_code:"USD",value:amount}}],
   application_context:{brand_name:"Star69AI",user_action:"PAY_NOW",return_url:"https://star69ai.com/checkout.html?step=subscription&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),cancel_url:"https://star69ai.com/checkout.html?cancelled=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)}
- },"S69-"+purpose+"-"+onboarding.id+"-"+String(onboarding.paypal_attempts||0));
+ },(purpose==="setup_fee"?"S":"P")+onboarding.id.replace(/-/g,"").slice(0,30)+String(Number(onboarding.paypal_attempts||0)%10));
  const approval=(order.links||[]).find(x=>x.rel==="approve"||x.rel==="payer-action")?.href;
  if(!order.id||!approval)throw Error("paypal_approval_link_missing");
  const nextStatus=purpose==="setup_fee"?"awaiting_setup":"awaiting_plan_payment";
@@ -297,7 +297,7 @@ async function capturePublicSetup(req,env,origin){
  if(waiting){
   const orderId=String(p.orderId||"").trim();if(!orderId||orderId!==ob.paypal_order_id)throw Error("paypal_order_mismatch");
   let order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId),"GET");
-  if(order.status!=="COMPLETED")order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId)+"/capture","POST",{},"S69-capture-"+ob.id);
+  if(order.status!=="COMPLETED")order=await paypalRequest(env,"/v2/checkout/orders/"+encodeURIComponent(orderId)+"/capture","POST",{},"C"+ob.id.replace(/-/g,"").slice(0,31));
   const purchase=(order.purchase_units||[])[0]||{},capture=purchase.payments?.captures?.[0],amount=capture?.amount||purchase.amount;
   const expectedCents=purpose==="setup_fee"?Number(ob.setup_amount_cents):Number(ob.prepaid_amount_cents);
   if(order.status!=="COMPLETED"||purchase.reference_id!==ob.id||purchase.custom_id!==ob.customer_id||capture?.status!=="COMPLETED"||amount?.currency_code!=="USD"||Number(amount?.value)!==expectedCents/100)throw Error("paypal_payment_not_confirmed");

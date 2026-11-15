@@ -168,7 +168,8 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    }
   }
  }
- if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(scid).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}\n if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
+ if(ev.type==="customer.subscription.deleted"||(ev.type==="customer.subscription.updated"&&o.status==="canceled")){const customer=await env.DB.prepare("SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(scid).first();if(customer)await forfeitMinuteVault(env,customer.id,"stripe_subscription_cancelled",{stripeEventId:ev.id,subscriptionId:o.id})}
+ if(ev.type==="invoice.payment_failed"){await env.DB.prepare("UPDATE avr_customers SET subscription_status='past_due',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run()}
  if(customerId||stripeCustomer){await env.DB.prepare("INSERT OR IGNORE INTO avr_billing_events(event_id,customer_id,event_type,event_created,payload_json) VALUES(?,?,?,?,?)").bind(ev.id,customerId,ev.type,ev.created,JSON.stringify(o).slice(0,50000)).run()}
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('stripe',?)").bind(ev.id).run();
  return {received:true};

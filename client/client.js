@@ -1,5 +1,5 @@
 (()=> {
- const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.49,growth:0.39,pro:0.29};
+ const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
  const $=s=>document.querySelector(s);
  let clerk=null,customer=null,loading=false;
  function note(t,e=false){const n=$("#notice");n.textContent=t;n.classList.remove("hidden","error");if(e)n.classList.add("error")}

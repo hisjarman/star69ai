@@ -243,9 +243,10 @@ async function startPublicCheckout(req,env,origin){
   try{
    const order=await createPublicPaypalOrder(env,onboarding,customer,statusToken);
    return {accepted:true,paymentStep:"setup_fee",approvalUrl:order.approvalUrl,onboardingId,statusToken,setupAmountCents:setupCents};
-  }catch(e){await env.DB.prepare("UPDATE avr_paid_onboardings SET status='checkout_failed',last_error=?,updated_at=? WHERE id=?").bind(String(e.message||"paypal_setup_failed").slice(0,300),new Date().toISOString(),onboardingId).run();throw e}
+  }catch(e){await env.DB.prepare("DELETE FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).run();await env.DB.prepare("DELETE FROM avr_demo_requests WHERE id=?").bind(leadId).run();await env.DB.prepare("DELETE FROM avr_customers WHERE id=?").bind(customerId).run();throw e}
  }
- const checkout=await createPublicStripeSession(env,onboarding,customer,statusToken);
+ let checkout;
+ try{checkout=await createPublicStripeSession(env,onboarding,customer,statusToken)}catch(e){await env.DB.prepare("DELETE FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).run();await env.DB.prepare("DELETE FROM avr_demo_requests WHERE id=?").bind(leadId).run();await env.DB.prepare("DELETE FROM avr_customers WHERE id=?").bind(customerId).run();throw e}
  return {accepted:true,paymentStep:"subscription",stripeUrl:checkout.stripeUrl,onboardingId,statusToken,setupAmountCents:0};
 }
 async function capturePublicSetup(req,env,origin){
@@ -293,16 +294,16 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  
  const o=ev.data?.object||{},customerId=o.metadata?.avr_customer_id||null,stripeCustomer=o.customer||o.customer_id||null;
  if(ev.type==="checkout.session.completed"&&customerId){
-  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,new Date().toISOString(),customerId).run();
-
-  if(ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded"){
-   const onboardingId=o.metadata?.avr_paid_onboarding_id;
-   if(onboardingId&&(o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded")){
-    await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_status='paid',stripe_session_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),onboardingId).run();
-    await maybeProvisionPaidOnboarding(env,onboardingId);
-   }
-  }
+  const selectedPlan=o.metadata?.plan_key||null;
+  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
   // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
+ }
+ if(ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded"){
+  const onboardingId=o.metadata?.avr_paid_onboarding_id;
+  if(onboardingId&&(o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded")){
+   await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_status='paid',stripe_session_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),onboardingId).run();
+   await maybeProvisionPaidOnboarding(env,onboardingId);
+  }
  }
  if(ev.type?.startsWith("customer.subscription.")||ev.type==="customer.subscription.created"||ev.type==="customer.subscription.updated"||ev.type==="customer.subscription.deleted"){
   const sid=o.id,scid=typeof o.customer==="string"?o.customer:null,priceId=o.items?.data?.[0]?.price?.id||"",plan=Object.entries(planInfo).find(([k,v])=>[env[v.priceEnv],env[v.sixMonthPriceEnv],env[v.annualPriceEnv]].filter(Boolean).includes(priceId))?.[0]||null,status=o.status||"unknown",period=o.current_period_end?new Date(o.current_period_end*1000).toISOString():null;
@@ -533,7 +534,7 @@ async function retellWebhook(req,env){
 async function route(req,env){
  const url=new URL(req.url),path=url.pathname,origin=req.headers.get("Origin");
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":origin&&origins(env).includes(origin)?origin:"null","Access-Control-Allow-Methods":"GET, POST, PUT, PATCH, DELETE, OPTIONS","Access-Control-Allow-Headers":"Authorization, Content-Type, Accept, Stripe-Signature, X-Retell-Signature","Access-Control-Max-Age":"86400","Vary":"Origin"}});
- if(path==="/health")return json({ok:true,service:"avr-platform-api",version:"1.0.0",stripe:!!env.STRIPE_SECRET_KEY,retell:!!env.RETELL_API_KEY},200,origin,env);
+ if(path==="/health")return json({ok:true,service:"avr-platform-api",version:"1.0.0",stripe:!!env.STRIPE_SECRET_KEY,paypal:!!env.PAYPAL_CLIENT_ID&&!!env.PAYPAL_CLIENT_SECRET,retell:!!env.RETELL_API_KEY},200,origin,env);
  if(path==="/webhooks/stripe"&&req.method==="POST"){try{return json(await stripeWebhook(req,env),200,origin,env)}catch(e){console.error("stripe_webhook",e.message);return json({error:e.message},400,origin,env)}}
  if(path==="/webhooks/retell/inbound"&&req.method==="POST"){try{return json(await retellInboundWebhook(req,env),200,origin,env)}catch(e){console.error("retell_inbound_webhook",e.message);return json({error:e.message},500,origin,env)}}
  if(path==="/webhooks/retell"&&req.method==="POST"){try{return json(await retellWebhook(req,env),200,origin,env)}catch(e){console.error("retell_webhook",e.message);return json({error:e.message},400,origin,env)}}

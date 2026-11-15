@@ -31,9 +31,11 @@
             <a href="/terms.html">Terms</a>
           </div>
         </details>
+        <a class="site-global-partner-mobile" href="/partner-portal/">Partner Login ↗</a>
         <a class="site-global-mobile-start" href="/get-started.html">Get started ↗</a>
       </nav>
       <div class="site-global-actions">
+        <a class="site-global-partner" href="/partner-portal/" aria-label="Partner Login — open the private Partner Center">Partner Login <span aria-hidden="true">↗</span></a>
         <a class="site-global-login" href="/client/">Client Login</a>
         <a class="site-global-start" href="/get-started.html">Get Started <span aria-hidden="true">↗</span></a>
       </div>

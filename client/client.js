@@ -70,7 +70,7 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
    const d=await api("/api/client/payg-wallet");
    $("#flex-wallet-balance").textContent=money(Number(d.balanceCents||0)/100);
    $("#flex-wallet-status").textContent=d.walletStatus||"not funded";
-   $("#flex-wallet-eligibility").textContent=d.canReceiveCalls?"Ready":"Paused";
+   $("#flex-wallet-eligibility").textContent=d.canReceiveCalls?"Ready":"Paused";$("#flex-wallet-note").textContent=d.activationNote||"Star69AI must assign your receptionist and phone number before live calls can connect.";
    const rows=d.transactions||[];
    $("#flex-wallet-history").innerHTML=rows.length?'<table><thead><tr><th>DATE</th><th>ACTIVITY</th><th>AMOUNT</th><th>DETAIL</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+safe(fmtDate(x.created_at))+'</td><td>'+safe(x.entry_type||"wallet")+'</td><td>'+money(Number(x.amount_cents||0)/100)+'</td><td>'+safe(x.note||x.source_ref||"—")+'</td></tr>').join("")+'</tbody></table>':'<div class="empty">No wallet activity yet. Add credit to enable Flex calls.</div>';
   }catch(e){$("#flex-wallet-history").innerHTML='<div class="empty">'+safe(e.message)+'</div>'}

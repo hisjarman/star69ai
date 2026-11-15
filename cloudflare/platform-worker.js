@@ -592,28 +592,28 @@ async function retellInboundWebhook(req,env){
  const raw=await req.text();
  if(!await retellVerify(raw,req.headers.get("x-retell-signature"),env.RETELL_API_KEY))throw Error("invalid_retell_signature");
  const payload=JSON.parse(raw),incoming=payload.call_inbound||payload,phone=String(incoming.to_number||payload.to_number||"").trim();
- if(!phone)return {};
+ if(!phone)return {call_inbound:{reject:true}};
  const number=await env.DB.prepare("SELECT customer_id,agent_id FROM avr_numbers WHERE phone_number=? LIMIT 1").bind(phone).first();
- if(!number?.customer_id||!number.agent_id)return {};
+ if(!number?.customer_id||!number.agent_id)return {call_inbound:{reject:true}};
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(number.customer_id).first();
- if(!customer||customer.status!=="active")return {};
- const agentId=String(incoming.agent_id||number.agent_id||"");if(!agentId)return {};
+ if(!customer||customer.status!=="active")return {call_inbound:{reject:true}};
+ const agentId=String(incoming.agent_id||number.agent_id||"");if(!agentId)return {call_inbound:{reject:true}};
  if(isFlexCustomer(customer)){
   const wallet=await env.DB.prepare("SELECT status FROM avr_payg_wallets WHERE customer_id=?").bind(customer.id).first();
   const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(customer.id).first();
-  if(env.PAYG_INGRESS_GATE_ENABLED!=="true"||wallet?.status!=="funded"||Number(balance?.balance_cents||0)<=0)return {};
+  if(env.PAYG_INGRESS_GATE_ENABLED!=="true"||wallet?.status!=="funded"||Number(balance?.balance_cents||0)<=0)return {call_inbound:{reject:true}};
   const callId=String(incoming.call_id||payload.call_id||"").trim(),reservedMs=await reserveFlexCall(env,customer,Number(balance?.balance_cents||0),callId);
-  if(reservedMs<60000)return {};
+  if(reservedMs<60000)return {call_inbound:{reject:true}};
   return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:reservedMs}}}};
  }
  const prepaid=["six_month","annual"].includes(customer.billing_cadence);
- if(!["active","trialing"].includes(customer.subscription_status)&&!prepaid)return {};
+ if(!["active","trialing"].includes(customer.subscription_status)&&!prepaid)return {call_inbound:{reject:true}};
  const usage=await refreshMinuteVault(env,customer),cap=subscriptionOverageCap(customer),periodKey=new Date().toISOString().slice(0,7);
  const callId=String(incoming.call_id||payload.call_id||"").trim();
  const reservedMs=await reserveSubscriptionCall(env,customer,usage,callId);
  if(reservedMs<60000){await sendOverageProtectionNotice(env,customer,periodKey,"blocked_75",Number(usage.billableOverageMinutes||0),cap,cap);return {}}
  const over=Number(usage.billableOverageMinutes||0);
- if(cap>0&&over>=Math.ceil(cap*0.5))await sendOverageProtectionNotice(env,customer,periodKey,"warning_50",over,cap,Math.ceil(cap*0.5));
+ 
  return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:reservedMs}}}};
 }
 async function retellWebhook(req,env){
@@ -664,7 +664,7 @@ async function route(req,env){
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":origin&&origins(env).includes(origin)?origin:"null","Access-Control-Allow-Methods":"GET, POST, PUT, PATCH, DELETE, OPTIONS","Access-Control-Allow-Headers":"Authorization, Content-Type, Accept, Stripe-Signature, X-Retell-Signature","Access-Control-Max-Age":"86400","Vary":"Origin"}});
  if(path==="/health")return json({ok:true,service:"avr-platform-api",version:"1.0.0",stripe:!!env.STRIPE_SECRET_KEY,paypal:!!env.PAYPAL_CLIENT_ID&&!!env.PAYPAL_CLIENT_SECRET,retell:!!env.RETELL_API_KEY},200,origin,env);
  if(path==="/webhooks/stripe"&&req.method==="POST"){try{return json(await stripeWebhook(req,env),200,origin,env)}catch(e){console.error("stripe_webhook",e.message);return json({error:e.message},400,origin,env)}}
- if(path==="/webhooks/retell/inbound"&&req.method==="POST"){try{return json(await retellInboundWebhook(req,env),200,origin,env)}catch(e){console.error("retell_inbound_webhook",e.message);return json({error:e.message},500,origin,env)}}
+ if(path==="/webhooks/retell/inbound"&&req.method==="POST"){try{return json(await retellInboundWebhook(req,env),200,origin,env)}catch(e){console.error("retell_inbound_webhook_fail_closed",e.message);return json({call_inbound:{reject:true}},200,origin,env)}}
  if(path==="/webhooks/retell"&&req.method==="POST"){try{return json(await retellWebhook(req,env),200,origin,env)}catch(e){console.error("retell_webhook",e.message);return json({error:e.message},400,origin,env)}}
  try{
 

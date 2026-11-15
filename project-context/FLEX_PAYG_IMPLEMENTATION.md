@@ -7,7 +7,14 @@
 - Credit is a prepaid usage balance; it is not cash-redeemable and is separate from subscription minute benefits.
 - A verified PayPal payment is manually posted by an administrator in this initial implementation. Do not claim automated PayPal top-ups or auto-reload.
 
-## Implemented in this branch
+## Merged and deployed foundation (2026-11-15)
+- Pull request #149 was squash-merged to `main` as `015db97e78d66386995a80f190dc20c3e2ba4892`.
+- D1 migration was applied to production database `avr-trust-lab`; both wallet tables and the ledger index were verified.
+- Worker `avr-platform-api` received the merged Worker source. Cloudflare reported the new deployment at 100% traffic.
+- Existing Worker bindings and secret bindings were preserved by updating script content only.
+- `PAYG_INGRESS_GATE_ENABLED` is not configured, so the API correctly reports call eligibility as false. Do not enable it until the ingress gate is live.
+
+## Implemented in the merged foundation
 - Added the Flex pricing card and explicit disclosure to `pricing.html`.
 - Added D1 tables for Flex wallet status and an auditable credit ledger.
 - Added authenticated client wallet-balance API: `GET /api/client/payg-wallet`.

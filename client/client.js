@@ -32,6 +32,7 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
  function showSignedOut(){$("#auth").classList.remove("hidden");$("#app").classList.add("hidden");$("#session-pill").textContent="Signed out"}
  function renderUsage(usage,included,plan){
   const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;
+  const overageLimit=Math.max(0,Number(usage.overageLimitMinutes||0)),overageStopAt=Math.max(0,Number(usage.overageStopAtMinutes||0));
   $("#usage-percent").textContent=Math.round(pct)+"%";
   $("#usage-fill").style.width=pct+"%";
   $("#usage-fill").classList.toggle("over-limit",over>0);
@@ -43,6 +44,7 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   if($("#vault-balance"))$("#vault-balance").textContent=vault.toLocaleString();
   if($("#vault-used"))$("#vault-used").textContent=vaultUsed.toLocaleString()+" min";
   if($("#vault-overage"))$("#vault-overage").textContent=over.toLocaleString()+" min";
+  const protection=$("#overage-protection-note");if(protection){if(String(plan||"").toLowerCase()==="flex"){protection.textContent="Pay-as-you-go calls are controlled by your prepaid wallet balance; new calls pause when the balance is exhausted."}else if(overageLimit>0){protection.textContent="Authorized overage allowance: "+overageLimit.toLocaleString()+" minutes. New inbound calls pause at "+overageStopAt.toLocaleString()+" overage minutes (75% of the approved allowance). Calls already in progress may finish."}else{protection.textContent=over>0?"New inbound calls are paused because no additional overage has been authorized.":"No additional overage is authorized. New inbound calls pause when included and vaulted minutes are exhausted. Contact support to request an allowance."}}
   $("#minutes-used").textContent=used.toLocaleString();
   $("#minutes-included").textContent=allowance.toLocaleString()+" included minutes";
  }

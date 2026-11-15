@@ -2,7 +2,7 @@
 -- New and existing customers default to zero authorized overage until an administrator sets a limit.
 ALTER TABLE avr_customers
   ADD COLUMN overage_limit_minutes INTEGER NOT NULL DEFAULT 0
-  CHECK(overage_limit_minutes >= 0 AND overage_limit_minutes <= 10000);
+  CHECK(overage_limit_minutes >= 0 AND overage_limit_minutes <= 2000);
 
 CREATE TABLE IF NOT EXISTS avr_overage_protection_events (
   id TEXT PRIMARY KEY,

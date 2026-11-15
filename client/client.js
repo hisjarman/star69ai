@@ -140,6 +140,7 @@ function renderAgentRequests(items){
    $("#plan-name").textContent=plans[customer.plan]?.[0]||"Not selected";
     const offerNote=$("#billing-offer-note");if(offerNote&&customer.hasPartnerReferral)offerNote.textContent="Your partner referral makes you eligible for 5% off the first monthly payment once the offer is active in checkout. It is applied automatically unless you enter CALLSMART10. Discounts do not stack; prepaid savings replace first-month offers.";
    $("#plan-price").textContent=plans[customer.plan]?.[1]||"Select a monthly plan";
+   const overagePreference=$("#overage-preference");if(overagePreference)overagePreference.value=customer.overageBillingPreference||"pay_month_end";
    renderUsage(d.usage||{},customer.includedMinutes||0,customer.plan);
    $("#calls-count").textContent=Number(d.usage?.calls||0).toLocaleString();
    $("#subscription-status").textContent=customer.subscriptionStatus||"Not active";
@@ -186,6 +187,7 @@ function renderAgentRequests(items){
  $("#refresh-addons")?.addEventListener("click",loadAddons);
  $("#agent-change-form")?.addEventListener("submit",submitAgentChange);$("#agent-change-type")?.addEventListener("change",toggleSmsFields);toggleSmsFields();
  $("#refresh-agent-requests")?.addEventListener("click",loadAgentConfiguration);
+ $("#overage-preference-form")?.addEventListener("submit",async e=>{e.preventDefault();const button=$("#save-overage-preference"),status=$("#overage-preference-status");button.disabled=true;status.textContent="Saving…";try{const result=await api("/api/client/overage-preference",{method:"PUT",body:JSON.stringify({preference:$("#overage-preference").value})});status.textContent=result.saved?"Preference saved. Billing enforcement is pending deployment and verification.":"Could not save preference.";}catch(err){status.textContent=err.message||"Could not save preference.";}finally{button.disabled=false;}});
  $("#billing-portal").onclick=async()=>{try{const d=await api("/api/billing/portal",{method:"POST",body:"{}"});location.href=d.url}catch(e){note(e.message,true)}};
  document.querySelectorAll(".plan-btn").forEach(b=>b.onclick=async()=>{try{b.disabled=true;const d=await api("/api/billing/checkout",{method:"POST",body:JSON.stringify({plan:b.dataset.plan,cadence:$("#billing-cadence")?.value||"monthly",promoCode:$("#billing-promo-code")?.value||""})});location.href=d.url}catch(e){const messages={invalid_promo_code:"That offer code is not valid. Check the code and try again.",challenge_offer_not_configured:"The challenge discount is not active in checkout yet. Please contact Star69AI before paying.",partner_offer_not_configured:"The partner discount is not active in checkout yet. Please contact Star69AI before paying.",prepaid_price_not_configured:"That prepaid billing option is not configured yet. Please contact Star69AI before paying.",prepaid_offer_cannot_be_combined_with_promo:"Prepaid savings cannot be combined with a first-month offer. Clear the code or choose monthly billing."};note(messages[e.message]||e.message,true);b.disabled=false}});
  const params=new URLSearchParams(location.search);

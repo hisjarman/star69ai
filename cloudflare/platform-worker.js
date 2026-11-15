@@ -755,8 +755,17 @@ async function route(req,env){
     const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(customerId).first();
     return json({funded:true,balanceCents:Number(balance?.balance_cents||0),ingressGateEnabled:env.PAYG_INGRESS_GATE_ENABLED==="true",canReceiveCalls:false,activationNote:"Credit is recorded. Do not activate inbound call handling until the number is routed through the pre-answer balance-checking ingress gate."},201,origin,env)
    }
+   const paidOnboardingRetryMatch=path.match(/^\/api\/admin\/paid-onboardings\/([a-f0-9-]{36})\/retry$/i);
+   if(paidOnboardingRetryMatch&&req.method==="POST"){
+    const onboardingId=paidOnboardingRetryMatch[1],existing=await env.DB.prepare("SELECT id,status FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).first();
+    if(!existing)throw Error("paid_onboarding_not_found");
+    await maybeProvisionPaidOnboarding(env,onboardingId);
+    const latest=await env.DB.prepare("SELECT status,account_delivery_status,last_error,agent_id FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).first();
+    await audit(env,u,"paid_onboarding_retry",null,{onboardingId,status:latest?.status||"unknown"});
+    return json({retried:true,...latest},200,origin,env);
+   }
    if(path==="/api/admin/demo-requests"&&req.method==="GET"){
-    const r=await env.DB.prepare("SELECT id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,agent_id,llm_id,customer_id,admin_notes,created_at,updated_at FROM avr_demo_requests ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 WHEN 'approved' THEN 2 WHEN 'creating_demo' THEN 3 ELSE 4 END,created_at DESC LIMIT 300").all();
+    const r=await env.DB.prepare("SELECT id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,agent_id,llm_id,customer_id,admin_notes,created_at,updated_at,(SELECT id FROM avr_paid_onboardings p WHERE p.demo_request_id=avr_demo_requests.id LIMIT 1) AS paid_onboarding_id,(SELECT status FROM avr_paid_onboardings p WHERE p.demo_request_id=avr_demo_requests.id LIMIT 1) AS paid_onboarding_status FROM avr_demo_requests ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 WHEN 'approved' THEN 2 WHEN 'creating_demo' THEN 3 ELSE 4 END,created_at DESC LIMIT 300").all();
     return json({requests:r.results||[]},200,origin,env);
    }
    const demoRequestMatch=path.match(/^\/api\/admin\/demo-requests\/([a-f0-9-]{36})$/i);

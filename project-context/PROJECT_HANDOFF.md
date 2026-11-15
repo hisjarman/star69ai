@@ -1,3 +1,9 @@
+## Mobile AI assistant and homepage demo disclosure — 2026-11-15
+
+- Homepage mobile assistant layout is adjusted so the receptionist image and chat widget stack vertically, the chat iframe receives a tall mobile viewport (at least 640px, 680px on narrow phones), and the widget is not clipped by the former short image-column height.
+- Homepage custom-demo AI Challenge disclosure now has an explicit pale background and dark green high-contrast text, including responsive type sizes. Reward terms remain unchanged: Starter 5%, Pro 10%, Expert 15% off monthly subscription payments for 12 months; no setup discount, no partner/prepaid stacking, and no redemption until secure account-based verification is enabled.
+- Source-only change on `fix/mobile-ai-assistant-and-challenge-disclosure-2026-11-15`. Mobile browser/iframe interaction testing and GitHub Pages publication remain to be verified.
+
 ## Partner setup-fee correction and public program explanation — 2026-11-15
 
 - Partner referrals no longer discount the one-time setup fee. The setup fee remains $99 for monthly-plan customers regardless of partner referral type; six-/twelve-month prepaid plans continue to waive setup under their separate offer.

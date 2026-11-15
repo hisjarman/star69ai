@@ -1,3 +1,16 @@
+## Public paid checkout and automatic demo provisioning — 2026-11-15
+
+- Feature branch: `feature/paypal-setup-checkout-2026-11-15`. Changes are not merged or deployed.
+- Public plan CTAs and partner referral links lead to `checkout.html`. Checkout collects customer/business details and the minimum discovery facts needed to generate a tailored demo agent.
+- Monthly path: preflight the active Stripe monthly price and partner coupon before collecting money; capture the one-time PayPal setup fee ($99 standard / $49.50 for eligible partner-discount referrals), then create a Stripe monthly subscription checkout. The backend verifies both providers' payment states before provisioning.
+- Prepaid path: six-month terms are 25% off and twelve-month terms are 35% off, charged once through PayPal at the approved totals (Starter $670.50 / $1,162.20; Growth $1,120.50 / $1,942.20; Pro $1,795.50 / $3,112.20). Setup is waived; prepaid does not create a Stripe subscription.
+- Partner discount and prepaid discounts cannot stack. Monthly partner referrals receive the approved 15% monthly subscription discount for 12 months and 50% off setup when the link is configured for discount. Partner commissions are calculated on subscription amounts actually collected after discounts; prepaid PayPal payments also create a commission ledger entry based on the collected prepaid amount, excluding setup.
+- After verified plan payment, the platform creates a Retell demo LLM/agent from the discovery brief, associates it with the D1 customer workspace, and sends a Clerk invitation to the checkout email. Existing Clerk users are directed to sign in. The demo agent is not assigned a phone number and does not activate production routing.
+- PayPal Live credentials are stored as Cloudflare Worker secrets on `avr-platform-api`: `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET`. The Worker defaults to Live; `PAYPAL_MODE=sandbox` is an optional non-secret switch for a deliberate sandbox deployment. Do not put credential values in GitHub.
+- New migrations to apply to the `avr-trust-lab` D1 database, in order, before deploying either Worker: `cloudflare/migrations/20261115_public_paid_onboarding.sql`, then `cloudflare/migrations/20261115_paypal_partner_commissions.sql`. The platform Worker requires the existing Stripe webhook endpoint at `/webhooks/stripe` to receive checkout completion and subscription events. PayPal orders are captured server-side after buyer approval; the browser redirect alone never marks a payment paid.
+- Admin Demo Requests displays paid onboarding state and supports retrying a failed Retell/Clerk provisioning step. Support is notified if provisioning fails after payment.
+- Static JavaScript syntax checks and SQLite migration/insert-shape checks passed. Live PayPal capture, Stripe checkout, Clerk invitation delivery, Retell agent creation, partner attribution/commission, and the full browser flow have not yet been production-tested. Do not deploy until the D1 migrations and end-to-end checks are complete.
+
 ## Subscription overage protection — 2026-11-15
 
 - Feature branch: feature/75-percent-overage-protection-2026-11-15. Not merged or deployed.
@@ -13,9 +26,9 @@
 
 ## Prepaid pricing and setup-fee waiver update — 2026-11-14
 
-- Approved prepaid offers: six months at 20% off the standard subscription total; twelve months at 30% off. Totals: Starter $715.20 / $1,251.60; Growth $1,195.20 / $2,091.60; Pro $1,915.20 / $3,351.60.
-- Both prepaid terms waive the $99 setup fee completely. Monthly setup invoices remain separate PayPal invoices issued manually by SIMIAPP CLOUD; standard amount $99, discounted partner amount $49.50. Prepaid customers must never receive a setup invoice.
-- Worker checkout validates prepaid Stripe Price amounts against the new 20%/30% totals. Existing six- and twelve-month Stripe Price IDs must be replaced/reconfigured to these amounts before prepaid checkout will pass validation. Do not assume production Stripe configuration has been changed.
+- Approved prepaid offers: six months at 25% off the standard subscription total; twelve months at 35% off. Totals: Starter $670.50 / $1,162.20; Growth $1,120.50 / $1,942.20; Pro $1,795.50 / $3,112.20.
+- Both prepaid terms waive the $99 setup fee completely. Monthly setup fees are collected through the public PayPal checkout; standard amount $99, discounted partner amount $49.50. Prepaid customers must never receive a setup invoice.
+- Prepaid checkout uses a one-time PayPal payment and never creates a Stripe subscription. Stripe is reserved for monthly recurring subscriptions.
 - New D1 migration adds `avr_customers.billing_cadence`; the Stripe checkout/subscription webhooks persist the selected cadence. The admin invoice workflow suppresses invoice creation for prepaid customers, both in its UI and server-side route.
 - Challenge and partner discounts cannot stack with prepaid offers. Setup-fee waiver is not a commissionable payment.
 - Deployment remains pending: apply the new D1 migration, update all six prepaid Stripe recurring prices/IDs in the configured Stripe mode, deploy Worker, publish GitHub Pages, and verify checkout and admin behavior. No live provider settings or production deployment were changed by this branch.

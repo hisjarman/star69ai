@@ -73,7 +73,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   const commissionableCents=lines.reduce((sum,line)=>{
    const subscriptionLine=line.type==="subscription"||!!line.subscription_item||line.parent?.type==="subscription_item_details";
    const proration=line.proration===true||line.parent?.subscription_item_details?.proration===true;
-   const netAmount=Math.max(0,Number(line.amount_excluding_tax??line.amount??0));
+   const amount=Number(line.amount_excluding_tax??line.amount??0),discounts=Array.isArray(line.discount_amounts)?line.discount_amounts.reduce((n,item)=>n+Number(item.amount||0),0):0,netAmount=Math.max(0,amount-discounts);
    return subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
   },0);
   if(customer&&partnerId&&commissionableCents>0){

@@ -133,7 +133,7 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
  const purpose=onboarding.paypal_order_purpose||"setup_fee";
  const amountCents=purpose==="setup_fee"?Number(onboarding.setup_amount_cents):Number(onboarding.prepaid_amount_cents);
  if(!Number.isInteger(amountCents)||amountCents<1)throw Error("invalid_paypal_checkout_amount");
- const amount=(amountCents/100).toFixed(2),attempt=Number(onboarding.paypal_attempts||0),description=purpose==="setup_fee"?"Star69AI one-time receptionist setup fee — issued by SIMIAPP CLOUD":"Star69AI "+(onboarding.billing_cadence==="six_month"?"six-month":"twelve-month")+" prepaid managed receptionist plan";
+ const amount=(amountCents/100).toFixed(2),attempt=Number(onboarding.paypal_attempts||0),description=purpose==="setup_fee"?"SIMIAPP CLOUD — Star69AI one-time receptionist setup fee":"Star69AI "+(onboarding.billing_cadence==="six_month"?"six-month":"twelve-month")+" prepaid managed receptionist plan";
  const order=await paypalRequest(env,"/v2/checkout/orders","POST",{
   intent:"CAPTURE",
   purchase_units:[{reference_id:onboarding.id,custom_id:customer.id,invoice_id:"S69-"+onboarding.id.slice(0,22)+"-"+attempt,description,amount:{currency_code:"USD",value:amount}}],

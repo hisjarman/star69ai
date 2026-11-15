@@ -355,9 +355,14 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  
  const o=ev.data?.object||{},customerId=o.metadata?.avr_customer_id||null,stripeCustomer=o.customer||o.customer_id||null;
  if((ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded")&&customerId){
-  const selectedPlan=o.metadata?.plan_key||null;
-  await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
-  // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
+  const paymentConfirmed=o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded";
+  if(paymentConfirmed){
+ 
+   const selectedPlan=o.metadata?.plan_key||null;
+   await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',status='active',updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
+   // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
+  }
+  }
  }
  if(ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded"){
   const onboardingId=o.metadata?.avr_paid_onboarding_id;

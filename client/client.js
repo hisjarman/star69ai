@@ -138,7 +138,7 @@ function renderAgentRequests(items){
    $("#account-status").textContent=customer.status||"Pending";$("#account-status").className="status "+(customer.status||"pending");
    const plans={starter:["Starter","$149 / month"],growth:["Growth","$249 / month"],pro:["Pro","$399 / month"]};
    $("#plan-name").textContent=plans[customer.plan]?.[0]||"Not selected";
-    const offerNote=$("#billing-offer-note");if(offerNote&&customer.hasPartnerReferral)offerNote.textContent="Your partner referral discount is 5% off the first monthly payment and is applied automatically unless you enter CALLSMART10. Discounts do not stack; prepaid savings replace first-month offers.";
+    const offerNote=$("#billing-offer-note");if(offerNote&&customer.hasPartnerReferral)offerNote.textContent="Your partner referral makes you eligible for 5% off the first monthly payment once the offer is active in checkout. It is applied automatically unless you enter CALLSMART10. Discounts do not stack; prepaid savings replace first-month offers.";
    $("#plan-price").textContent=plans[customer.plan]?.[1]||"Select a monthly plan";
    renderUsage(d.usage||{},customer.includedMinutes||0,customer.plan);
    $("#calls-count").textContent=Number(d.usage?.calls||0).toLocaleString();

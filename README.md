@@ -117,4 +117,4 @@ This repository contains proprietary Star69AI software and original materials. S
 - Partner self-service: [Partner Center](https://star69ai.com/partner-portal/).
 - Private administration: `/partners-admin.html`.
 - First-party referral tracking and commission accounting use Cloudflare Workers/D1 and Stripe; Systeme.io is not required.
-- The partner portal source and D1 migration are under review on `feature/star69ai-partner-portal`. Referral tracking and Stripe commission processing are not production-active until the PR is approved, the D1 migration is applied, both Workers are deployed, and signed webhook tests pass.
+- The partner portal and first-party referral tracking are under review in GitHub feature branches. The `feature/partner-link-discount-choice` branch adds two partner referral links (15% first-month discount or standard/no customer discount), preserves commission attribution for both, and calculates commissions from the discounted subscription amount actually received. This branch requires its D1 migration, a `STRIPE_COUPON_PARTNER15` coupon ID, Worker deployment and Stripe test-mode validation before production use.

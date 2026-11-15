@@ -1,5 +1,5 @@
 (()=> {
- const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.49,growth:0.39,pro:0.29};
+ const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
  const $=s=>document.querySelector(s);
  let clerk=null,customer=null,loading=false;
  function note(t,e=false){const n=$("#notice");n.textContent=t;n.classList.remove("hidden","error");if(e)n.classList.add("error")}
@@ -17,7 +17,7 @@
  }
  function showSignedOut(){$("#auth").classList.remove("hidden");$("#app").classList.add("hidden");$("#session-pill").textContent="Signed out"}
  function renderUsage(usage,included,plan){
-  const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,used-allowance),pct=allowance?Math.min(100,used/allowance*100):0;
+  const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;
   $("#usage-percent").textContent=Math.round(pct)+"%";
   $("#usage-fill").style.width=pct+"%";
   $("#usage-fill").classList.toggle("over-limit",over>0);
@@ -25,7 +25,10 @@
   $("#usage-total").textContent=used+" of "+allowance+" included minutes";
   const overageRate=OVERAGE_RATES[String(plan||"").toLowerCase()];
   $("#overage-rate").textContent=overageRate===undefined?"See your plan":money(overageRate)+" / minute";
-  $("#overage-estimate").textContent="Estimated overage: "+(overageRate===undefined?"—":money(over*overageRate));
+  $("#overage-estimate").textContent="Estimated overage after vault: "+(overageRate===undefined?"—":money(over*overageRate));
+  if($("#vault-balance"))$("#vault-balance").textContent=vault.toLocaleString();
+  if($("#vault-used"))$("#vault-used").textContent=vaultUsed.toLocaleString()+" min";
+  if($("#vault-overage"))$("#vault-overage").textContent=over.toLocaleString()+" min";
   $("#minutes-used").textContent=used.toLocaleString();
   $("#minutes-included").textContent=allowance.toLocaleString()+" included minutes";
  }

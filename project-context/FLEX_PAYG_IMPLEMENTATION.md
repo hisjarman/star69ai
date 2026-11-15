@@ -34,3 +34,10 @@ Before selling/activating Flex, route the business number through a supported te
 - Define whether call usage is billed in full-minute increments or per-second increments. Public copy currently says per AI voice minute; the meter must use the same disclosed rounding rule.
 - Add client portal UI for wallet history and top-up instructions.
 - Add the pre-answer ingress service and integration tests.
+
+
+## Inbound webhook update — 2026-11-15
+- A separate pre-answer Retell inbound webhook endpoint is being added for customer-number eligibility checks: `/webhooks/retell/inbound`.
+- The subscription overage protection branch attaches that endpoint to newly assigned numbers and provides an admin action to attach it to existing assigned numbers.
+- For Flex, the endpoint remains fail-closed unless `PAYG_INGRESS_GATE_ENABLED=true` and the wallet is funded with positive balance. This branch does NOT deduct Flex usage from the wallet or implement a safe per-call balance reservation. Do not enable the flag or activate Flex based on the presence of the webhook alone.
+- Flex must still receive tested per-call usage deductions, concurrent-call protection and the agreed 10-minute in-progress-call allowance before the gate can be enabled.

@@ -115,7 +115,7 @@ async function refreshMinuteVault(env,c){
    }
    if(lot.remaining<=0)lots.shift();
   }
-  const banked=isCurrent?0:Math.max(0,included-used);
+  const banked=isCurrent?0:Math.floor(Math.max(0,included-used)*0.5);
   if(banked>0)lots.push({periodKey:row.period_key,remaining:banked});
   balance=lots.reduce((sum,lot)=>sum+lot.remaining,0);
   if(isCurrent){currentUsed=used;currentBankUsed=bankUsed;billable=remainingOverage}

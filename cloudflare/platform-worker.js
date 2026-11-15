@@ -498,14 +498,14 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  if(ev.type==="setup_intent.succeeded"&&stripeCustomer&&o.payment_method){
   const pm=typeof o.payment_method==="string"?o.payment_method:o.payment_method.id;
   await stripeRequest(env,"customers/"+encodeURIComponent(stripeCustomer),{"invoice_settings[default_payment_method]":pm},"POST","avr-overage-default-pm-"+o.id);
-  await env.DB.prepare("UPDATE avr_customers SET stripe_payment_method_id=?,overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(pm,new Date().toISOString(),stripeCustomer).run();
+  await env.DB.prepare("UPDATE avr_customers SET stripe_payment_method_id=?,updated_at=? WHERE stripe_customer_id=?").bind(pm,new Date().toISOString(),stripeCustomer).run();
   const retryRows=await env.DB.prepare("SELECT id,stripe_invoice_id FROM avr_overage_billing_ledger WHERE customer_id=(SELECT id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1) AND status='failed' AND stripe_invoice_id IS NOT NULL").bind(stripeCustomer).all();
+  if(!(retryRows.results||[]).length)await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();
   for(const row of (retryRows.results||[])){try{await stripeRequest(env,"invoices/"+encodeURIComponent(row.stripe_invoice_id)+"/pay",{payment_method:pm,off_session:true},"POST","avr-overage-retry-"+row.id+"-"+pm);await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='invoiced',failure_reason=NULL,updated_at=? WHERE id=?").bind(new Date().toISOString(),row.id).run();}catch(e){console.error("overage_invoice_retry_failed",row.id,e.message)}}
  }
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
-  if(o.metadata?.avr_overage_ledger_id)await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),o.metadata.avr_overage_ledger_id).run();
-  for(const line of (o.lines?.data||[])){const ledgerId=line.metadata?.avr_overage_ledger_id;if(ledgerId)await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),ledgerId).run();}
-  await env.DB.prepare("UPDATE avr_customers SET overage_payment_status=CASE WHEN billing_cadence='monthly' OR stripe_payment_method_id IS NOT NULL THEN 'active' ELSE overage_payment_status END,updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();
+  if(o.metadata?.avr_overage_ledger_id){await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),o.metadata.avr_overage_ledger_id).run();await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();}
+  for(const line of (o.lines?.data||[])){const ledgerId=line.metadata?.avr_overage_ledger_id;if(ledgerId){await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),ledgerId).run();await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();}}
   const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
   const partnerId=customer?.affiliate_partner_id||o.metadata?.affiliate_partner_id||null;
   const lines=Array.isArray(o.lines?.data)?o.lines.data:[];

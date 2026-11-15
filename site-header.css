@@ -1,6 +1,6 @@
 .site-global-header{position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:clamp(12px,1.5vw,24px);width:100%;min-height:76px;padding:10px max(20px,calc((100vw - 1400px)/2));background:rgba(3,10,24,.97);border-bottom:1px solid rgba(53,151,230,.28);box-shadow:0 8px 28px rgba(0,0,0,.24);color:#f4f8fc;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .site-global-brand{display:flex;align-items:center;flex:0 0 auto;min-width:0}
-.site-global-brand img{display:block;width:clamp(160px,17vw,220px);max-width:100%;height:auto;max-height:52px;object-fit:contain}
+.site-global-brand img{display:block;width:clamp(170px,18vw,236px);max-width:100%;height:auto;max-height:58px;object-fit:contain}
 .site-global-nav{display:flex;align-items:center;justify-content:center;gap:clamp(11px,1.35vw,20px);margin-left:auto;min-width:0}
 .site-global-nav>a,.site-global-more>summary{color:#dce8f4;font:700 12px/1.3 'DM Sans',Arial,sans-serif;white-space:nowrap;cursor:pointer}
 .site-global-nav>a:hover,.site-global-nav>a[aria-current=page],.site-global-more>summary:hover{color:#43b4fe}

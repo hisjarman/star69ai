@@ -104,7 +104,7 @@ async function audit(env,user,action,customerId,detail={}){await env.DB.prepare(
 async function stripeRequest(env,path,params={},method="POST"){if(!env.STRIPE_SECRET_KEY)throw Error("stripe_not_configured");const form=new URLSearchParams();for(const [k,v] of Object.entries(params))if(v!==undefined&&v!==null)form.set(k,String(v));const r=await fetch("https://api.stripe.com/v1/"+path,{method,headers:{Authorization:"Bearer "+env.STRIPE_SECRET_KEY,"Content-Type":"application/x-www-form-urlencoded"},body:method==="GET"?undefined:form.toString()});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error?.message||"stripe_request_failed");return d}
 async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",options={}){
  const p=planInfo[plan];if(!p)throw Error("invalid_plan");
- if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;
+ if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;if(selected!=="monthly")throw Error("prepaid_terms_are_paid_in_full_through_paypal_not_stripe");
  const priceEnv=selected==="six_month"?p.sixMonthPriceEnv:selected==="annual"?p.annualPriceEnv:p.priceEnv;
  const price=env[priceEnv];if(!price||price==="price_replace_me")throw Error(selected==="monthly"?"stripe_price_id_missing_"+plan:"prepaid_price_not_configured");
  if(selected!=="monthly"){

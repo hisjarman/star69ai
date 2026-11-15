@@ -1001,3 +1001,17 @@ This section supersedes the earlier activation-status notes above where they des
 - Timeline checks passed: seven top year links match seven detail cards, and the detailed history section appears after the homepage intake form.
 - Checkout source check passed: a discounted partner referral cannot use the AI Challenge promo code; the old stacked coupon and follow-up webhook code paths are removed. Prepaid checkout continues to reject promo codes.
 - Not yet completed: visual browser QA, live authenticated partner-account verification, Stripe test checkout/webhook tests, Cloudflare Worker deployment, and GitHub Pages publication. PR remains draft and unmerged.
+
+
+## Flex wallet customer flow update — 2026-11-15
+
+- Feature branch: `feature/flex-wallet-customer-flow-2026-11-15`. Not merged or deployed.
+- Flex retail rate remains $0.65 per AI voice minute. Wallet deposits are dollar credit, not fixed-minute packages. Published options: $10, $25, $50, $75, $100 and $149. Portal estimates minutes at the published rate only.
+- Client portal now includes a Flex wallet page showing balance, estimated minutes, wallet status and latest 20 ledger entries. PayPal invoice request controls are disabled until the ingress gate is enabled.
+- Agency Admin now has a Flex wallets tab listing all customer accounts and balances. The administrator can post a wallet credit only after confirming the matching PayPal payment was received.
+- Worker wallet API returns deposit tiers and ledger history. Admin credit endpoint now accepts only the six published denominations, rejects duplicate PayPal references and refuses credit posting unless `PAYG_INGRESS_GATE_ENABLED=true`.
+- Pricing page labels Flex as pilot/waitlist only and explicitly states deposits/calls are not currently enabled. Flex remains separate from Stripe subscriptions and the subscription Minute Vault.
+- No automated PayPal invoice creation, PayPal webhook, auto-reload, usage debit, or pre-answer ingress gateway was added. No production payment setting or `PAYG_INGRESS_GATE_ENABLED` flag was changed.
+- Retell bills accumulated call duration to the nearest second; implement per-second pro-rata retail usage only after a reserve-based ingress gateway, atomic debit, max-call-duration enforcement and post-call reconciliation are built and tested.
+- Source-level JavaScript syntax checks passed for Worker, client and admin scripts. Browser testing, D1 live tests, payment tests, Worker deployment and GitHub Pages publication remain outstanding.
+- See `project-context/FLEX_PAYG_IMPLEMENTATION.md` for deposit tiers, flow, unit-economics and launch blockers.

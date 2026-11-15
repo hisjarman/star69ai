@@ -1,7 +1,7 @@
 ## Automatic overage billing implementation — review pending 2026-11-15
 
 - Feature branch: `feature/automatic-overage-billing-2026-11-15`. Not merged or deployed.
-- Monthly plans use their active Stripe subscription and queue usage invoice items for the next subscription invoice. PayPal-prepaid six-/twelve-month customers must add a card through Stripe Checkout Setup mode with off-session usage consent; overage is invoiced separately through Stripe.
+- All plan customers must separately authorize off-session overage collection in the client portal and save a card through Stripe Checkout Setup mode. Monthly overage invoice items attach to the active Stripe subscription and are charged on its next invoice; PayPal-prepaid six-/twelve-month overage is charged through a separate Stripe invoice. The saved method is set as the customer's default and, for monthly customers, the subscription's default payment method.
 - Rates: Starter $0.55/minute, Growth $0.45/minute, Pro $0.36/minute. The existing 75% hard overage cap and Minute Vault consumption order remain unchanged. Without an overage payment method, calls may use included and vaulted minutes but cannot reserve overage capacity.
 - The Worker stores a D1 billing ledger keyed by customer, period and cumulative overage minutes; Stripe idempotency keys prevent duplicate invoice items/invoices. Failed usage is retained in the ledger to prevent double billing; updating a card retries failed prepaid invoices where an invoice ID exists.
 - Client portal shows card authorization state, overage billing totals and the billing timing.

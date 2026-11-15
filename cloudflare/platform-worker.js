@@ -335,6 +335,13 @@ async function route(req,env){
    return json({accepted:true,id,discoveryComplete,notificationSent,message:discoveryComplete?"Your complete business discovery brief has been received.":"Your demo request has been received."},201,origin,env);
   }
   if(path==="/api/me"&&req.method==="GET"){const u=await clerkUser(req,env);return json({user:u},200,origin,env)}
+  if(path==="/api/client/payg-wallet"&&req.method==="GET"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   const wallet=await env.DB.prepare("SELECT status,currency,created_at,updated_at FROM avr_payg_wallets WHERE customer_id=?").bind(c.id).first();
+   const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(c.id).first();
+   const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";
+   return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>0&&gateEnabled,ingressGateEnabled:gateEnabled,activationNote:gateEnabled?"Wallet balance is positive.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
+  }
   if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes}},200,origin,env)}
 
   if(path==="/api/client/agent-configuration"&&req.method==="GET"){
@@ -487,6 +494,23 @@ async function route(req,env){
   if(path.startsWith("/api/admin/")){
    const u=await requireAdmin(req,env);
 
+   if(path==="/api/admin/payg-wallets"&&req.method==="GET"){
+    const r=await env.DB.prepare("SELECT w.customer_id,w.status,w.currency,w.created_at,w.updated_at,c.business_name,c.email,COALESCE((SELECT SUM(l.amount_cents) FROM avr_payg_wallet_ledger l WHERE l.customer_id=w.customer_id),0) AS balance_cents FROM avr_payg_wallets w JOIN avr_customers c ON c.id=w.customer_id ORDER BY w.updated_at DESC LIMIT 500").all();
+    return json({wallets:r.results||[],rateCentsPerMinute:65,ingressGateEnabled:env.PAYG_INGRESS_GATE_ENABLED==="true"},200,origin,env)
+   }
+   const paygCreditMatch=path.match(/^\\/api\\/admin\\/payg-wallets\\/([a-f0-9-]{36})\\/credit$/i);
+   if(paygCreditMatch&&req.method==="POST"){
+    const customerId=paygCreditMatch[1],p=await body(req,3000),amountCents=Math.floor(Number(p.amountCents)),reference=String(p.paypalReference||"").trim().slice(0,160),note=String(p.note||"").trim().slice(0,500);
+    if(!Number.isInteger(amountCents)||amountCents<1||amountCents>1000000)throw Error("valid_credit_amount_cents_required");
+    if(reference.length<4)throw Error("verified_paypal_reference_required");
+    const customer=await env.DB.prepare("SELECT id,email FROM avr_customers WHERE id=?").bind(customerId).first();if(!customer)throw Error("customer_not_found");
+    const now=new Date().toISOString(),id="paypal:"+reference.toLowerCase();
+    await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status,currency,created_at,updated_at) VALUES(?,'funded','usd',?,?) ON CONFLICT(customer_id) DO UPDATE SET status='funded',updated_at=excluded.updated_at").bind(customerId,now,now).run();
+    await env.DB.prepare("INSERT INTO avr_payg_wallet_ledger(id,customer_id,amount_cents,entry_type,source_ref,note,created_by,created_at) VALUES(?,?,?,'top_up',?,?,?,?)").bind(id,customerId,amountCents,reference,note||"PayPal payment verified manually by administrator",u.email,now).run();
+    await audit(env,u,"payg_wallet_funded",customerId,{amountCents,paypalReference:reference});
+    const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(customerId).first();
+    return json({funded:true,balanceCents:Number(balance?.balance_cents||0),ingressGateEnabled:env.PAYG_INGRESS_GATE_ENABLED==="true",canReceiveCalls:false,activationNote:"Credit is recorded. Do not activate inbound call handling until the number is routed through the pre-answer balance-checking ingress gate."},201,origin,env)
+   }
    if(path==="/api/admin/demo-requests"&&req.method==="GET"){
     const r=await env.DB.prepare("SELECT id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,agent_id,llm_id,customer_id,admin_notes,created_at,updated_at FROM avr_demo_requests ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'reviewing' THEN 1 WHEN 'approved' THEN 2 WHEN 'creating_demo' THEN 3 ELSE 4 END,created_at DESC LIMIT 300").all();
     return json({requests:r.results||[]},200,origin,env);

@@ -14,7 +14,8 @@
   $("#pp-payout-status").textContent=data.partner.paypalEmail?"PAYPAL DETAILS SAVED":"PAYPAL SETUP NEEDED";
   $("#pp-payout-message").textContent=data.partner.payoutUpdatedAt?"Last updated "+new Date(data.partner.payoutUpdatedAt).toLocaleDateString():"Add your PayPal email to receive payouts.";
 
-  $("#pp-referral-link").value=data.partner.referralUrl;
+  $("#pp-referral-discounted").value=data.partner.referralUrlDiscounted;
+  $("#pp-referral-standard").value=data.partner.referralUrlStandard;
   $("#pp-clicks").textContent=Number(data.stats.clicks||0).toLocaleString();
   $("#pp-leads").textContent=Number(data.stats.leads||0).toLocaleString();
   $("#pp-customers").textContent=Number(data.stats.customers||0).toLocaleString();
@@ -44,7 +45,9 @@
   }catch(e){message.textContent=e.message==="valid_paypal_email_required"?"Enter a valid PayPal email address.":e.message||"Could not save payout details.";}
   finally{button.disabled=false;button.textContent="Save payout details";}
  });
- $("#pp-copy-link").addEventListener("click",async()=>{const value=$("#pp-referral-link").value;try{await navigator.clipboard.writeText(value);$("#pp-copy-status").textContent="Referral link copied."; }catch{$("#pp-referral-link").select();$("#pp-copy-status").textContent="Select and copy your referral link."; }});
+ async function copyReferral(inputId,label){const input=$(inputId),value=input.value;try{await navigator.clipboard.writeText(value);$("#pp-copy-status").textContent=label+" copied.";}catch{input.select();$("#pp-copy-status").textContent="Select and copy the "+label.toLowerCase()+".";}}
+ $("#pp-copy-discounted").addEventListener("click",()=>copyReferral("#pp-referral-discounted","Discounted referral link"));
+ $("#pp-copy-standard").addEventListener("click",()=>copyReferral("#pp-referral-standard","Standard referral link"));
  async function init(){try{if(!window.Clerk)throw new Error("Clerk did not load. Refresh and try again.");await window.Clerk.load({ui:{ClerkUI:window.__internal_ClerkUICtor}});clerk=window.Clerk;if(clerk.isSignedIn)signedIn();else signedOut();clerk.addListener(()=>clerk.isSignedIn?signedIn():signedOut());}catch(e){$("#pp-auth-title").textContent="Sign-in could not initialize";$("#pp-auth-copy").textContent=e.message||"Refresh and try again.";actions.hidden=true;}}
  init();
 })();

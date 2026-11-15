@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS avr_paid_onboardings (
   paypal_capture_id TEXT,
   paypal_attempts INTEGER NOT NULL DEFAULT 0,
   stripe_session_id TEXT,
+  stripe_attempts INTEGER NOT NULL DEFAULT 0,
   plan_payment_provider TEXT NOT NULL CHECK(plan_payment_provider IN ('stripe','paypal')),
   plan_payment_status TEXT NOT NULL DEFAULT 'pending' CHECK(plan_payment_status IN ('pending','paid')),
   status TEXT NOT NULL DEFAULT 'awaiting_setup' CHECK(status IN ('awaiting_setup','awaiting_plan_payment','awaiting_subscription','awaiting_provisioning','provisioning','provisioned','provisioning_failed','checkout_failed')),

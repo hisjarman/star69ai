@@ -767,7 +767,7 @@ async function route(req,env){
   if(path==="/api/client/payg-wallet/topup"&&req.method==="POST"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");if(!isFlexCustomer(c))throw Error("flex_wallet_only");
    const p=await body(req,2000),amount=Number(p.amount),amountCents=Math.round(amount*100);
-   if(!Number.isFinite(amount)||!Number.isInteger(amountCents)||amountCents<500||amountCents>50000||amountCents%500!==0)throw Error("topup_must_be_in_5_dollar_increments_between_5_and_500");
+   if(!Number.isFinite(amount)||!Number.isInteger(amountCents)||amountCents<500||amountCents%500!==0)throw Error("topup_must_be_in_5_dollar_increments_between_5_and_500");
    if(!env.PAYPAL_CLIENT_ID||!env.PAYPAL_CLIENT_SECRET)throw Error("paypal_not_configured");
    const now=new Date().toISOString(),topupId=crypto.randomUUID();
    await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status) VALUES(?,'pending') ON CONFLICT(customer_id) DO NOTHING").bind(c.id).run();

@@ -310,7 +310,7 @@ async function startPublicFlexSignup(p,env,contact,email,phone,business,industry
   }
  }catch(e){console.error("flex_account_invitation_failed",e.message)}
  await env.DB.prepare("UPDATE avr_customers SET admin_notes=? WHERE id=?").bind("Flex account; "+accountDeliveryStatus+"; "+(invitationId||"")+"; "+String(p.notes||"").slice(0,1000),customerId).run();
- return {accepted:true,paymentStep:"flex_wallet",completeUrl:"https://star69ai.com/checkout-complete.html?flex_signup=1&email="+encodeURIComponent(email),accountDeliveryStatus};
+ return {accepted:true,paymentStep:"flex_wallet",completeUrl:"https://star69ai.com/checkout-complete.html?flex_signup=1",accountDeliveryStatus};
 }
 async function startPublicCheckout(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");

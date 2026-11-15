@@ -105,17 +105,10 @@ async function stripeRequest(env,path,params={},method="POST"){if(!env.STRIPE_SE
 async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",options={}){
  const p=planInfo[plan];if(!p)throw Error("invalid_plan");
  if(!["monthly","six_month","annual"].includes(cadence))throw Error("invalid_billing_cadence");const selected=cadence;if(selected!=="monthly")throw Error("prepaid_terms_are_paid_in_full_through_paypal_not_stripe");
- const priceEnv=selected==="six_month"?p.sixMonthPriceEnv:selected==="annual"?p.annualPriceEnv:p.priceEnv;
- const price=env[priceEnv];if(!price||price==="price_replace_me")throw Error(selected==="monthly"?"stripe_price_id_missing_"+plan:"prepaid_price_not_configured");
- if(selected!=="monthly"){
-  const months=selected==="six_month"?6:12,discount=selected==="six_month"?0.20:0.30,expectedCents=Math.round(p.price*months*(1-discount)*100);
-  const stripePrice=await stripeRequest(env,"prices/"+encodeURIComponent(price),{},"GET");
-  if(!stripePrice.active||stripePrice.currency!=="usd"||Number(stripePrice.unit_amount)!==expectedCents||stripePrice.recurring?.interval!=="month"||Number(stripePrice.recurring?.interval_count)!==months)throw Error("prepaid_price_configuration_mismatch");
- }
+ const price=env[p.priceEnv];if(!price||price==="price_replace_me")throw Error("stripe_price_id_missing_"+plan);
  const affiliateId=c.affiliate_partner_id||"",partnerDiscount=affiliateId&&c.affiliate_offer_mode==="discount";let coupons=[],discountType="none";
  const code=String(promoCode||"").trim().toUpperCase();
- if(selected!=="monthly"&&code)throw Error("prepaid_offer_cannot_be_combined_with_promo");
- if(selected==="monthly"&&code)throw Error("challenge_reward_redemption_not_yet_enabled");
+ if(code)throw Error("challenge_reward_redemption_not_yet_enabled");
  else if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType="partner_15_for_12_months";}
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId});stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
  const extra=options.metadata||{};const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:options.successUrl||"https://star69ai.com/client/?billing=success",cancel_url:options.cancelUrl||"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"metadata[plan_key]":plan,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType,"subscription_data[metadata][plan_key]":plan};for(const [key,value] of Object.entries(extra))if(value!==undefined&&value!==null){params["metadata["+key+"]"]=String(value);params["subscription_data[metadata]["+key+"]"]=String(value)}

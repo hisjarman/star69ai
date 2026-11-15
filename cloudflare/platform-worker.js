@@ -37,7 +37,7 @@ async function reserveFlexCall(env,customer,balanceCents,callId){
  const reserveMs=Math.min(3600000,Math.floor(available/60000)*60000);
  if(reserveMs<60000)return 0;
  const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_overage_call_reservations(call_id,customer_id,period_key,reserved_ms,expires_at,created_at) SELECT ?,?,'flex',?,?,? WHERE COALESCE((SELECT SUM(reserved_ms) FROM avr_overage_call_reservations WHERE customer_id=? AND period_key='flex' AND expires_at>?),0)+? <= ?")
- .bind(callId,customer.id,reserveMs,now+65*60*1000,now,customer.id,now,reserveMs,baseRemainingMs).run();
+ .bind(callId,customer.id,reserveMs,now+24*60*60*1000,now,customer.id,now,reserveMs,baseRemainingMs).run();
  if(Number(inserted.meta?.changes||0)!==1)return 0;
  return reserveMs;
 }
@@ -576,7 +576,7 @@ async function sendOverageProtectionNotice(env,customer,periodKey,eventType,over
  const subject=blocked?"Star69AI call protection has paused new calls":"Star69AI overage usage alert";
  const text=blocked
   ? "Hello "+(customer.contact_name||customer.business_name||"there")+",\n\nYour account has reached the fixed 75% plan overage ceiling. Star69AI has paused new AI-receptionist calls for this billing period.\n\nCurrent overage: "+overageMinutes+" minutes. Fixed plan overage ceiling: "+limitMinutes+" minutes.\n\nStar69AI Support — support@star69ai.com"
-  : "Hello "+(customer.contact_name||customer.business_name||"there")+",\n\nYour account has used 50% of its fixed plan overage ceiling. New calls stop at the full 75% ceiling.\n\nCurrent overage: "+overageMinutes+" minutes. Authorized overage limit: "+limitMinutes+" minutes. Call protection threshold: "+thresholdMinutes+" minutes.\n\nStar69AI Support — support@star69ai.com";
+  : "Hello "+(customer.contact_name||customer.business_name||"there")+",\n\nYour account has used 50% of its fixed plan overage ceiling. New calls stop at the full 75% ceiling.\n\nCurrent overage: "+overageMinutes+" minutes. Fixed plan overage ceiling: "+limitMinutes+" minutes. Warning threshold: "+thresholdMinutes+" minutes.\n\nStar69AI Support — support@star69ai.com";
  const esc=v=>String(v??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
  const html="<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#20343b\"><h2>"+esc(subject)+"</h2><p>Hello "+esc(customer.contact_name||customer.business_name||"there")+",</p><p>"+(blocked?"Your account has reached its authorized overage protection threshold. Star69AI has paused new AI-receptionist calls for this billing period. Calls already in progress may finish.":"Your account has used 50% of its authorized overage allowance. New calls will be paused automatically at 75% of that allowance.")+"</p><p><b>Current overage:</b> "+overageMinutes+" minutes<br><b>Authorized overage limit:</b> "+limitMinutes+" minutes<br><b>Call protection threshold:</b> "+thresholdMinutes+" minutes</p><p>Contact <a href=\"mailto:support@star69ai.com\">support@star69ai.com</a> if you need your allowance reviewed.</p><p>Star69AI — Smarter Calls. Bigger Opportunity.</p></div>";
  const recipients=[...new Set([customer.email,...String(env.ADMIN_EMAILS||"").split(",").map(x=>x.trim().toLowerCase())].filter(x=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x)))];

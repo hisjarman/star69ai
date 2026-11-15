@@ -28,10 +28,9 @@ async function refreshMinuteVault(env,c){
  const active=c.status==="active"&&(["active","trialing"].includes(c.subscription_status)||["six_month","annual"].includes(c.billing_cadence));
  if(!active)return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,forfeited:false};
  const now=new Date(),currentKey=now.toISOString().slice(0,7),plan=planInfo[c.plan_key],currentAllowance=Number(plan?.minutes||c.included_minutes||0);
- let rows=(await env.DB.prepare("SELECT period_key,included_minutes FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key").bind(c.id).all()).results||[];
+ let rows=(await env.DB.prepare("SELECT period_key,included_minutes,plan_key FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key").bind(c.id).all()).results||[];
  if(!rows.length){
   await env.DB.prepare("INSERT OR IGNORE INTO avr_minute_vault_periods(customer_id,period_key,plan_key,included_minutes) VALUES(?,?,?,?)").bind(c.id,currentKey,c.plan_key||"custom",currentAllowance).run();
-  rows=[{period_key:currentKey,included_minutes:currentAllowance}];
  }else{
   const last=rows[rows.length-1],parts=last.period_key.split("-").map(Number);
   let cursor=new Date(Date.UTC(parts[0],parts[1],1));
@@ -44,8 +43,7 @@ async function refreshMinuteVault(env,c){
    cursor=new Date(Date.UTC(cursor.getUTCFullYear(),cursor.getUTCMonth()+1,1));
   }
   if(guard>36)throw Error("minute_vault_period_backfill_limit");
-  const currentExists=rows.some(x=>x.period_key===currentKey);
-  if(!currentExists)await env.DB.prepare("INSERT OR IGNORE INTO avr_minute_vault_periods(customer_id,period_key,plan_key,included_minutes) VALUES(?,?,?,?)").bind(c.id,currentKey,c.plan_key||"custom",currentAllowance).run();
+  if(!rows.some(x=>x.period_key===currentKey))await env.DB.prepare("INSERT OR IGNORE INTO avr_minute_vault_periods(customer_id,period_key,plan_key,included_minutes) VALUES(?,?,?,?)").bind(c.id,currentKey,c.plan_key||"custom",currentAllowance).run();
  }
  rows=(await env.DB.prepare("SELECT period_key,plan_key,included_minutes FROM avr_minute_vault_periods WHERE customer_id=? ORDER BY period_key").bind(c.id).all()).results||[];
  if(!rows.length)return {balanceMinutes:0,usedFromVaultThisMonth:0,billableOverageMinutes:0,forfeited:false};
@@ -58,23 +56,24 @@ async function refreshMinuteVault(env,c){
   const key=new Date(stamp).toISOString().slice(0,7);
   usageByMonth[key]=(usageByMonth[key]||0)+Math.max(0,Number(call.duration_ms||0));
  }
+ await env.DB.prepare("DELETE FROM avr_minute_vault_allocations WHERE customer_id=?").bind(c.id).run();
+ const lots=[];
  let balance=0,currentUsed=0,currentBankUsed=0,billable=0;
  for(const row of rows){
   const used=Math.ceil((usageByMonth[row.period_key]||0)/60000),included=Math.max(0,Number(row.included_minutes||0)),isCurrent=row.period_key===currentKey;
-  let bankUsed=0,banked=0;
-  if(isCurrent){
-   currentUsed=used;
-   const excess=Math.max(0,used-included);
-   bankUsed=Math.min(balance,excess);
-   currentBankUsed=bankUsed;
-   billable=Math.max(0,excess-bankUsed);
-   balance-=bankUsed;
-  }else{
-   const excess=Math.max(0,used-included);
-   bankUsed=Math.min(balance,excess);
-   banked=Math.max(0,included-used);
-   balance=Math.max(0,balance+included-used);
+  let remainingOverage=Math.max(0,used-included),bankUsed=0;
+  while(remainingOverage>0&&lots.length){
+   const lot=lots[0],take=Math.min(lot.remaining,remainingOverage);
+   if(take>0){
+    await env.DB.prepare("INSERT INTO avr_minute_vault_allocations(customer_id,usage_period_key,grant_period_key,minutes) VALUES(?,?,?,?)").bind(c.id,row.period_key,lot.periodKey,take).run();
+    lot.remaining-=take;remainingOverage-=take;bankUsed+=take;
+   }
+   if(lot.remaining<=0)lots.shift();
   }
+  const banked=isCurrent?0:Math.max(0,included-used);
+  if(banked>0)lots.push({periodKey:row.period_key,remaining:banked});
+  balance=lots.reduce((sum,lot)=>sum+lot.remaining,0);
+  if(isCurrent){currentUsed=used;currentBankUsed=bankUsed;billable=remainingOverage}
   await env.DB.prepare("UPDATE avr_minute_vault_periods SET used_minutes=?,banked_minutes=?,bank_used_minutes=?,balance_after_minutes=?,finalized=?,updated_at=? WHERE customer_id=? AND period_key=?").bind(used,banked,bankUsed,balance,isCurrent?0:1,now.toISOString(),c.id,row.period_key).run();
  }
  return {balanceMinutes:balance,usedFromVaultThisMonth:currentBankUsed,billableOverageMinutes:billable,currentUsedMinutes:currentUsed,currentIncludedMinutes:Number(rows.find(x=>x.period_key===currentKey)?.included_minutes||currentAllowance),forfeited:false};

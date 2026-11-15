@@ -53,7 +53,7 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   if(q.get("setup_payment")!=="1"||!q.get("token"))return;
   note("PayPal approved the setup payment. Verifying it securely…");
   try{await api("/api/public/checkout/capture",{method:"POST",body:JSON.stringify({onboardingId:q.get("onboarding_id"),statusToken:q.get("status_token"),orderId:q.get("token")})});history.replaceState(null,"",location.pathname+"#overview");note("Setup payment verified. Your account is ready for managed launch.")}
-  catch(e){note("Payment verification did not complete: "+e.message,true)}
+  catch(e){note(e.message==="setup_offer_updated_please_resume_checkout"?"The setup offer has been updated to the current discount limit. Please return to your launch checklist and restart the PayPal setup payment.":"Payment verification did not complete: "+e.message,true)}
  } async function captureWalletTopupReturn(){
   const q=new URLSearchParams(location.search);
   if(q.get("payg_topup_cancelled")==="1"){note("The PayPal top-up was cancelled. No wallet credit was added.");history.replaceState(null,"",location.pathname+"#billing");return}
@@ -206,7 +206,7 @@ function renderAgentRequests(items){
    $("#account-status").textContent=customer.status||"Pending";$("#account-status").className="status "+(customer.status||"pending");
    const plans={starter:["Starter","$149 / month"],growth:["Growth","$249 / month"],pro:["Pro","$399 / month"],flex:["Flex","$0.65 per AI minute"]};
    $("#plan-name").textContent=plans[customer.plan]?.[0]||"Not selected";
-    const offerNote=$("#billing-offer-note");if(offerNote&&customer.hasPartnerReferral)offerNote.textContent="Your partner referral makes you eligible for 5% off the first monthly payment once the offer is active in checkout. It is applied automatically unless you enter CALLSMART10. Discounts do not stack; prepaid savings replace first-month offers.";
+    const offerNote=$("#billing-offer-note");if(offerNote){const prepaid=["six_month","annual"].includes(d.onboarding?.billing_cadence);if(prepaid){offerNote.textContent="Your prepaid plan uses its separate 25% six-month or 35% twelve-month savings and waives the setup fee. Partner and AI Challenge discounts do not apply to prepaid purchases.";}else if(customer.hasPartnerReferral&&customer.partnerOfferMode==="discount"){const setupAmount=Number(d.onboarding?.setupAmountCents??8415)/100;offerNote.textContent="Your verified discounted partner referral provides 15% off monthly subscription payments for the first 12 months and 15% off the $99 setup fee. Your setup amount is "+money(setupAmount)+". This offer cannot be combined with AI Challenge rewards or prepaid savings.";}else if(customer.hasPartnerReferral){offerNote.textContent="Your partner referral is recorded for attribution and commission eligibility, but this standard link does not apply a customer discount. Challenge and prepaid offers are separate and cannot be combined.";}else{offerNote.textContent="AI Challenge rewards are 5%, 10% or 15% off monthly subscription payments for the first 12 months, depending on the level mastered. They never discount setup and cannot be combined with partner or prepaid offers. Secure reward redemption is not yet enabled.";}}
    $("#plan-price").textContent=plans[customer.plan]?.[1]||"Select a monthly plan";
    renderUsage(d.usage||{},customer.includedMinutes||0,customer.plan);
    $("#calls-count").textContent=Number(d.usage?.calls||0).toLocaleString();

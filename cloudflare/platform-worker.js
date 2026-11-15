@@ -268,6 +268,60 @@ async function syncRetell(env){
  for(const n of numbers){const phone=n.phone_number;const inbound=n.inbound_agents?.[0]?.agent_id||n.inbound_agent_id||null;await env.DB.prepare("INSERT INTO avr_numbers(phone_number,nickname,agent_id,phone_number_type,raw_json,synced_at) VALUES(?,?,?,?,?,?) ON CONFLICT(phone_number) DO UPDATE SET nickname=excluded.nickname,agent_id=COALESCE(avr_numbers.agent_id,excluded.agent_id),phone_number_type=excluded.phone_number_type,raw_json=excluded.raw_json,synced_at=excluded.synced_at").bind(phone,n.nickname||null,inbound,n.phone_number_type||null,JSON.stringify(n),new Date().toISOString()).run()}
  return {agents:agents.length,numbers:numbers.length,agentDetailsFetched:agents.filter(a=>!a._avr_sync_error).length}
 }
+async function sendOverageProtectionNotice(env,customer,periodKey,eventType,overageMinutes,limitMinutes,thresholdMinutes){
+ const id=crypto.randomUUID(),now=new Date().toISOString();
+ await env.DB.prepare("INSERT OR IGNORE INTO avr_overage_protection_events(id,customer_id,period_key,event_type,overage_minutes,limit_minutes,threshold_minutes,created_at) VALUES(?,?,?,?,?,?,?,?)").bind(id,customer.id,periodKey,eventType,overageMinutes,limitMinutes,thresholdMinutes,now).run();
+ const event=await env.DB.prepare("SELECT id,notification_sent FROM avr_overage_protection_events WHERE customer_id=? AND period_key=? AND event_type=?").bind(customer.id,periodKey,eventType).first();
+ if(!event||Number(event.notification_sent||0)===1||!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL||!customer.email)return false;
+ const blocked=eventType!=="warning_50";
+ const subject=blocked?"Star69AI call protection has paused new calls":"Star69AI overage usage alert";
+ const text=blocked
+  ? "Hello "+(customer.contact_name||customer.business_name||"there")+",\n\nYour account has reached its authorized overage protection threshold. Star69AI has paused new AI-receptionist calls for this billing period. Calls already in progress may finish. Please contact support if you need your authorized overage allowance reviewed.\n\nCurrent overage: "+overageMinutes+" minutes. Authorized overage limit: "+limitMinutes+" minutes.\n\nStar69AI Support — support@star69ai.com"
+  : "Hello "+(customer.contact_name||customer.business_name||"there")+",\n\nYour account has used 50% of its authorized overage allowance. New calls will be paused automatically when usage reaches 75% of that allowance.\n\nCurrent overage: "+overageMinutes+" minutes. Authorized overage limit: "+limitMinutes+" minutes. Call protection threshold: "+thresholdMinutes+" minutes.\n\nStar69AI Support — support@star69ai.com";
+ const esc=v=>String(v??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+ const html="<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#20343b\"><h2>"+esc(subject)+"</h2><p>Hello "+esc(customer.contact_name||customer.business_name||"there")+",</p><p>"+(blocked?"Your account has reached its authorized overage protection threshold. Star69AI has paused new AI-receptionist calls for this billing period. Calls already in progress may finish.":"Your account has used 50% of its authorized overage allowance. New calls will be paused automatically at 75% of that allowance.")+"</p><p><b>Current overage:</b> "+overageMinutes+" minutes<br><b>Authorized overage limit:</b> "+limitMinutes+" minutes<br><b>Call protection threshold:</b> "+thresholdMinutes+" minutes</p><p>Contact <a href=\"mailto:support@star69ai.com\">support@star69ai.com</a> if you need your allowance reviewed.</p><p>Star69AI — Smarter Calls. Bigger Opportunity.</p></div>";
+ const recipients=[...new Set([customer.email,...String(env.ADMIN_EMAILS||"").split(",").map(x=>x.trim().toLowerCase())].filter(x=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x)))];
+ try{
+  const sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-overage-protection/"+event.id},body:JSON.stringify({from:resendFrom(env),to:recipients,subject,html:brandEmail(html),text})});
+  if(!sent.ok){const result=await sent.json().catch(()=>({}));console.error("overage_protection_email_failed",sent.status,result);return false}
+  await env.DB.prepare("UPDATE avr_overage_protection_events SET notification_sent=1,notified_at=? WHERE id=?").bind(now,event.id).run();
+  return true;
+ }catch(e){console.error("overage_protection_email_error",e.message);return false}
+}
+async function retellInboundWebhook(req,env){
+ const raw=await req.text();
+ if(!await retellVerify(raw,req.headers.get("x-retell-signature"),env.RETELL_API_KEY))throw Error("invalid_retell_signature");
+ const payload=JSON.parse(raw),incoming=payload.call_inbound||payload,phone=String(incoming.to_number||payload.to_number||"").trim();
+ if(!phone)return {};
+ const number=await env.DB.prepare("SELECT customer_id,agent_id FROM avr_numbers WHERE phone_number=? LIMIT 1").bind(phone).first();
+ if(!number?.customer_id||!number.agent_id)return {};
+ const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(number.customer_id).first();
+ if(!customer||customer.status!=="active")return {};
+ const agentId=String(incoming.agent_id||number.agent_id||"");
+ if(!agentId)return {};
+ if(customer.plan_key==="flex"){
+  const wallet=await env.DB.prepare("SELECT status FROM avr_payg_wallets WHERE customer_id=?").bind(customer.id).first();
+  const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(customer.id).first();
+  if(env.PAYG_INGRESS_GATE_ENABLED!=="true"||wallet?.status!=="funded"||Number(balance?.balance_cents||0)<=0)return {};
+  return {call_inbound:{override_agent_id:agentId}};
+ }
+ const prepaid=["six_month","annual"].includes(customer.billing_cadence);
+ if(!["active","trialing"].includes(customer.subscription_status)&&!prepaid)return {};
+ const usage=await refreshMinuteVault(env,customer);
+ const limit=Math.max(0,Math.floor(Number(customer.overage_limit_minutes||0)));
+ const stopAt=limit>0?Math.max(1,Math.ceil(limit*0.75)):0;
+ const noOverageAuthorized=limit===0&&(Number(usage.billableOverageMinutes||0)>0||(Number(usage.currentIncludedMinutes||0)>0&&Number(usage.currentUsedMinutes||0)>=Number(usage.currentIncludedMinutes||0)&&Number(usage.balanceMinutes||0)<=0));
+ const blocked=noOverageAuthorized||(limit>0&&Number(usage.billableOverageMinutes||0)>=stopAt);
+ const periodKey=new Date().toISOString().slice(0,7);
+ if(limit>0&&Number(usage.billableOverageMinutes||0)>=Math.max(1,Math.ceil(limit*0.5))){
+  await sendOverageProtectionNotice(env,customer,periodKey,"warning_50",Number(usage.billableOverageMinutes||0),limit,stopAt);
+ }
+ if(blocked){
+  await sendOverageProtectionNotice(env,customer,periodKey,limit>0?"blocked_75":"blocked_no_overage_authorization",Number(usage.billableOverageMinutes||0),limit,stopAt);
+  return {};
+ }
+ return {call_inbound:{override_agent_id:agentId}};
+}
 async function retellWebhook(req,env){
  const raw=await req.text();
  if(!await retellVerify(raw,req.headers.get("x-retell-signature"),env.RETELL_API_KEY))throw Error("invalid_retell_signature");
@@ -289,6 +343,15 @@ async function retellWebhook(req,env){
  const analysis=call.call_analysis||{};
  await env.DB.prepare("INSERT INTO avr_calls(call_id,customer_id,agent_id,phone_number,from_number,to_number,direction,call_status,duration_ms,start_timestamp,end_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason,raw_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(call_id) DO UPDATE SET customer_id=COALESCE(excluded.customer_id,avr_calls.customer_id),agent_id=COALESCE(excluded.agent_id,avr_calls.agent_id),phone_number=COALESCE(excluded.phone_number,avr_calls.phone_number),from_number=COALESCE(excluded.from_number,avr_calls.from_number),to_number=COALESCE(excluded.to_number,avr_calls.to_number),direction=COALESCE(excluded.direction,avr_calls.direction),call_status=excluded.call_status,duration_ms=COALESCE(excluded.duration_ms,avr_calls.duration_ms),start_timestamp=COALESCE(excluded.start_timestamp,avr_calls.start_timestamp),end_timestamp=COALESCE(excluded.end_timestamp,avr_calls.end_timestamp),transcript=COALESCE(excluded.transcript,avr_calls.transcript),recording_url=COALESCE(excluded.recording_url,avr_calls.recording_url),call_summary=COALESCE(excluded.call_summary,avr_calls.call_summary),user_sentiment=COALESCE(excluded.user_sentiment,avr_calls.user_sentiment),disconnection_reason=COALESCE(excluded.disconnection_reason,avr_calls.disconnection_reason),raw_json=excluded.raw_json")
  .bind(id,cid,agent,line,call.from_number||null,to,direction,callStatus,duration,start,end,call.transcript||null,call.recording_url||null,analysis.call_summary||null,analysis.user_sentiment||null,call.disconnection_reason||null,JSON.stringify(p).slice(0,100000)).run();
+ if(cid&&(event==="call_ended"||event==="call_analyzed")){
+  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(cid).first();
+  if(customer&&customer.status==="active"&&customer.plan_key!=="flex"){
+   const usage=await refreshMinuteVault(env,customer),limit=Math.max(0,Math.floor(Number(customer.overage_limit_minutes||0))),stopAt=limit>0?Math.max(1,Math.ceil(limit*0.75)):0,periodKey=new Date().toISOString().slice(0,7),over=Number(usage.billableOverageMinutes||0);
+   if(limit>0&&over>=Math.max(1,Math.ceil(limit*0.5)))await sendOverageProtectionNotice(env,customer,periodKey,"warning_50",over,limit,stopAt);
+   const noAuth=limit===0&&(over>0||(Number(usage.currentIncludedMinutes||0)>0&&Number(usage.currentUsedMinutes||0)>=Number(usage.currentIncludedMinutes||0)&&Number(usage.balanceMinutes||0)<=0));
+   if(noAuth||limit>0&&over>=stopAt)await sendOverageProtectionNotice(env,customer,periodKey,limit>0?"blocked_75":"blocked_no_overage_authorization",over,limit,stopAt);
+  }
+ }
  if(event==="call_analyzed"&&cid)await sendAutomaticCallSummary(env,cid,id);
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('retell',?)").bind(eventKey).run();
  return {received:true,event,call_id:id,customer_matched:!!cid};
@@ -298,6 +361,7 @@ async function route(req,env){
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":origin&&origins(env).includes(origin)?origin:"null","Access-Control-Allow-Methods":"GET, POST, PUT, PATCH, DELETE, OPTIONS","Access-Control-Allow-Headers":"Authorization, Content-Type, Accept, Stripe-Signature, X-Retell-Signature","Access-Control-Max-Age":"86400","Vary":"Origin"}});
  if(path==="/health")return json({ok:true,service:"avr-platform-api",version:"1.0.0",stripe:!!env.STRIPE_SECRET_KEY,retell:!!env.RETELL_API_KEY},200,origin,env);
  if(path==="/webhooks/stripe"&&req.method==="POST"){try{return json(await stripeWebhook(req,env),200,origin,env)}catch(e){console.error("stripe_webhook",e.message);return json({error:e.message},400,origin,env)}}
+ if(path==="/webhooks/retell/inbound"&&req.method==="POST"){try{return json(await retellInboundWebhook(req,env),200,origin,env)}catch(e){console.error("retell_inbound_webhook",e.message);return json({error:e.message},500,origin,env)}}
  if(path==="/webhooks/retell"&&req.method==="POST"){try{return json(await retellWebhook(req,env),200,origin,env)}catch(e){console.error("retell_webhook",e.message);return json({error:e.message},400,origin,env)}}
  try{
   if(path==="/api/demo-requests"&&req.method==="POST"){
@@ -342,7 +406,7 @@ async function route(req,env){
    const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";
    return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>0&&gateEnabled,ingressGateEnabled:gateEnabled,activationNote:gateEnabled?"Wallet balance is positive.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
   }
-  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes}},200,origin,env)}
+  if(path==="/api/client/dashboard"&&req.method==="GET"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({customer:null,needsSetup:true},200,origin,env);const calls=await env.DB.prepare("SELECT call_id,agent_id,from_number,to_number,direction,call_status,duration_ms,start_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason FROM avr_calls WHERE customer_id=? ORDER BY start_timestamp DESC LIMIT 50").bind(c.id).all();const usage=await env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) AS ms,COUNT(*) AS calls FROM avr_calls WHERE customer_id=? AND start_timestamp>=?").bind(c.id,Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),1)).first();const vault=await refreshMinuteVault(env,c);const agent=await env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=?").bind(c.id).all();const nums=await env.DB.prepare("SELECT phone_number,nickname,agent_id FROM avr_numbers WHERE customer_id=?").bind(c.id).all();return json({customer:{id:c.id,businessName:c.business_name,contactName:c.contact_name,email:c.email,phone:c.phone,status:c.status,plan:c.plan_key,subscriptionStatus:c.subscription_status,periodEnd:c.current_period_end,includedMinutes:vault.currentIncludedMinutes||planInfo[c.plan_key]?.minutes||c.included_minutes,overageLimitMinutes:Number(c.overage_limit_minutes||0),hasBillingAccount:!!c.stripe_customer_id,hasPartnerReferral:!!c.affiliate_partner_id},calls:calls.results||[],agents:agent.results||[],numbers:nums.results||[],usage:{minutes:Math.ceil(Number(usage?.ms||0)/60000),calls:Number(usage?.calls||0),vaultMinutes:vault.balanceMinutes,vaultUsedThisMonth:vault.usedFromVaultThisMonth,billableOverageMinutes:vault.billableOverageMinutes,overageLimitMinutes:Number(c.overage_limit_minutes||0),overageStopAtMinutes:Number(c.overage_limit_minutes||0)>0?Math.max(1,Math.ceil(Number(c.overage_limit_minutes)*0.75)):0}},200,origin,env)}
 
   if(path==="/api/client/agent-configuration"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
@@ -726,7 +790,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
    if(path==="/api/admin/customers"&&req.method==="POST"){const p=await body(req),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase();if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");const exists=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=?").bind(email).first();if(exists)throw Error("customer_email_already_exists");const referral=await env.DB.prepare("SELECT id,affiliate_application_id,offer_mode FROM partner_referrals WHERE lower(lead_email)=? AND lead_status='lead' AND attribution_expires_at>=? LIMIT 1").bind(email,new Date().toISOString()).first();const id=crypto.randomUUID();await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,clerk_user_id,status,admin_notes,affiliate_partner_id,affiliate_offer_mode) VALUES(?,?,?,?,?,?,?,?,?,?)").bind(id,business,String(p.contactName||"").slice(0,120),email,String(p.phone||"").slice(0,40),String(p.clerkUserId||"").trim()||null,"pending",String(p.notes||"").slice(0,2000),referral?.affiliate_application_id||null,referral?.offer_mode==="discount"?"discount":"standard").run();if(referral)await env.DB.prepare("UPDATE partner_referrals SET lead_status='customer',customer_id=? WHERE id=?").bind(id,referral.id).run();await audit(env,u,"customer_created",id,{email,partnerAttributed:!!referral});return json({created:true,id,partnerAttributed:!!referral},201,origin,env)}
    const workspaceMatch=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})\/workspace$/i);
    if(workspaceMatch&&req.method==="GET"){
-    const id=workspaceMatch[1],customer=await env.DB.prepare("SELECT id,business_name,contact_name,email,phone,status,plan_key,included_minutes,subscription_status,stripe_customer_id,admin_notes,created_at,updated_at FROM avr_customers WHERE id=?").bind(id).first();
+    const id=workspaceMatch[1],customer=await env.DB.prepare("SELECT id,business_name,contact_name,email,phone,status,plan_key,included_minutes,subscription_status,stripe_customer_id,overage_limit_minutes,admin_notes,created_at,updated_at FROM avr_customers WHERE id=?").bind(id).first();
     if(!customer)throw Error("customer_not_found");
     const [agents,nums,emailRow,tickets,orders,calls]=await Promise.all([
      env.DB.prepare("SELECT agent_id,agent_name,status FROM avr_agents WHERE customer_id=? ORDER BY agent_name").bind(id).all(),
@@ -750,8 +814,10 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     const contact=p.contactName===undefined?null:String(p.contactName).trim().slice(0,120);
     const phone=p.phone===undefined?null:String(p.phone).trim().slice(0,40);
     const notes=p.adminNotes===undefined?null:String(p.adminNotes).slice(0,2000);
-    await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
-     .bind(business,contact,phone,status||null,plan||null,plan||"",plan||"",plan||"",notes,new Date().toISOString(),id).run();
+    const overageLimit=p.overageLimitMinutes===undefined?null:Number(p.overageLimitMinutes);
+    if(overageLimit!==null&&(!Number.isInteger(overageLimit)||overageLimit<0||overageLimit>10000))throw Error("overage_limit_must_be_integer_0_to_10000");
+    await env.DB.prepare("UPDATE avr_customers SET business_name=COALESCE(?,business_name),contact_name=COALESCE(?,contact_name),phone=COALESCE(?,phone),status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,overage_limit_minutes=COALESCE(?,overage_limit_minutes),admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?")
+     .bind(business,contact,phone,status||null,plan||null,plan||"",plan||"",plan||"",overageLimit,notes,new Date().toISOString(),id).run();
     if(p.callEmail&&typeof p.callEmail==="object"){
      const recipients=Array.isArray(p.callEmail.recipients)?[...new Set(p.callEmail.recipients.map(x=>String(x).trim().toLowerCase()).filter(Boolean))]:[];
      if(recipients.length>10)throw Error("maximum_10_email_recipients");
@@ -760,10 +826,16 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
       .bind(id,p.callEmail.enabled?1:0,JSON.stringify(recipients),new Date().toISOString()).run();
     }
     if(status==="closed")await forfeitMinuteVault(env,id,"admin_account_closed",{adminEmail:u.email});
-    await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,callEmailUpdated:!!p.callEmail});
+    await audit(env,u,"client_workspace_updated",id,{status:status||null,plan:plan||null,overageLimitMinutes:overageLimit,callEmailUpdated:!!p.callEmail});
     return json({saved:true},200,origin,env)
    }
    const cm=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})$/i);if(cm&&req.method==="PATCH"){const p=await body(req),id=cm[1],c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(id).first();if(!c)throw Error("customer_not_found");const status=p.status,plan=p.plan;if(status&&!["pending","active","suspended","closed"].includes(status))throw Error("invalid_status");if(plan&&!planInfo[plan])throw Error("invalid_plan");await env.DB.prepare("UPDATE avr_customers SET status=COALESCE(?,status),plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,admin_notes=COALESCE(?,admin_notes),updated_at=? WHERE id=?").bind(status||null,plan||null,plan||"",plan||"",plan||"",p.notes===undefined?null:String(p.notes).slice(0,2000),new Date().toISOString(),id).run();if(status==="closed")await forfeitMinuteVault(env,id,"admin_account_closed",{adminEmail:u.email});await audit(env,u,"customer_updated",id,p);return json({saved:true},200,origin,env)}
+   if(path==="/api/admin/retell/billing-protection/sync"&&req.method==="POST"){
+    const rows=await env.DB.prepare("SELECT phone_number,agent_id,customer_id FROM avr_numbers WHERE customer_id IS NOT NULL AND agent_id IS NOT NULL ORDER BY phone_number").all();
+    const results=[];for(const row of rows.results||[]){try{await retellApi(env,"/update-phone-number/"+encodeURIComponent(row.phone_number),"PATCH",{inbound_webhook_url:"https://avr-platform-api.hisjarman.workers.dev/webhooks/retell/inbound"});results.push({phoneNumber:row.phone_number,enabled:true})}catch(e){results.push({phoneNumber:row.phone_number,enabled:false,error:String(e.message||"retell_update_failed")})}}
+    const enabled=results.filter(x=>x.enabled).length,failed=results.length-enabled;await audit(env,u,"retell_billing_protection_sync",null,{total:results.length,enabled,failed});
+    return json({total:results.length,enabled,failed,results},200,origin,env);
+   }
    if(path==="/api/admin/retell/sync"&&req.method==="POST"){const result=await syncRetell(env);await audit(env,u,"retell_sync",null,result);return json(result,200,origin,env)}
    if(path==="/api/admin/retell/resources"&&req.method==="GET"){
     const [a,n]=await Promise.all([env.DB.prepare("SELECT a.agent_id,a.agent_name,a.status,a.customer_id,a.client_visible_prompt,a.raw_json,c.business_name FROM avr_agents a LEFT JOIN avr_customers c ON c.id=a.customer_id ORDER BY a.agent_name").all(),env.DB.prepare("SELECT n.*,c.business_name FROM avr_numbers n LEFT JOIN avr_customers c ON c.id=n.customer_id ORDER BY n.phone_number").all()]);
@@ -805,7 +877,7 @@ Ask one question at a time. Use plain language. Be reassuring without minimizing
     await audit(env,u,"retell_agent_prompt_published",row.customer_id,{agentId,engineType:cfg.engineType,version:draftVersion,characters:prompt.length});
     return json({saved:true,published:true,characters:prompt.length,version:draftVersion,engineType:cfg.engineType},200,origin,env)
    }
-   if(path==="/api/admin/assignments"&&req.method==="POST"){const p=await body(req),customerId=String(p.customerId||""),agentId=String(p.agentId||""),phone=String(p.phoneNumber||"");const c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(customerId).first();if(!c)throw Error("customer_not_found");if(agentId){const a=await env.DB.prepare("SELECT agent_id FROM avr_agents WHERE agent_id=?").bind(agentId).first();if(!a)throw Error("agent_not_found")}if(phone){const n=await env.DB.prepare("SELECT phone_number FROM avr_numbers WHERE phone_number=?").bind(phone).first();if(!n)throw Error("phone_number_not_found");if(!agentId)throw Error("select_agent_for_phone_number");await retellApi(env,"/update-phone-number/"+encodeURIComponent(phone),"PATCH",{inbound_agents:[{agent_id:agentId,weight:1}],outbound_agents:[{agent_id:agentId,weight:1}]})}
+   if(path==="/api/admin/assignments"&&req.method==="POST"){const p=await body(req),customerId=String(p.customerId||""),agentId=String(p.agentId||""),phone=String(p.phoneNumber||"");const c=await env.DB.prepare("SELECT id FROM avr_customers WHERE id=?").bind(customerId).first();if(!c)throw Error("customer_not_found");if(agentId){const a=await env.DB.prepare("SELECT agent_id FROM avr_agents WHERE agent_id=?").bind(agentId).first();if(!a)throw Error("agent_not_found")}if(phone){const n=await env.DB.prepare("SELECT phone_number FROM avr_numbers WHERE phone_number=?").bind(phone).first();if(!n)throw Error("phone_number_not_found");if(!agentId)throw Error("select_agent_for_phone_number");await retellApi(env,"/update-phone-number/"+encodeURIComponent(phone),"PATCH",{inbound_agents:[{agent_id:agentId,weight:1}],outbound_agents:[{agent_id:agentId,weight:1}],inbound_webhook_url:"https://avr-platform-api.hisjarman.workers.dev/webhooks/retell/inbound"})}
     if(agentId)await env.DB.prepare("UPDATE avr_agents SET customer_id=? WHERE agent_id=?").bind(customerId,agentId).run();if(phone)await env.DB.prepare("UPDATE avr_numbers SET customer_id=?,agent_id=? WHERE phone_number=?").bind(customerId,agentId||null,phone).run();await audit(env,u,"resources_assigned",customerId,{agentId,phone});return json({saved:true},200,origin,env)}
    if(path==="/api/admin/calls"&&req.method==="GET"){const r=await env.DB.prepare("SELECT x.*,c.business_name FROM avr_calls x LEFT JOIN avr_customers c ON c.id=x.customer_id ORDER BY x.start_timestamp DESC LIMIT 200").all();return json({calls:r.results||[]},200,origin,env)}
    if(path==="/api/admin/retell/events"&&req.method==="GET"){const limit=Math.min(500,Math.max(1,Number(url.searchParams.get("limit")||200)));const r=await env.DB.prepare("SELECT e.event_id,e.event_type,e.call_id,e.agent_id,e.customer_id,c.business_name,e.received_at,e.payload_json FROM avr_retell_events e LEFT JOIN avr_customers c ON c.id=e.customer_id ORDER BY e.received_at DESC LIMIT ?").bind(limit).all();return json({events:r.results||[]},200,origin,env)}

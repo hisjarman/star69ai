@@ -154,7 +154,7 @@ async function handlePartnerDashboard(request,env,origin){
     let partner=await env.DB.prepare("SELECT id,name,email,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE lower(email)=? AND application_status='approved' ORDER BY updated_at DESC LIMIT 1").bind(user.email).first();
     if(!partner)return json({error:"partner_approval_required"},403,origin,env);
     const partnerCode=partner.partnerCode||("S69"+crypto.randomUUID().replace(/-/g,"").slice(0,9)).toUpperCase();
-    const partnerLink="https://star69ai.com/get-started.html?ref="+partnerCode;
+    const partnerLink="https://star69ai.com/checkout.html?ref="+partnerCode;
     if(!partner.partnerCode||partner.referralUrl!==partnerLink){
       await env.DB.prepare("UPDATE affiliate_applications SET partner_code=COALESCE(partner_code,?),referral_url=?,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").bind(partnerCode,partnerLink,partner.id).run();
       partner=await env.DB.prepare("SELECT id,name,email,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE id=?").bind(partner.id).first();

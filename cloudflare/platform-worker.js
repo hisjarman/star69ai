@@ -299,7 +299,7 @@ async function resumePublicCheckout(req,env,origin){
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  if(!customer)throw Error("customer_not_found");
- if(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status!=="paid"){
+ if(ob.setup_status==="pending"||(ob.plan_payment_provider==="paypal"&&ob.plan_payment_status!=="paid")){
   const order=await createPublicPaypalOrder(env,ob,customer,p.statusToken);
   return {paymentStep:ob.paypal_order_purpose,approvalUrl:order.approvalUrl};
  }

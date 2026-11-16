@@ -1048,7 +1048,49 @@ async function route(req,env){
   if(path==="/api/billing/checkout"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);const p=await body(req);if(String(p.promoCode||"").trim())throw Error("promotion_only_for_new_monthly_signups");return json(await createCheckout(u,c,String(p.plan||""),env,String(p.cadence||"monthly"),""),200,origin,env)}
   if(path==="/api/billing/portal"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c?.stripe_customer_id)throw Error("stripe_customer_not_found");const s=await stripeRequest(env,"billing_portal/sessions",{customer:c.stripe_customer_id,return_url:"https://star69ai.com/client/" });return json({url:s.url},200,origin,env)}
   if(path.startsWith("/api/admin/")){
-   const u=await requireAdmin(req,env);
+   const u=await requireAdmin(req,env);\n   if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
+    const rows=await env.DB.prepare("SELECT id,business_name,contact_name,email,industry,notes,status,created_at,last_contacted_at FROM avr_marketing_prospects ORDER BY created_at DESC LIMIT 500").all();
+    return json({prospects:rows.results||[]},200,origin,env);
+   }
+   if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
+    const p=await body(req,5000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,1000);
+    if(business.length<2||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
+    const existing=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE normalized_email=?").bind(email).first();
+    if(existing){if(existing.status==="unsubscribed")throw Error("prospect_has_unsubscribed_do_not_contact");return json({created:false,alreadyExists:true,id:existing.id},200,origin,env)}
+    const id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO avr_marketing_prospects(id,business_name,contact_name,email,normalized_email,industry,notes,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'active',?,?)").bind(id,business,contact,email,email,industry,notes,now,now).run();
+    await audit(env,u,"marketing_prospect_created",null,{prospectId:id,industry});
+    return json({created:true,id},201,origin,env);
+   }
+   const marketingSend=path.match(/^\\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/send$/i);
+   if(marketingSend&&req.method==="POST"){
+    if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)throw Error("email_sender_not_configured_check_resend");
+    const postal=String(env.BUSINESS_POSTAL_ADDRESS||"").trim();
+    if(postal.length<8)throw Error("business_postal_address_required_for_marketing");
+    const id=marketingSend[1],p=await body(req,10000),subject=String(p.subject||"").trim(),message=String(p.body||"").trim();
+    if(subject.length<4||subject.length>180||message.length<30||message.length>6000)throw Error("valid_subject_and_email_body_required");
+    const prospect=await env.DB.prepare("SELECT * FROM avr_marketing_prospects WHERE id=?").bind(id).first();
+    if(!prospect)throw Error("marketing_prospect_not_found");
+    if(prospect.status!=="active")throw Error("prospect_has_unsubscribed_do_not_contact");
+    const recent=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_sends WHERE sent_at>=?").bind(new Date(Date.now()-86400000).toISOString()).first();
+    if(Number(recent?.n||0)>=25)throw Error("daily_marketing_send_limit_reached");
+    const token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,"0")).join("");
+    const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)),hash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
+    await env.DB.prepare("INSERT INTO avr_marketing_unsubscribe_tokens(token_hash,prospect_id,created_at) VALUES(?,?,?)").bind(hash,id,new Date().toISOString()).run();
+    const unsubscribeUrl="https://avr-platform-api.hisjarman.workers.dev/api/public/marketing/unsubscribe?token="+token;
+    const textBody=message+"\\n\\nStar69AI\\nhttps://star69ai.com/\\n"+postal+"\\n\\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
+    const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p>"+esc(message).replace(/\\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
+    const send=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-marketing/"+id+"/"+crypto.randomUUID()},body:JSON.stringify({from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}})});
+    const sent=await send.json().catch(()=>({}));
+    if(!send.ok)throw Error(send.status===429?"email_provider_rate_limited_try_again":"email_provider_rejected_request_contact_support");
+    const now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO avr_marketing_sends(id,prospect_id,resend_email_id,subject,sent_at,status) VALUES(?,?,?,?,?,'sent')").bind(crypto.randomUUID(),id,sent.id||null,subject,now).run();
+    await env.DB.prepare("UPDATE avr_marketing_prospects SET last_contacted_at=?,updated_at=? WHERE id=?").bind(now,now,id).run();
+    await audit(env,u,"marketing_email_sent",null,{prospectId:id,resendEmailId:sent.id||null});
+    return json({sent:true,emailId:sent.id||null},200,origin,env);
+   }
+
 
    if(path==="/api/admin/payg-wallets"&&req.method==="GET"){
     const r=await env.DB.prepare("SELECT c.id AS customer_id,c.business_name,c.email,c.status AS account_status,COALESCE(w.status,'not_funded') AS wallet_status,COALESCE(w.currency,'usd') AS currency,COALESCE((SELECT SUM(l.amount_cents) FROM avr_payg_wallet_ledger l WHERE l.customer_id=c.id),0) AS balance_cents FROM avr_customers c LEFT JOIN avr_payg_wallets w ON w.customer_id=c.id WHERE c.payg_enabled=1 ORDER BY c.business_name LIMIT 500").all();

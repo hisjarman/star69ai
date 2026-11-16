@@ -244,7 +244,7 @@ async function createPublicStripeSession(env,onboarding,customer,statusToken){
   }catch{}
  }
  const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),metadata:{avr_paid_onboarding_id:onboarding.id,promo_code:customer.promo_code||"",idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)}};
- const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,"",urls);
+ const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,customer.promo_code||"",urls);
  await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,stripe_attempts=stripe_attempts+1,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();
  return {stripeUrl:session.url,sessionId:session.id};
 }
@@ -530,7 +530,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
   if(o.metadata?.avr_overage_ledger_id){await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),o.metadata.avr_overage_ledger_id).run();await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();}
   for(const line of (o.lines?.data||[])){const ledgerId=line.metadata?.avr_overage_ledger_id;if(ledgerId){await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),ledgerId).run();await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();}}
-  const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
+  const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id,promo_code,stripe_subscription_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
   const partnerId=customer?.affiliate_partner_id||o.metadata?.affiliate_partner_id||null;
   const lines=Array.isArray(o.lines?.data)?o.lines.data:[];
   const eligiblePlanPriceIds=new Set(Object.values(planInfo).flatMap(p=>[env[p.priceEnv],env[p.sixMonthPriceEnv],env[p.annualPriceEnv]]).filter(Boolean));

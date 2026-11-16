@@ -1048,7 +1048,8 @@ async function route(req,env){
   if(path==="/api/billing/checkout"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);const p=await body(req);if(String(p.promoCode||"").trim())throw Error("promotion_only_for_new_monthly_signups");return json(await createCheckout(u,c,String(p.plan||""),env,String(p.cadence||"monthly"),""),200,origin,env)}
   if(path==="/api/billing/portal"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c?.stripe_customer_id)throw Error("stripe_customer_not_found");const s=await stripeRequest(env,"billing_portal/sessions",{customer:c.stripe_customer_id,return_url:"https://star69ai.com/client/" });return json({url:s.url},200,origin,env)}
   if(path.startsWith("/api/admin/")){
-   const u=await requireAdmin(req,env);\n   if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
+   const u=await requireAdmin(req,env);
+   if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
     const rows=await env.DB.prepare("SELECT id,business_name,contact_name,email,industry,notes,status,created_at,last_contacted_at FROM avr_marketing_prospects ORDER BY created_at DESC LIMIT 500").all();
     return json({prospects:rows.results||[]},200,origin,env);
    }

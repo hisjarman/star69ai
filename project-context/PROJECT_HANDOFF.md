@@ -1153,3 +1153,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Stabilizes the workspace identity/header grid so the company name and supporting description can wrap within their column without overlapping the status/refresh controls or overflowing the Cockpit content area.
 - Keeps normal mobile user-agent behavior unchanged.
 - Source-only pending review and merge. Verify on Android Chrome with Desktop site enabled and disabled, plus a regular desktop browser; no live browser QA or GitHub Pages deployment is claimed.
+
+
+## Homepage conversion flow and AI assistant — 2026-11-16
+
+- Feature branch: `feature/homepage-conversion-flow-ai-challenge-2026-11-16`.
+- Homepage now promotes the Receptionist Architect AI Challenge immediately after the hero, with a dedicated visual feature block and a direct start button; the hero also has a direct challenge CTA. It retains the 45-scenario / three-level description and clearly discloses that challenge achievements are learning progress, not redeemable coupons.
+- The custom demo form is moved directly after the managed-service explanation to shorten the conversion path. The telephone-history deep dive is removed from the homepage to keep the page focused on onboarding and marketing; the existing AI Challenge is removed from the generic resource-card grid to avoid duplicate promotion.
+- A minimized-by-default floating Star69AI assistant is added to the homepage. It opens the existing `https://star69ai-concierge.hisjarman.workers.dev/` coach in a lazy-loaded iframe, can be minimized with the close control or Escape, and does not load the assistant until a visitor opens it.
+- New styles are isolated in `home-conversion-flow.css`; existing global styling, lead form endpoint, pricing, reward restrictions, and application integrations are preserved.
+- Validation and publication status must be recorded after static checks and browser review. This branch must be reviewed through a PR; do not merge `main` without approval.

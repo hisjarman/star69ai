@@ -1,6 +1,7 @@
 (()=> {
- // Respect the browser's desktop-site user-agent mode even when the device has a narrow physical screen.
- const desktopSiteMode = navigator.userAgentData ? !navigator.userAgentData.mobile : !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+ // Respect Chrome desktop-site mode: Android desktop UA commonly reports X11/Linux x86_64 even if UA Client Hints still reports a mobile device.
+ const ua=navigator.userAgent||'', uaLooksDesktop=/Windows NT|Macintosh|X11|Linux x86_64|CrOS/i.test(ua), uaLooksMobile=/Android.*Mobile|iPhone|iPad|iPod|Mobile/i.test(ua);
+ const desktopSiteMode=uaLooksDesktop||(!!navigator.userAgentData&&!navigator.userAgentData.mobile)||!uaLooksMobile;
  if(desktopSiteMode) document.documentElement.classList.add("cockpit-desktop-mode");
  const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
  const $=s=>document.querySelector(s);

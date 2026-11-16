@@ -246,7 +246,7 @@ function renderAgentRequests(items){
  const cockpitMenu=$("#cockpit-menu-toggle"),cockpitBackdrop=$("#cockpit-drawer-backdrop");
  cockpitMenu?.addEventListener("click",()=>{const open=$("#workspace").classList.toggle("cockpit-drawer-open");cockpitMenu.setAttribute("aria-expanded",String(open))});
  cockpitBackdrop?.addEventListener("click",()=>{ $("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false") });
- const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support"].includes(initialPage)?initialPage:"overview");
+ const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support","knowledge"].includes(initialPage)?initialPage:"overview");
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();

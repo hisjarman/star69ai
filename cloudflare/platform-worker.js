@@ -363,7 +363,7 @@ async function startPublicCheckout(req,env,origin){
  if(String(p.websiteHoneypot||p.websiteTrap||"").trim())return {accepted:true};
  const contact=String(p.contactName||"").trim().slice(0,120),email=String(p.email||"").trim().toLowerCase(),phone=String(p.phone||"").trim().slice(0,40),business=String(p.businessName||"").trim().slice(0,160),industry=String(p.industry||"").trim().slice(0,100),plan=String(p.plan||"").toLowerCase(),cadence=String(p.cadence||"monthly"),subscribeNow=p.subscribeNow===true;
  if(contact.length<2||business.length<2||phone.length<5||! /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||industry.length<2)throw Error("complete_contact_business_and_industry_details_required");
- if(plan==="flex")return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);
+ if(plan==="flex"){if(String(p.promoCode||"").trim())throw Error("promotion_only_for_monthly_plans");return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);}
  if(!planInfo[plan]||!["monthly","six_month","annual"].includes(cadence))throw Error("valid_subscription_plan_required");
  if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
  if(!env.RETELL_API_KEY||!env.CLERK_SECRET_KEY)throw Error("automated_demo_and_account_provisioning_not_configured");
@@ -375,8 +375,8 @@ async function startPublicCheckout(req,env,origin){
   const referral=await env.DB.prepare("SELECT a.id,r.offer_mode FROM partner_referrals r JOIN affiliate_applications a ON a.id=r.affiliate_application_id WHERE lower(r.lead_email)=? AND a.partner_code=? AND a.application_status='approved' AND r.attribution_expires_at>=? ORDER BY r.created_at DESC LIMIT 1").bind(email,partnerCode,new Date().toISOString()).first();
   if(referral){affiliateId=referral.id;offerMode=referral.offer_mode==="discount"?"discount":"standard"}
  }
- if(promoCode&&affiliateId&&offerMode==="discount")throw Error("promotion_cannot_be_combined_with_discounted_partner_referral");
  const promoCode=String(p.promoCode||"").trim().toUpperCase();
+ if(promoCode&&affiliateId&&offerMode==="discount")throw Error("promotion_cannot_be_combined_with_discounted_partner_referral");
  if(promoCode&&promoCode!=="3FORFREE")throw Error("promotion_code_not_valid");
  if(promoCode){const today=new Date().toISOString().slice(0,10);if(cadence!=="monthly"||today<"2026-11-01"||today>"2026-11-30")throw Error("promotion_not_available_for_selected_checkout");if(!env.STRIPE_COUPON_3FORFREE)throw Error("november_promotion_not_configured_contact_support");const promo=await stripeRequest(env,"coupons/"+encodeURIComponent(env.STRIPE_COUPON_3FORFREE),{},"GET");if(promo.valid===false||Number(promo.percent_off)!==100||promo.duration!=="once")throw Error("november_promotion_configuration_invalid");}
  const prepaidTotals={starter:{six_month:67050,annual:116220},growth:{six_month:112050,annual:194220},pro:{six_month:179550,annual:311220}};

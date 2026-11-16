@@ -26,19 +26,22 @@ async function body(req,max=20000){const t=await req.text();if(t.length>max)thro
 const planInfo={starter:{name:"Starter",price:149,minutes:300,priceEnv:"STRIPE_PRICE_STARTER",sixMonthPriceEnv:"STRIPE_PRICE_STARTER_6MO",annualPriceEnv:"STRIPE_PRICE_STARTER_12MO"},growth:{name:"Growth",price:249,minutes:600,priceEnv:"STRIPE_PRICE_GROWTH",sixMonthPriceEnv:"STRIPE_PRICE_GROWTH_6MO",annualPriceEnv:"STRIPE_PRICE_GROWTH_12MO"},pro:{name:"Pro",price:399,minutes:1200,priceEnv:"STRIPE_PRICE_PRO",sixMonthPriceEnv:"STRIPE_PRICE_PRO_6MO",annualPriceEnv:"STRIPE_PRICE_PRO_12MO"}};
 async function clientStripePlanPrice(env,customer){
  if(!customer||isFlexCustomer(customer)||!env.STRIPE_SECRET_KEY)return null;
- try{
-  let price=null;
-  if(customer.stripe_subscription_id){
+ let price=null;
+ if(customer.stripe_subscription_id){
+  try{
    const subscription=await stripeRequest(env,"subscriptions/"+encodeURIComponent(customer.stripe_subscription_id)+"?expand[]=items.data.price.product",{},"GET");
    price=subscription.items?.data?.[0]?.price||null;
+  }catch(error){console.error("client_stripe_subscription_price_lookup_failed",customer.plan_key,String(error?.message||"stripe_subscription_lookup_failed"))}
+ }
+ if(!price||!Number.isFinite(Number(price.unit_amount))){
+  const plan=planInfo[customer.plan_key],priceId=plan?env[plan.priceEnv]:null;
+  if(priceId){
+   try{price=await stripeRequest(env,"prices/"+encodeURIComponent(priceId)+"?expand[]=product",{},"GET")}
+   catch(error){console.error("client_stripe_catalog_price_lookup_failed",customer.plan_key,String(error?.message||"stripe_price_lookup_failed"))}
   }
-  if(!price){
-   const plan=planInfo[customer.plan_key],priceId=plan?env[plan.priceEnv]:null;
-   if(priceId)price=await stripeRequest(env,"prices/"+encodeURIComponent(priceId)+"?expand[]=product",{},"GET");
-  }
-  if(!price||!Number.isFinite(Number(price.unit_amount)))return null;
-  return {amountCents:Number(price.unit_amount),currency:String(price.currency||"usd").toLowerCase(),interval:price.recurring?.interval||null,intervalCount:Number(price.recurring?.interval_count||1),productName:typeof price.product==="object"?String(price.product.name||""):null};
- }catch(error){console.error("client_stripe_plan_price_lookup_failed",customer.plan_key,String(error?.message||"stripe_price_lookup_failed"));return null}
+ }
+ if(!price||!Number.isFinite(Number(price.unit_amount)))return null;
+ return {amountCents:Number(price.unit_amount),currency:String(price.currency||"usd").toLowerCase(),interval:price.recurring?.interval||null,intervalCount:Number(price.recurring?.interval_count||1),productName:typeof price.product==="object"?String(price.product.name||""):null};
 }
 
 function isFlexCustomer(customer){return Number(customer?.payg_enabled||0)===1||customer?.plan_key==="flex"}

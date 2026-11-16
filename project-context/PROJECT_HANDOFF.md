@@ -1125,3 +1125,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Feature branch: `fix/admin-console-missing-api-routes-2026-11-16`. The Agency Admin frontend's initial `overview()` requested four admin API endpoints that were absent from `cloudflare/platform-worker.js`: `/api/admin/addon-orders`, `/api/admin/support-tickets`, `/api/admin/agent-change-requests`, and `/api/admin/demo-requests`. The Worker returned `admin_route_not_found`, causing the dashboard overview Promise to reject and leaving its metrics and related panels in a loading/error state.
 - Added authenticated GET handlers for those four endpoints, using existing D1 tables and joining customer business/email context where needed. No billing, customer data, or outbound email behavior changed.
 - Worker JavaScript syntax validation passed. End-to-end verification against production D1 and browser login is still required after merge/deployment. The PR must be reviewed and explicitly approved before merge; deploy the updated Worker only after confirming the production D1 schema supports the selected columns.
+
+
+## THE COCKPIT client dashboard visual integration — 2026-11-16
+
+- Feature branch: `design/client-cockpit-dashboard-2026-11-16`. Applies the premium dark navy / neon green THE COCKPIT visual system to the existing static GitHub Pages client portal at `/client/`; it does not introduce Next.js or a second client application.
+- Preserves the current Clerk sign-in/session, authenticated `client/client.js` API calls, Cloudflare Worker routes, D1-backed customer data, Retell call history, support tickets, Stripe billing, PayPal setup/Flex flows, onboarding approvals, Minute Vault, and fixed 75% overage ceiling.
+- Adds `cockpit.css` as a scoped final stylesheet override, a branded sidebar header and managed-service card, and a responsive mobile navigation drawer. Existing page panels and data-bound DOM IDs remain in place; no demo billing or call records are inserted.
+- Client receptionist settings remain managed/read-only where the existing product policy requires Star69AI staff to configure, test and publish changes. Upgrade and configuration requests remain requests subject to written quote/approval.
+- Source-only change. No Worker, D1, Stripe, PayPal, Clerk, Retell, Resend or customer data was changed. GitHub Pages publication and authenticated desktop/mobile browser QA remain pending review/merge.

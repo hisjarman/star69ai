@@ -12,6 +12,8 @@
   const labels={overview:["Overview","A clear view of your receptionist and business activity."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Support center","Get help, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.querySelectorAll(".cockpit-top-tab").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  $("#workspace")?.classList.remove("cockpit-drawer-open");$("#cockpit-menu-toggle")?.setAttribute("aria-expanded","false");
   const label=labels[page]||labels.overview;$("#client-page-title").textContent=label[0];$("#client-page-description").textContent=label[1];
   try{history.replaceState(null,"",page==="overview"?"#overview":"#"+page)}catch{}
   if(page==="knowledge")initKnowledgeSearch();
@@ -241,7 +243,10 @@ function renderAgentRequests(items){
   }catch(e){note(e.message,true)}
  }
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
- const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support"].includes(initialPage)?initialPage:"overview");
+ const cockpitMenu=$("#cockpit-menu-toggle"),cockpitBackdrop=$("#cockpit-drawer-backdrop");
+ cockpitMenu?.addEventListener("click",()=>{const open=$("#workspace").classList.toggle("cockpit-drawer-open");cockpitMenu.setAttribute("aria-expanded",String(open))});
+ cockpitBackdrop?.addEventListener("click",()=>{ $("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false") });
+ const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support","knowledge"].includes(initialPage)?initialPage:"overview");
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();

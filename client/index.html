@@ -11,6 +11,7 @@
   <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
   <link rel="shortcut icon" href="../assets/favicon.svg">
 <link rel="stylesheet" href="../offer.css"><link rel="stylesheet" href="/readability.css">
+  <link rel="stylesheet" href="../cockpit.css">
 </head>
 <body>
 <main class="shell">
@@ -35,9 +36,11 @@
     </div>
 
     <div id="workspace" class="hidden">
+      <button id="cockpit-drawer-backdrop" class="cockpit-drawer-backdrop" type="button" aria-label="Close dashboard navigation"></button>
       <div class="client-workspace-layout">
-        <aside class="client-sidebar" aria-label="Client navigation">
-          <div class="sidebar-caption">WORKSPACE</div>
+        <aside class="client-sidebar" id="client-sidebar" aria-label="Client navigation">
+          <a class="cockpit-sidebar-brand" href="../index.html" aria-label="Star69AI home"><span class="cockpit-brand-mark">AI</span><span class="cockpit-brand-word">STAR<span>69</span>AI<small>THE COCKPIT</small></span></a>
+          <div class="sidebar-caption">YOUR WORKSPACE</div>
           <nav class="client-nav">
             <button class="client-nav-item active" type="button" data-page="overview" aria-current="page"><span class="nav-icon">⌂</span><span>Overview</span></button>
             <button class="client-nav-item" type="button" data-page="receptionist"><span class="nav-icon">✧</span><span>Receptionist</span></button>
@@ -47,11 +50,12 @@
             <button class="client-nav-item" type="button" data-page="support"><span class="nav-icon">?</span><span>Support center</span></button>
             <button class="client-nav-item" type="button" data-page="knowledge"><span class="nav-icon">▤</span><span>Knowledge center</span></button>
           </nav>
+          <section class="cockpit-managed-card"><div class="cockpit-managed-kicker">MANAGED SERVICE</div><b>Your AI teammate, taken care of.</b><p>Star69AI configures, tests and maintains your receptionist.</p><span class="cockpit-managed-dot"></span><small>YOUR TEAM IS ON IT</small></section>
           <div class="sidebar-help"><span class="sidebar-help-icon">✦</span><b>Need a hand?</b><p>Our team is here to help with your receptionist.</p><button type="button" data-page="support">Contact support <span>→</span></button></div>
           <div class="sidebar-footer"><span class="sidebar-status-dot"></span> Secure client workspace</div>
         </aside>
         <div class="client-page-content">
-          <div class="intro client-workspace-header"><div><div class="eyebrow">CLIENT WORKSPACE</div><h1 id="business-title">Your dashboard</h1><p>Your receptionist, calls, usage and account details—all in one place.</p></div><div class="row"><span id="account-status" class="status">Loading</span><button id="refresh-dashboard" class="btn secondary" type="button">↻ Refresh</button></div></div>
+          <div class="intro client-workspace-header"><button id="cockpit-menu-toggle" class="cockpit-menu-toggle" type="button" aria-label="Open dashboard navigation" aria-expanded="false">☰</button><div><div class="eyebrow">THE COCKPIT</div><h1 id="business-title">Your dashboard</h1><p>Your receptionist, calls, usage and account details—all in one place.</p></div><div class="row"><span id="account-status" class="status">Loading</span><button id="refresh-dashboard" class="btn secondary" type="button">↻ Refresh</button></div></div>
           <div class="client-page-heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h2 id="client-page-title">Overview</h2><p id="client-page-description">A clear view of your receptionist and business activity.</p></div><span class="client-page-label">CLIENT PORTAL</span></div>
           <section class="client-page active" data-page-panel="overview">      <div class="grid">
         <article class="card metric"><small>MONTHLY PLAN</small><strong id="plan-name">—</strong><em id="plan-price">Choose a plan</em></article>

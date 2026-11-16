@@ -1,3 +1,10 @@
+## AI Challenge desktop layout refinement — 2026-11-16
+
+- Follow-up on PR #202, branch `feature/challenge-flow-examples-reward-copy-2026-11-16`.
+- Widened the challenge content container on desktop while keeping the question/game card and hero copy constrained for readability. The workflow explainer now uses three roomy horizontal step cards and three example cards per row on wide desktop; examples switch to two columns at tablet widths and one column on mobile. Mobile retains the compact stacked numbered-step treatment.
+- Increased desktop card padding and body text size to improve hierarchy and scanning. This addresses the desktop/mobile layout mismatch reported by the user.
+- Source CSS and responsive media-query boundaries were reviewed. Actual browser viewport testing remains outstanding; do not claim visual verification or publication until checked after Pages deploys.
+
 ## AI Challenge workflow explainer and reward-status clarification — 2026-11-16
 
 - Feature branch: `feature/challenge-flow-examples-reward-copy-2026-11-16`.

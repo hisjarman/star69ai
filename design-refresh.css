@@ -253,3 +253,35 @@ body#top .s69-flow-example em{display:block;margin-top:10px;padding-top:9px;bord
   body#top .s69-more-flows-grid{grid-template-columns:1fr}
   body#top .s69-flow-example{padding:15px}
 }
+
+
+/* Hard containment for the homepage call-flow panel and its example cards.
+   Prevent long copy or inherited layout rules from painting outside card borders. */
+body#top .s69-hero-preview,
+body#top .s69-hero-preview *{box-sizing:border-box}
+body#top .s69-hero-preview{width:100%;min-width:0;max-width:100%}
+body#top .s69-preview-body,
+body#top .s69-preview-explainer,
+body#top .s69-preview-steps,
+body#top .s69-more-flows,
+body#top .s69-more-flows-grid,
+body#top .s69-more-flows-grid>*{min-width:0;max-width:100%}
+body#top .s69-preview-step{min-width:0;max-width:100%;overflow:hidden}
+body#top .s69-preview-step>div{min-width:0;overflow-wrap:anywhere}
+body#top .s69-preview-step small{white-space:normal;overflow-wrap:anywhere}
+body#top .s69-more-flows{display:block;width:100%;overflow:hidden}
+body#top .s69-more-flows-grid{display:grid;width:100%;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch}
+body#top .s69-flow-example{
+  display:flex;flex-direction:column;align-items:stretch;
+  width:100%;min-width:0;max-width:100%;height:100%;
+  overflow:hidden;overflow-wrap:anywhere;word-break:normal;
+}
+body#top .s69-flow-example>*{min-width:0;max-width:100%;overflow-wrap:anywhere}
+body#top .s69-flow-example p{white-space:normal}
+@media(max-width:980px){
+  body#top .s69-more-flows-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  body#top .s69-more-flows-grid{grid-template-columns:minmax(0,1fr)}
+  body#top .s69-flow-example{height:auto}
+}

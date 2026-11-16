@@ -417,8 +417,7 @@ async function capturePublicSetup(req,env,origin){
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const purpose=ob.paypal_order_purpose||"setup_fee";if(purpose==="setup_fee"&&Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
  if(purpose==="setup_fee"&&ob.setup_status==="pending"){
-  const referral=await env.DB.prepare("SELECT affiliate_partner_id,affiliate_offer_mode FROM avr_customers WHERE id=? LIMIT 1").bind(ob.customer_id).first();
-  const expectedSetupCents=referral?.affiliate_partner_id&&referral?.affiliate_offer_mode==="discount"?9900:9900;
+  const expectedSetupCents=9900;
   if(Number(ob.setup_amount_cents)!==expectedSetupCents){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_amount_cents=?,paypal_order_id=NULL,updated_at=? WHERE id=? AND setup_status='pending'").bind(expectedSetupCents,new Date().toISOString(),ob.id).run();
    throw Error("setup_offer_updated_please_resume_checkout");

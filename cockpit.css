@@ -295,3 +295,25 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 .client-workspace-header h1{max-width:100%;min-width:0;overflow-wrap:anywhere;word-break:normal}
 .client-workspace-header p{max-width:100%;overflow-wrap:anywhere}
 .client-workspace-header>.row{min-width:0;max-width:100%;flex-wrap:wrap}
+
+
+/* Mobile drawer: reserve the full drawer height for navigation, not promotional panels. */
+@media(max-width:700px){
+ html:not(.cockpit-desktop-mode) .client-sidebar{
+  height:100dvh;max-height:100dvh;overflow-x:hidden;overflow-y:auto;
+  overscroll-behavior:contain;padding-bottom:max(18px,env(safe-area-inset-bottom));
+ }
+ html:not(.cockpit-desktop-mode) .cockpit-managed-card,
+ html:not(.cockpit-desktop-mode) .sidebar-help,
+ html:not(.cockpit-desktop-mode) .sidebar-footer{display:none!important}
+ html:not(.cockpit-desktop-mode) .client-nav{flex:0 0 auto;gap:7px}
+ html:not(.cockpit-desktop-mode) .client-nav-item{min-height:46px}
+}
+
+/* Make the automatic call-summary switch visibly a checkbox with a clear explanation. */
+.call-email-toggle{display:flex;align-items:flex-start;gap:13px;width:100%;padding:15px 16px;border:1px solid rgba(62,255,122,.24);border-radius:13px;background:rgba(62,255,122,.055);cursor:pointer}
+.call-email-toggle input[type="checkbox"]{appearance:auto;-webkit-appearance:checkbox;display:block!important;flex:0 0 20px;width:20px!important;height:20px!important;min-width:20px;margin:2px 0 0;accent-color:var(--cockpit-green);cursor:pointer}
+.call-email-toggle>span{display:grid;gap:6px;min-width:0}
+.call-email-toggle strong{display:block;color:#fff;font-size:14px;line-height:1.35}
+.call-email-toggle small{display:block;color:var(--cockpit-muted);font-size:12px;line-height:1.55}
+.call-email-privacy-note{margin:9px 2px 0!important;line-height:1.55}

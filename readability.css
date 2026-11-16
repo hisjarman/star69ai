@@ -130,3 +130,22 @@ body main .auth :where(p,.small,.muted,small){color:#e4d6e5!important}
 body main .auth .eyebrow{color:#a6ff72!important}
 body main .auth a:not(.button):not(.btn){color:#9be7ff!important}
 body main .auth :where(button,.btn){color:#24172d!important}
+
+
+/* Contrast safety net: dark Star69AI surfaces always use light foregrounds.
+   Explicitly scope this to dark sections/cards so light form surfaces retain dark ink. */
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card){
+  color:#f4f8fc!important;
+}
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) :where(p,li,dd,dt,label,legend,small,.small,.small-text,.muted,.hint,.helper-text,.disclaimer,td,th,span){
+  color:#d7e4f1!important;
+}
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) :where(h1,h2,h3,h4,h5,h6,strong,b){
+  color:#f8fbff!important;
+}
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) a:not(.button):not(.btn){
+  color:#9be3ff!important;
+}
+body :where(.onboard-section,.faq-section,.form-panel,.form-card,.pricing-card--light,.light-panel) :where(h1,h2,h3,h4,h5,h6,p,li,label,small,span,strong,b,td,th){
+  color:inherit;
+}

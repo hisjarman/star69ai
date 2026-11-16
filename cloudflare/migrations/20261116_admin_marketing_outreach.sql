@@ -24,3 +24,12 @@ CREATE TABLE IF NOT EXISTS avr_marketing_sends (
  FOREIGN KEY(prospect_id) REFERENCES avr_marketing_prospects(id)
 );
 CREATE INDEX IF NOT EXISTS avr_marketing_sends_sent_at_idx ON avr_marketing_sends(sent_at DESC);
+
+CREATE TABLE IF NOT EXISTS avr_marketing_unsubscribe_tokens (
+ token_hash TEXT PRIMARY KEY,
+ prospect_id TEXT NOT NULL,
+ created_at TEXT NOT NULL,
+ used_at TEXT,
+ FOREIGN KEY(prospect_id) REFERENCES avr_marketing_prospects(id)
+);
+CREATE INDEX IF NOT EXISTS avr_marketing_unsubscribe_prospect_idx ON avr_marketing_unsubscribe_tokens(prospect_id);

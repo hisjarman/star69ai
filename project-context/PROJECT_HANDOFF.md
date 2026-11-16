@@ -1219,3 +1219,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Reworded reward disclosures on the homepage and challenge page to remove “not enabled” / “not connected yet” phrasing while remaining accurate: progress is a browser-saved learning achievement and completing a level does not itself apply a subscription discount.
 - Updated the homepage “Get My Custom Demo” hero CTA and form submit button to the same purple-to-blue-to-green rainbow spectrum as the AI Challenge CTA, with matching glow and hover treatment.
 - Static website changes only. No Worker, D1, Stripe, PayPal, Clerk, Retell, customer data or billing configuration changed. Browser visual QA and GitHub Pages publication remain pending.
+
+
+## Homepage hero sales-story rethink — 2026-11-16
+
+- Feature branch: `design/homepage-hero-sales-story-2026-11-16`. Rebuilt the homepage first screen around one clear proposition: the business owner stays focused on the job while Star69AI answers and captures incoming customer calls. The new headline is “You’re busy doing the work. We’ll answer the call.”
+- Reduced the hero to one dominant rainbow-spectrum **Get My Custom Demo** CTA and one secondary link to the managed-service explanation. Removed the competing AI Challenge and call-comparison buttons from the hero; the AI Challenge remains promoted in its own homepage feature section.
+- Replaced the dense right-hand workflow manual and six example cards inside the hero with the existing left-facing receptionist artwork, Earth-at-night visual treatment and a clearly marked illustrative call-summary card. The call summary is explicitly labeled illustrative and is not represented as a live customer result.
+- Moved the six industry examples into a separate responsive section after the hero so they remain available without overwhelming the first screen. Preserved pricing/demo disclosure and the existing custom-demo anchor.
+- Added `homepage-hero-rethought.css` as a final stylesheet override. This is a static GitHub Pages change only; no Worker, D1, Stripe, PayPal, Clerk, Retell, Resend, customer data or billing behavior changed.
+- Static structure and responsive CSS review are required before merge. Verify desktop and mobile layout, image crop, CTA destination, challenge section and demo form in a real browser after Pages publishes. This branch is not merged or confirmed live.

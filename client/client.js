@@ -5,7 +5,7 @@
  if(desktopSiteMode) document.documentElement.classList.add("cockpit-desktop-mode");
  const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
  const $=s=>document.querySelector(s);
- let clerk=null,customer=null,loading=false;
+ let clerk=null,customer=null,loading=false,allCalls=[],callEmailDefault="",flexCanReceiveCalls=false;
  function note(t,e=false){const n=$("#notice");n.textContent=t;n.classList.remove("hidden","error");if(e)n.classList.add("error")}
  async function api(path,opts={}){const token=await clerk.session?.getToken();if(!token)throw Error("Please sign in again.");const r=await fetch(API+path,{...opts,headers:{Accept:"application/json",...(opts.body?{"Content-Type":"application/json"}:{}),Authorization:"Bearer "+token,...(opts.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok){const error=new Error(d.error||"Request failed ("+r.status+")");error.referenceId=d.referenceId||null;error.providerCode=d.providerCode||null;error.providerStatus=d.providerStatus||r.status;throw error}return d}
  function safe(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -69,26 +69,40 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   catch(e){note("Wallet top-up verification did not complete: "+e.message,true)}
  }
  async function loadFlexWallet(){
-  const panel=$("#flex-wallet-panel");if(!panel)return;
+  const panel=$("#flex-wallet-panel");flexCanReceiveCalls=false;if(!panel)return;
   if(customer?.plan!=="flex"){panel.hidden=true;return}
   panel.hidden=false;
   try{
-   const d=await api("/api/client/payg-wallet");
+   const d=await api("/api/client/payg-wallet");flexCanReceiveCalls=!!d.canReceiveCalls;
    $("#flex-wallet-balance").textContent=money(Number(d.balanceCents||0)/100);
    $("#flex-wallet-status").textContent=d.walletStatus||"not funded";
    $("#flex-wallet-eligibility").textContent=d.canReceiveCalls?"Ready":"Paused";$("#flex-wallet-note").textContent=d.activationNote||"Star69AI must assign your receptionist and phone number before live calls can connect.";
    const rows=d.transactions||[];
    $("#flex-wallet-history").innerHTML=rows.length?'<table><thead><tr><th>DATE</th><th>ACTIVITY</th><th>AMOUNT</th><th>DETAIL</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+safe(fmtDate(x.created_at))+'</td><td>'+safe(x.entry_type||"wallet")+'</td><td>'+money(Number(x.amount_cents||0)/100)+'</td><td>'+safe(x.note||x.source_ref||"—")+'</td></tr>').join("")+'</tbody></table>':'<div class="empty">No wallet activity yet. Add credit to enable Flex calls.</div>';
-  }catch(e){$("#flex-wallet-history").innerHTML='<div class="empty">'+safe(e.message)+'</div>'}
+  }catch(e){flexCanReceiveCalls=false;$("#flex-wallet-history").innerHTML='<div class="empty">'+safe(e.message)+'</div>'}
  }
 
  function renderUsage(usage,included,plan){
   const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;
   const overageLimit=Math.max(0,Number(usage.overageLimitMinutes||0)),overageStopAt=Math.max(0,Number(usage.overageStopAtMinutes||0));
   $("#usage-percent").textContent=Math.round(pct)+"%";
-  $("#usage-fill").style.width=pct+"%";
-  $("#usage-fill").classList.toggle("over-limit",over>0);
-  $("#usage-left").textContent=allowance?Math.max(0,allowance-used)+" minutes remaining": "No included minutes on this account";
+  const fill=$("#usage-fill"),track=$(".usage-track");
+  fill.style.width=pct+"%";
+  fill.classList.remove("usage-warn-50","usage-warn-75","usage-warn-90");
+  fill.classList.toggle("over-limit",over>0);
+  if(pct>=90)fill.classList.add("usage-warn-90");
+  else if(pct>=75)fill.classList.add("usage-warn-75");
+  else if(pct>=50)fill.classList.add("usage-warn-50");
+  if(track)track.setAttribute("aria-valuenow",String(Math.round(pct)));
+  const threshold=$("#usage-threshold-notice");
+  if(threshold){
+   threshold.classList.remove("warning","critical");
+   if(pct>=90){threshold.textContent="90% or more of your included minutes have been used. Available Vault minutes and authorized overage remain subject to your account’s usage limits.";threshold.classList.add("critical")}
+   else if(pct>=75){threshold.textContent="You’ve used at least 75% of your included minutes. Keep an eye on usage; your available Vault and authorized overage are shown below.";threshold.classList.add("warning")}
+   else if(pct>=50){threshold.textContent="You’ve used at least 50% of your included minutes. Your remaining included minutes and Minute Vault balance are shown below.";threshold.classList.add("warning")}
+   else{threshold.textContent="Usage is below 50% of your included monthly minutes."}
+  }
+  $("#usage-left").textContent=allowance?Math.max(0,allowance-used)+" included minutes remaining": "No included minutes on this account";
   $("#usage-total").textContent=used+" of "+allowance+" included minutes";
   const overageRate=OVERAGE_RATES[String(plan||"").toLowerCase()];
   $("#overage-rate").textContent=String(plan||"").toLowerCase()==="flex"?money(0.65)+" / minute":overageRate===undefined?"See your plan":money(overageRate)+" / minute";
@@ -103,12 +117,31 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   $("#minutes-included").textContent=allowance.toLocaleString()+" included minutes";
  }
  function renderCalls(calls,defaultEmail=""){
-  const root=$("#calls-table");
-  if(!calls.length){root.innerHTML='<div class="empty">No calls have been recorded for your account yet.</div>';return}
+  allCalls=Array.isArray(calls)?calls:[];
+  callEmailDefault=defaultEmail||"";
+  const select=$("#call-status-filter"),current=select?.value||"";
+  if(select){
+   const statuses=[...new Set(allCalls.map(c=>String(c.call_status||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+   select.innerHTML='<option value="">All statuses</option>'+statuses.map(status=>'<option value="'+safe(status.toLowerCase())+'">'+safe(status)+'</option>').join("");
+   select.value=statuses.some(status=>status.toLowerCase()===current)?current:"";
+  }
+  renderFilteredCalls();
+ }
+ function renderFilteredCalls(){
+  const root=$("#calls-table");if(!root)return;
+  const count=$("#calls-filter-count");
+  if(!allCalls.length){root.innerHTML='<div class="empty">No calls have been recorded for your account yet.</div>';if(count)count.textContent="No calls yet";return}
+  const query=($("#call-search")?.value||"").trim().toLowerCase(),statusFilter=$("#call-status-filter")?.value||"";
+  const calls=allCalls.filter(c=>{
+   const haystack=[c.from_number,c.to_number,c.call_summary,c.transcript,c.call_status,c.direction].map(v=>String(v||"")).join(" ").toLowerCase();
+   return (!query||haystack.includes(query))&&(!statusFilter||String(c.call_status||"").toLowerCase()===statusFilter);
+  });
+  if(count)count.textContent="Showing "+calls.length+" of "+allCalls.length+" calls";
+  if(!calls.length){root.innerHTML='<div class="empty">No calls match those search and status filters. Try a different search or choose All statuses.</div>';return}
   root.innerHTML='<table><thead><tr><th>DATE</th><th>CALLER</th><th>STATUS</th><th>DURATION</th><th>SUMMARY</th><th></th></tr></thead><tbody>'+calls.map((c,i)=>{
    const summary=c.call_summary||"No summary available",transcript=c.transcript||"",recording=safeHttps(c.recording_url);
    const callId=String(c.call_id||"");
-   const detail='<div class="call-detail-grid"><div><b>Call summary</b><p>'+safe(summary)+'</p><p class="small">Direction: '+safe(c.direction||"—")+' · Sentiment: '+safe(c.user_sentiment||"—")+' · Disconnection: '+safe(c.disconnection_reason||"—")+'</p><form class="call-email-form" data-call-id="'+safe(callId)+'"><label class="small" for="call-email-'+i+'">Send call details to email</label><div class="row"><input id="call-email-'+i+'" name="email" type="email" value="'+safe(defaultEmail)+'" placeholder="name@business.com" required><button class="btn secondary" type="submit">Email details</button></div><label class="small"><input type="checkbox" name="authorized" required> I confirm this recipient is authorized to receive this call information.</label><span class="small email-status" role="status"></span></form></div><div><b>Transcript</b><pre class="transcript">'+safe(transcript||"No transcript available for this call.")+'</pre>'+(recording?'<audio class="call-audio" controls preload="none" src="'+safe(recording)+'">Your browser does not support audio playback.</audio><a class="small recording-link" href="'+safe(recording)+'" target="_blank" rel="noopener noreferrer">Open recording in new tab ↗</a>':'<span class="small">No recording available</span>')+'</div></div>';
+   const detail='<div class="call-detail-grid"><div><b>Call summary</b><p>'+safe(summary)+'</p><p class="small">Direction: '+safe(c.direction||"—")+' · Sentiment: '+safe(c.user_sentiment||"—")+' · Disconnection: '+safe(c.disconnection_reason||"—")+'</p><form class="call-email-form" data-call-id="'+safe(callId)+'"><label class="small" for="call-email-'+i+'">Send call details to email</label><div class="row"><input id="call-email-'+i+'" name="email" type="email" value="'+safe(callEmailDefault)+'" placeholder="name@business.com" required><button class="btn secondary" type="submit">Email details</button></div><label class="small"><input type="checkbox" name="authorized" required> I confirm this recipient is authorized to receive this call information.</label><span class="small email-status" role="status"></span></form></div><div><b>Transcript</b><pre class="transcript">'+safe(transcript||"No transcript available for this call.")+'</pre>'+(recording?'<audio class="call-audio" controls preload="none" src="'+safe(recording)+'">Your browser does not support audio playback.</audio><a class="small recording-link" href="'+safe(recording)+'" target="_blank" rel="noopener noreferrer">Open recording in new tab ↗</a>':'<span class="small">No recording available</span>')+'</div></div>';
    return '<tr><td>'+safe(fmtDate(c.start_timestamp))+'</td><td>'+safe(c.from_number||"Unknown")+'</td><td><span class="status">'+safe(c.call_status||"—")+'</span></td><td>'+Math.ceil((c.duration_ms||0)/60000)+' min</td><td><div class="call-summary">'+safe(summary)+'</div></td><td><button class="btn secondary call-toggle" type="button" data-call-index="'+i+'" aria-expanded="false">Details</button></td></tr><tr class="call-detail-row hidden" data-detail-index="'+i+'"><td colspan="6">'+detail+'</td></tr>';
   }).join("")+'</tbody></table>';
   root.querySelectorAll(".call-toggle").forEach(b=>b.addEventListener("click",()=>{const row=root.querySelector('[data-detail-index="'+b.dataset.callIndex+'"]');const open=row.classList.toggle("hidden")===false;b.setAttribute("aria-expanded",String(open));b.textContent=open?"Hide":"Details"}));
@@ -128,8 +161,6 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
    }
   }));
  }
-
-
  async function loadCallEmailSettings(){
   const enabled=$("#call-email-enabled"),recipients=$("#call-email-recipients"),status=$("#call-email-settings-status");
   if(!enabled||!recipients)return;
@@ -200,6 +231,27 @@ function renderAgentRequests(items){
   catch(err){status.textContent=err.message}
   finally{button.disabled=false}
  }
+ function renderReceptionistStatus(data){
+  const agents=Array.isArray(data.agents)?data.agents:[],numbers=Array.isArray(data.numbers)?data.numbers:[];
+  const hasDemo=agents.some(a=>String(a.status||"").toLowerCase()==="demo");
+  const hasAgent=agents.length>0;
+  const assignedLive=numbers.some(n=>n.agent_id&&agents.some(a=>a.agent_id===n.agent_id&&String(a.status||"").toLowerCase()!=="demo"));
+  const prepaid=["six_month","annual"].includes(customer?.billingCadence);
+  const subscriptionReady=["active","trialing"].includes(String(customer?.subscriptionStatus||"").toLowerCase())||prepaid;
+  const liveReady=customer?.plan==="flex"?flexCanReceiveCalls:customer?.status==="active"&&subscriptionReady&&assignedLive;
+  const pill=$("#receptionist-live-status");
+  if(pill){
+   const state=liveReady?"live":hasDemo?"demo":assignedLive?"setup":"preparing";
+   pill.dataset.state=state;
+   pill.textContent=liveReady?"LIVE SETUP":hasDemo?"DEMO READY":assignedLive?"LAUNCH CHECK":"PREPARING";
+   pill.setAttribute("aria-label","Receptionist status: "+pill.textContent);
+  }
+  const status=$("#receptionist-status");
+  if(status){
+   status.innerHTML=liveReady?'<b>Live receptionist setup is ready</b><p class="small">Your account is active, a production receptionist is assigned to your business number, and the plan or prepaid wallet is eligible for calls.</p>':assignedLive?'<b>Production receptionist assigned — launch check required</b><p class="small">Your agent and business number are assigned, but the account or billing eligibility is not yet confirmed for live calls. Star69AI will complete the required checks.</p>':hasDemo?'<b>Demo receptionist ready</b><p class="small">Your personalized demo agent is available for review. It is not connected to a live production number.</p><p class="small">Next: approve the demo and complete the managed launch steps.</p>':hasAgent?'<b>Receptionist configuration in progress</b><p class="small">Your receptionist is being prepared. Star69AI will confirm the live number and launch status here.</p>':'<b>Demo receptionist in preparation</b><p class="small">Your personalized demo agent will appear here when provisioning is complete.</p>';
+  }
+  return {liveReady,hasDemo,hasAgent,assignedLive};
+ }
  async function load(){
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
@@ -227,12 +279,11 @@ function renderAgentRequests(items){
    $("#contact-phone").value=customer.phone||"";
    $("#contact-email").value=customer.email||"";
    $("#agent-list").innerHTML=d.agents.length?d.agents.map(a=>{const isDemo=String(a.status||"").toLowerCase()==="demo";return '<div class="resource"><b>'+safe(a.agent_name||a.agent_id)+'</b><span class="small">'+(isDemo?'DEMO RECEPTIONIST · Not connected to a live phone number':'Live receptionist · '+safe(a.status||"Configured"))+'</span></div>'}).join(""):'<div class="empty">Your demo receptionist is being prepared. It will appear here when setup is complete.</div>';
-   const hasDemo=d.agents.some(a=>String(a.status||"").toLowerCase()==="demo");
-   const hasLive=d.agents.some(a=>String(a.status||"").toLowerCase()!=="demo");
-   $("#receptionist-status").innerHTML=hasLive?'<b>Live receptionist configured</b><p class="small">Your managed receptionist is configured. Check the phone-number section below for the assigned business line.</p>':hasDemo?'<b>Demo receptionist ready</b><p class="small">Your personalized demo agent has been created from your business details. You can review its setup here. It is not connected to your live business number and cannot answer production calls yet.</p><p class="small">Next: our team completes configuration, assigns your phone number and tests the live call route.</p>':'<b>Demo receptionist in preparation</b><p class="small">Your account is ready. Your personalized demo agent will appear here as soon as provisioning is complete.</p>';
+
    $("#number-list").innerHTML=d.numbers.length?d.numbers.map(n=>'<div class="resource"><b>'+safe(n.phone_number)+'</b><span class="small">'+safe(n.nickname||"Business line")+'</span></div>').join(""):'<div class="empty"><b>Phone number not assigned yet</b><p class="small">That is expected at this stage. Your demo can be reviewed before a business number is assigned. We will complete number assignment and live-call testing during managed launch.</p></div>';
    renderCalls(d.calls||[],customer.email||"");
    await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration(),loadFlexWallet()]);
+   renderReceptionistStatus(d);
    renderAgentOptions();
   }catch(e){note(e.message,true)}
   finally{loading=false;$("#refresh-dashboard").disabled=false}
@@ -263,6 +314,8 @@ function renderAgentRequests(items){
 
  $("#support-ticket-form")?.addEventListener("submit",submitTicket);
  $("#call-email-settings-form")?.addEventListener("submit",saveCallEmailSettings);
+ $("#call-search")?.addEventListener("input",renderFilteredCalls);
+ $("#call-status-filter")?.addEventListener("change",renderFilteredCalls);
  $("#refresh-tickets")?.addEventListener("click",loadTickets);
  $("#profile-form").onsubmit=async e=>{e.preventDefault();try{await api("/api/client/profile",{method:"PATCH",body:JSON.stringify({businessName:$("#business-name").value,contactName:$("#contact-name").value,phone:$("#contact-phone").value})});note("Account details saved.");await load()}catch(e){note(e.message,true)}};
  const voiceModal=$("#voice-clone-modal");

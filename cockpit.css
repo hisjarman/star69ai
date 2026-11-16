@@ -343,3 +343,25 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 #workspace.cockpit-drawer-open .client-nav-item{
  min-height:48px;
 }
+
+
+/* Dashboard enhancement: clearer readiness, usage thresholds and call-history filters. */
+.cockpit-receptionist-state{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.cockpit-receptionist-state::before{content:"";display:inline-block;width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#94A3B8}
+.cockpit-receptionist-state[data-state="live"]{border-color:rgba(62,255,122,.4);background:rgba(62,255,122,.1);color:var(--cockpit-green)}
+.cockpit-receptionist-state[data-state="live"]::before{background:var(--cockpit-green);box-shadow:0 0 10px rgba(62,255,122,.7)}
+.cockpit-receptionist-state[data-state="demo"]{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.1);color:#93C5FD}
+.cockpit-receptionist-state[data-state="demo"]::before{background:#93C5FD}
+.cockpit-receptionist-state[data-state="setup"]{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.1);color:#FACC15}
+.cockpit-receptionist-state[data-state="setup"]::before{background:#FACC15}
+.usage-threshold-notice{margin:10px 0 0;line-height:1.5}
+.usage-threshold-notice.warning{color:#FACC15}
+.usage-threshold-notice.critical{color:#FCA5A5}
+.usage-fill.usage-warn-50{background:#FACC15;box-shadow:0 0 12px rgba(250,204,21,.28)}
+.usage-fill.usage-warn-75{background:#FB923C;box-shadow:0 0 12px rgba(251,146,60,.3)}
+.usage-fill.usage-warn-90{background:#F87171;box-shadow:0 0 12px rgba(248,113,113,.3)}
+.call-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(170px,1fr);gap:14px;align-items:end;margin:4px 0 16px}
+.call-filters label{display:grid;gap:7px;color:var(--cockpit-muted);font-size:11px;font-weight:700;letter-spacing:.04em}
+.call-filters input,.call-filters select{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--cockpit-border);border-radius:11px;background:var(--cockpit-input);color:#fff}
+.call-filters input:focus,.call-filters select:focus{border-color:var(--cockpit-green);outline:2px solid rgba(62,255,122,.12)}
+@media(max-width:700px){.client-workspace-header .row{gap:6px}.cockpit-receptionist-state{font-size:9px}.call-filters{grid-template-columns:1fr;gap:10px}}

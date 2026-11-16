@@ -213,8 +213,7 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
  const purpose=onboarding.paypal_order_purpose||"setup_fee";
  let amountCents;
  if(purpose==="setup_fee"){
-  const eligiblePartnerDiscount=!!customer?.affiliate_partner_id&&customer?.affiliate_offer_mode==="discount";
-  amountCents=eligiblePartnerDiscount?9900:9900;
+  amountCents=9900;
   if(Number(onboarding.setup_amount_cents)!==amountCents){
    const changed=await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_amount_cents=?,updated_at=? WHERE id=? AND setup_status='pending'").bind(amountCents,new Date().toISOString(),onboarding.id).run();
    if(Number(changed.meta?.changes||0)!==1)throw Error("setup_fee_changed_after_payment_or_not_pending");
@@ -376,7 +375,7 @@ async function startPublicCheckout(req,env,origin){
  }
  const prepaidTotals={starter:{six_month:67050,annual:116220},growth:{six_month:112050,annual:194220},pro:{six_month:179550,annual:311220}};
  const prepaidCents=cadence==="monthly"?0:Number(prepaidTotals[plan][cadence]);
- const setupCents=cadence==="monthly"?(affiliateId&&offerMode==="discount"?9900:9900):0;
+ const setupCents=cadence==="monthly"?9900:0;
  if(cadence==="monthly"){
   if(!env.STRIPE_SECRET_KEY||!env.STRIPE_WEBHOOK_SECRET)throw Error("stripe_monthly_billing_not_fully_configured");
   const monthlyPriceId=env[planInfo[plan].priceEnv];if(!monthlyPriceId)throw Error("stripe_price_id_missing_"+plan);
@@ -418,8 +417,7 @@ async function capturePublicSetup(req,env,origin){
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const purpose=ob.paypal_order_purpose||"setup_fee";if(purpose==="setup_fee"&&Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
  if(purpose==="setup_fee"&&ob.setup_status==="pending"){
-  const referral=await env.DB.prepare("SELECT affiliate_partner_id,affiliate_offer_mode FROM avr_customers WHERE id=? LIMIT 1").bind(ob.customer_id).first();
-  const expectedSetupCents=referral?.affiliate_partner_id&&referral?.affiliate_offer_mode==="discount"?9900:9900;
+  const expectedSetupCents=9900;
   if(Number(ob.setup_amount_cents)!==expectedSetupCents){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_amount_cents=?,paypal_order_id=NULL,updated_at=? WHERE id=? AND setup_status='pending'").bind(expectedSetupCents,new Date().toISOString(),ob.id).run();
    throw Error("setup_offer_updated_please_resume_checkout");

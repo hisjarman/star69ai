@@ -1179,3 +1179,13 @@ This section supersedes the earlier activation-status notes above where they des
 - On desktop, the hero now uses a full-width single-column flow: marketing headline and primary actions first, followed by the example-flow panel spanning the available content width. Inside the panel, the explanation stays on the left and the three workflow stages display horizontally across the right.
 - The workflow panel is no longer capped at 510px. Desktop content width is up to 1,440px with responsive side gutters. Tablet/mobile retain stacked layouts.
 - Change is source-only on `fix/homepage-example-flow-full-width-2026-11-16`. Validate in a real browser at desktop/tablet/mobile widths and confirm GitHub Pages publication after merge; do not claim live until verified.
+
+
+## Homepage industry-specific call-flow examples — 2026-11-16
+
+- Feature branch: `feature/homepage-more-call-flows-2026-11-16`.
+- Expanded the full-width homepage hero workflow panel with six additional concrete examples for plumbing, HVAC, cleaning, auto service, general contracting and real estate, alongside the existing roofing walkthrough.
+- Each example shows a caller scenario, the information the receptionist gathers, and the configured next step. The cards are responsive: three columns on wide screens, two on tablets and one on narrow phones.
+- Copy is illustrative and does not promise guaranteed bookings, transfers or outcomes; actual actions depend on the client's approved call-handling rules and integrations.
+- Changes are limited to `index.html`, `design-refresh.css` and this handoff. No Worker, D1, billing, authentication, customer data or live integrations changed.
+- Static source review is complete; real browser visual QA and GitHub Pages publication remain pending. Submit through a PR and do not merge without explicit approval.

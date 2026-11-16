@@ -543,14 +543,15 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    const amount=Number(line.amount_excluding_tax??line.amount??0),discounts=Array.isArray(line.discount_amounts)?line.discount_amounts.reduce((n,item)=>n+Number(item.amount||0),0):0,netAmount=Math.max(0,amount-discounts);
    return planSubscriptionLine&&subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
   },0);
-  if(customer?.promo_code==="3FORFREE"&&customer.stripe_subscription_id&&eligibleLinesCents>0&&env.STRIPE_COUPON_3FORFREE){
+  const promoSubscriptionId=o.subscription||o.parent?.subscription_details?.subscription||customer?.stripe_subscription_id||null;
+  if(customer?.promo_code==="3FORFREE"&&promoSubscriptionId&&eligibleLinesCents>0&&env.STRIPE_COUPON_3FORFREE){
    const recorded=await env.DB.prepare("INSERT OR IGNORE INTO avr_3forfree_invoice_events(invoice_id,customer_id,created_at) VALUES(?,?,?)").bind(o.id,customer.id,new Date().toISOString()).run();
    if(Number(recorded.meta?.changes||0)>0)await env.DB.prepare("UPDATE avr_customers SET promo_paid_cycles=promo_paid_cycles+1,updated_at=? WHERE id=? AND promo_code='3FORFREE' AND promo_free_applied=0").bind(new Date().toISOString(),customer.id).run();
    const promoState=await env.DB.prepare("SELECT promo_paid_cycles,promo_free_applied FROM avr_customers WHERE id=?").bind(customer.id).first();
    if(Number(promoState?.promo_paid_cycles||0)>=2&&Number(promoState?.promo_free_applied||0)===0){
     const coupon=await stripeRequest(env,"coupons/"+encodeURIComponent(env.STRIPE_COUPON_3FORFREE),{},"GET");
     if(coupon.valid!==false&&Number(coupon.percent_off)===100&&coupon.duration==="once"){
-     await stripeRequest(env,"subscriptions/"+encodeURIComponent(customer.stripe_subscription_id),{"discounts[0][coupon]":env.STRIPE_COUPON_3FORFREE},"POST","star69ai-3forfree-third-month-"+customer.id);
+     await stripeRequest(env,"subscriptions/"+encodeURIComponent(promoSubscriptionId),{"discounts[0][coupon]":env.STRIPE_COUPON_3FORFREE},"POST","star69ai-3forfree-third-month-"+customer.id);
      await env.DB.prepare("UPDATE avr_customers SET promo_free_applied=1,updated_at=? WHERE id=? AND promo_free_applied=0").bind(new Date().toISOString(),customer.id).run();
     }
    }

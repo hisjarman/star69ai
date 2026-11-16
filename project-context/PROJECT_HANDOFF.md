@@ -2,10 +2,10 @@
 
 - Public campaign: `3FORFREE`, available for new monthly subscription signups through November 30, 2026 (UTC date boundary enforced by the checkout Worker). The first two monthly subscription invoices are charged at standard price; the third monthly subscription invoice receives a one-time 100% subscription discount after the second successful paid subscription invoice.
 - Standard $99 setup fee remains unchanged and is collected separately via PayPal after demo approval. Taxes, usage and third-party charges are not discounted. Prepaid plans and discounted partner referrals are excluded; other promo codes are rejected by the public checkout handler.
-- GitHub PR #182 merged into `main` as `2f1ce942ebd3f1232c925f5112492128c2cf3063`.
+- GitHub PR #182 merged into `main` as `2f1ce942ebd3f1232c925f5112492128c2cf3063`; follow-up PR #183 added the existing-client checkout guard and merged as `1e176c6d52530c6edd43ebf5df6ea65654524ba8`.
 - Production D1 migration `cloudflare/migrations/20261115_3forfree_promotion.sql` applied to database `avr-trust-lab` (`6cf68b12-2aa8-4ed4-9f92-8a7824520d1a`). Verified customer promo columns and `avr_3forfree_invoice_events` table.
 - Live Stripe coupon: `STAR69AI_3FORFREE_2026_11_NOREDEEM` (100% off, duration once, no Stripe redeem_by; Star69AI checkout enforces the November signup window). An earlier coupon with a Stripe redeem_by date was deleted before use because that date would have prevented applying the reward after the second payment in a later month.
-- Cloudflare Worker `avr-platform-api` production deployment: `ec5c6606-eaa2-4850-b299-4bfaaf5db3ef`, version `c8495db6-998e-4943-a5e0-43dd91e9b460` (100% traffic). Binding `STRIPE_COUPON_3FORFREE` is a plain-text binding containing the live coupon ID. Existing D1 and secret bindings were retained.
+- Cloudflare Worker `avr-platform-api` latest production deployment: `99ae8159-f418-4ec7-ab0a-984fd79e6054`, version `82b5be0f-10b8-4079-8c9e-279ca70ac53d` (100% traffic). Binding `STRIPE_COUPON_3FORFREE` is a plain-text binding containing the live coupon ID. Existing D1 and secret bindings were retained. A server-side guard blocks existing client accounts from submitting the public acquisition code.
 - Activation is complete at the Stripe, D1 and Worker layers. Live public website rendering / GitHub Pages publication could not be independently fetched from this runtime; verify the homepage, pricing and `checkout.html?promo=3FORFREE` in a browser before advertising the campaign.
 
 ## November 2026 3FORFREE promotion — implementation branch

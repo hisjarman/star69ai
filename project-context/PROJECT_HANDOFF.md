@@ -1,3 +1,11 @@
+## AI Challenge workflow explainer and reward-status clarification — 2026-11-16
+
+- Feature branch: `feature/challenge-flow-examples-reward-copy-2026-11-16`.
+- Expanded `challenge/index.html` with a three-step receptionist design method: understand the caller's request, capture only useful details, and take the correct approved next step. Added six detailed industry examples for roofing, plumbing, HVAC, cleaning, auto service and real estate.
+- Replaced the vague “Rewards are not automatically applied yet” copy with precise terms: Starter 5%, Pro 10%, Expert 15% off eligible monthly subscription payments for 12 months; no setup-fee discount; no stacking with partner/prepaid offers. The page clearly says browser-only progress is not account proof and cannot apply a discount.
+- Challenge completion remains browser-local only. The current implementation has no authenticated server-side completion record, verification endpoint or checkout redemption path. **Do not tell customers that challenge discounts are redeemable.** Enabling actual rewards requires an authenticated account flow, server-verified completion for each level, one-time eligibility/redemption records and server-side checkout enforcement, plus tests for replay, tampering, duplicate redemption and offer stacking.
+- No Worker, D1, Stripe, PayPal, Clerk or production configuration was changed. Website publication and browser testing remain pending.
+
 ## Homepage call-flow card containment correction — 2026-11-16
 
 - Follow-up branch: `fix/homepage-call-flow-card-containment-2026-11-16`. The homepage's six additional industry examples were present inside the hero preview, and `design-refresh.css` was already linked by `index.html`; the issue was insufficient defensive sizing/overflow rules for nested grid items and their text.

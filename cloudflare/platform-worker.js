@@ -1073,6 +1073,7 @@ async function route(req,env){
     const prospect=await env.DB.prepare("SELECT * FROM avr_marketing_prospects WHERE id=?").bind(id).first();
     if(!prospect)throw Error("marketing_prospect_not_found");
     if(prospect.status!=="active")throw Error("prospect_has_unsubscribed_do_not_contact");
+    if(prospect.last_contacted_at&&Date.parse(prospect.last_contacted_at)>Date.now()-7*86400000)throw Error("prospect_contacted_within_last_7_days");
     const recent=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_sends WHERE sent_at>=?").bind(new Date(Date.now()-86400000).toISOString()).first();
     if(Number(recent?.n||0)>=25)throw Error("daily_marketing_send_limit_reached");
     const token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,"0")).join("");

@@ -317,3 +317,29 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 .call-email-toggle strong{display:block;color:#fff;font-size:14px;line-height:1.35}
 .call-email-toggle small{display:block;color:var(--cockpit-muted);font-size:12px;line-height:1.55}
 .call-email-privacy-note{margin:9px 2px 0!important;line-height:1.55}
+
+
+/* Drawer-open priority: never let the two promotional/help notices consume navigation space. */
+#workspace.cockpit-drawer-open .client-sidebar{
+ display:flex;
+ flex-direction:column;
+ min-height:100dvh;
+ max-height:100dvh;
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ padding-bottom:max(18px,env(safe-area-inset-bottom));
+}
+#workspace.cockpit-drawer-open .cockpit-managed-card,
+#workspace.cockpit-drawer-open .sidebar-help,
+#workspace.cockpit-drawer-open .sidebar-footer{
+ display:none!important;
+}
+#workspace.cockpit-drawer-open .client-nav{
+ flex:0 0 auto;
+ margin-bottom:0;
+ gap:7px;
+}
+#workspace.cockpit-drawer-open .client-nav-item{
+ min-height:48px;
+}

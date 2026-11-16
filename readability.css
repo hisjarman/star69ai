@@ -130,3 +130,50 @@ body main .auth :where(p,.small,.muted,small){color:#e4d6e5!important}
 body main .auth .eyebrow{color:#a6ff72!important}
 body main .auth a:not(.button):not(.btn){color:#9be7ff!important}
 body main .auth :where(button,.btn){color:#24172d!important}
+
+
+/* Contrast safety net: dark Star69AI surfaces always use light foregrounds.
+   Explicitly scope this to dark sections/cards so light form surfaces retain dark ink. */
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card){
+  color:#f4f8fc!important;
+}
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) :where(p,li,dd,dt,label,legend,small,.small,.small-text,.muted,.hint,.helper-text,.disclaimer,td,th,span){
+  color:#d7e4f1!important;
+}
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) :where(h1,h2,h3,h4,h5,h6,strong,b){
+  color:#f8fbff!important;
+}
+body :where(.s69-hero,.s69-intro,.s69-trust-section,.conversion-compare,.conversion-safeguards,.roofing-feature,.technology-history-section,.technology-history-card,.dashboard-preview-window,.dashboard-preview-sidebar,.dashboard-preview-content,.dashboard-preview-panel,.language-showcase,.language-card,.home-paths,.home-path-card,.story-promo,.dark-shell,.checkout-card,.reference-hero,.product-stage,.console,.dashboard-demo,.client-workspace-layout,.client-sidebar,.client-workspace-header,.client-page,.client-page-content,.admin-modal-panel,.voice-modal-panel,.agent-prompt-preview,.tl-hero,.tl-section,.tl-feed,.tp-hero,.tp-cta,.p-wrap,.p-top,.p-hero,.p-main,.p-section,.p-footer,.p-apply,.p-panel,.p-card,.pp-shell,.pp-top,.pp-auth,.pp-panel,.pp-link-card) a:not(.button):not(.btn){
+  color:#9be3ff!important;
+}
+body :where(.onboard-section,.faq-section,.form-panel,.form-card,.pricing-card--light,.light-panel) :where(h1,h2,h3,h4,h5,h6,p,li,label,small,span,strong,b,td,th){
+  color:inherit;
+}
+
+
+/* Homepage hero: replace the decorative AI portrait with a concrete lead outcome. */
+body#top .s69-hero-outcome{height:auto!important;min-height:500px!important;align-self:center!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:16px!important;margin:0!important;padding:28px 12px!important}
+body#top .s69-hero-outcome .s69-earth{inset:0!important;right:0!important;width:100%!important;height:100%!important;border-radius:28px!important;opacity:.7!important;mask-image:radial-gradient(ellipse at center,#000 35%,#000b 72%,transparent 100%)!important}
+body#top .hero-call-card{position:relative;z-index:3;width:min(100%,510px);padding:clamp(22px,3vw,32px);border:1px solid rgba(67,180,254,.48);border-radius:22px;background:linear-gradient(145deg,rgba(5,17,39,.97),rgba(7,25,48,.96));box-shadow:0 26px 80px rgba(0,0,0,.48),0 0 50px rgba(0,213,255,.12);color:#f8fbff!important;backdrop-filter:blur(14px)}
+body#top .hero-call-card :where(p,span,small){color:#d7e4f1!important}
+body#top .hero-call-card :where(h2,strong,b){color:#f8fbff!important}
+body#top .hero-call-card-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid #29435f}
+body#top .hero-call-live{display:inline-flex;align-items:center;gap:8px;color:#8bffad!important;font:700 11px/1.3 'DM Mono',monospace;letter-spacing:.1em}
+body#top .hero-call-live i{width:8px;height:8px;border-radius:50%;background:#3eff7a;box-shadow:0 0 12px #3eff7a;display:inline-block}
+body#top .hero-call-time{color:#a8bdd4!important;font:500 10px/1.3 'DM Mono',monospace;letter-spacing:.1em}
+body#top .hero-call-label{margin:24px 0 8px;color:#65d9ff!important;font:700 10px/1.4 'DM Mono',monospace;letter-spacing:.14em}
+body#top .hero-call-card h2{margin:0 0 10px;font:800 clamp(25px,3vw,34px)/1.15 Manrope,sans-serif;letter-spacing:-.04em}
+body#top .hero-call-summary{font-size:14px;line-height:1.65;margin:0 0 22px;max-width:none}
+body#top .hero-call-details{display:grid;gap:0;border:1px solid #29435f;border-radius:13px;overflow:hidden}
+body#top .hero-call-details>div{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 15px;border-bottom:1px solid #29435f}
+body#top .hero-call-details>div:last-child{border-bottom:0}
+body#top .hero-call-details span{color:#91a9c3!important;font:600 9px/1.4 'DM Mono',monospace;letter-spacing:.1em;flex:0 0 88px}
+body#top .hero-call-details strong{font-size:12px;text-align:right}
+body#top .hero-call-footer{display:flex;align-items:center;gap:12px;margin-top:18px;padding:14px;border-radius:12px;background:rgba(62,255,122,.09);border:1px solid rgba(62,255,122,.28)}
+body#top .hero-call-check{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#3eff7a;color:#04120b!important;font-weight:900;flex:none}
+body#top .hero-call-footer strong,body#top .hero-call-footer small{display:block}
+body#top .hero-call-footer strong{font-size:12px}
+body#top .hero-call-footer small{margin-top:3px;font-size:10px;line-height:1.5}
+body#top .hero-call-caption{position:relative;z-index:2;margin:0;color:#d4e4f5!important;text-align:center;font-size:11px;letter-spacing:.04em;text-shadow:0 2px 12px #020510}
+@media(max-width:900px){body#top .s69-hero-outcome{min-height:0!important;margin:10px auto 0!important;padding:26px 12px 0!important;width:min(100%,680px)!important}}
+@media(max-width:560px){body#top .hero-call-card{padding:20px 16px;border-radius:16px}body#top .hero-call-details>div{padding:12px}body#top .hero-call-details span{flex-basis:76px}body#top .hero-call-details strong{font-size:11px}body#top .hero-call-caption{font-size:10px}}

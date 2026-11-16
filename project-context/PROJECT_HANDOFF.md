@@ -1,3 +1,9 @@
+## Homepage call-flow card containment correction — 2026-11-16
+
+- Follow-up branch: `fix/homepage-call-flow-card-containment-2026-11-16`. The homepage's six additional industry examples were present inside the hero preview, and `design-refresh.css` was already linked by `index.html`; the issue was insufficient defensive sizing/overflow rules for nested grid items and their text.
+- Added explicit border-box sizing, zero minimum widths, width/max-width constraints, text wrapping and overflow containment to the hero preview, three-stage flow cards and six industry example cards. The example grid is explicitly three columns on desktop, two on tablet and one on narrow mobile.
+- No content, checkout, Worker, D1, billing, authentication or customer data changed. Browser viewport verification is still required after GitHub Pages publishes the change.
+
 ## November 2026 3FORFREE promotion — LIVE activation
 
 - Public campaign: `3FORFREE`, available for new monthly subscription signups through November 30, 2026 (UTC date boundary enforced by the checkout Worker). The first two monthly subscription invoices are charged at standard price; the third monthly subscription invoice receives a one-time 100% subscription discount after the second successful paid subscription invoice.

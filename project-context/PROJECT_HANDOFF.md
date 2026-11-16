@@ -1134,3 +1134,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Adds `cockpit.css` as a scoped final stylesheet override, a branded sidebar header and managed-service card, and a responsive mobile navigation drawer. Existing page panels and data-bound DOM IDs remain in place; no demo billing or call records are inserted.
 - Client receptionist settings remain managed/read-only where the existing product policy requires Star69AI staff to configure, test and publish changes. Upgrade and configuration requests remain requests subject to written quote/approval.
 - Source-only change. No Worker, D1, Stripe, PayPal, Clerk, Retell, Resend or customer data was changed. GitHub Pages publication and authenticated desktop/mobile browser QA remain pending review/merge.
+
+
+## THE COCKPIT mobile usability and header refinement — 2026-11-16
+
+- Follow-up feature branch: `fix/cockpit-mobile-header-qa-2026-11-16`, based on the merged THE COCKPIT dashboard.
+- Refines the mobile global header into a compact, balanced brand/session/account row and reorganizes the workspace header into a clear two-column layout: navigation control and dashboard identity on the first row, account status and refresh action below.
+- Keeps the slide-out navigation and ensures Escape closes it, restores the menu button's expanded state, and returns focus to the menu control.
+- Adds contained horizontal scrolling for wide data tables so call history and other tables do not widen the entire phone viewport; improves wrapping for long cell content.
+- Raises mobile tap target sizing, protects narrow-screen form controls from overflow, uses 16px form text on small phones to avoid unwanted browser zoom, and adds visible keyboard focus styling.
+- Static source checks are required before review. This remains a source change until merged and published; authenticated visual testing at 320px, 360px, 390px and 430px widths is still required.

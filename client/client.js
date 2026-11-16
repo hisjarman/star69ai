@@ -265,7 +265,7 @@ function renderAgentRequests(items){
  function closeVoiceModal(){voiceModal?.classList.remove("open");voiceModal?.setAttribute("aria-hidden","true");document.body.classList.remove("voice-modal-open")}
  $("#open-voice-clone")?.addEventListener("click",()=>{voiceModal?.classList.add("open");voiceModal?.setAttribute("aria-hidden","false");document.body.classList.add("voice-modal-open");voiceModal.querySelector(".voice-modal-panel")?.focus()});
  voiceModal?.querySelectorAll("[data-close-voice-modal]").forEach(b=>b.addEventListener("click",closeVoiceModal));
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&voiceModal?.classList.contains("open"))closeVoiceModal()});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(voiceModal?.classList.contains("open"))closeVoiceModal();if($("#workspace")?.classList.contains("cockpit-drawer-open")){$("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false");cockpitMenu?.focus()}}});
  document.querySelectorAll(".addon-request").forEach(b=>b.onclick=()=>{closeVoiceModal();requestAddon(b.dataset.addon,b)});
  $("#refresh-addons")?.addEventListener("click",loadAddons);
  $("#agent-change-form")?.addEventListener("submit",submitAgentChange);$("#agent-change-type")?.addEventListener("change",toggleSmsFields);toggleSmsFields();

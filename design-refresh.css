@@ -229,3 +229,27 @@ body.multi-page .dashboard-demo-view{border-radius:18px}
   body#top .s69-preview-why p,body#top .s69-preview-owner{font-size:12px;line-height:1.7}
   body#top .s69-preview-step strong{font-size:14px}
 }
+
+
+/* Additional homepage call-flow examples: show practical, industry-specific use cases. */
+body#top .s69-more-flows{position:relative;margin-top:clamp(22px,3vw,38px);padding-top:clamp(20px,2.4vw,30px);border-top:1px solid rgba(139,172,209,.2)}
+body#top .s69-more-flows-heading{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;align-items:baseline;margin-bottom:17px}
+body#top .s69-more-flows-heading>span{color:#8de6ff;font:800 10px/1.4 "DM Mono",monospace;letter-spacing:.14em}
+body#top .s69-more-flows-heading h3{margin:0;color:#f4f8ff;font:800 clamp(18px,2vw,24px)/1.2 Manrope,sans-serif}
+body#top .s69-more-flows-heading p{grid-column:2;margin:5px 0 0;color:#afc2d8;font-size:12px;line-height:1.5}
+body#top .s69-more-flows-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+body#top .s69-flow-example{min-width:0;padding:16px;border:1px solid rgba(115,164,207,.22);border-radius:14px;background:linear-gradient(145deg,rgba(15,34,58,.82),rgba(7,19,37,.9))}
+body#top .s69-flow-industry{display:inline-block;margin-bottom:8px;color:#8de6ff;font:800 9px/1.4 "DM Mono",monospace;letter-spacing:.12em}
+body#top .s69-flow-example h4{margin:0 0 9px;color:#f4f8ff;font:800 15px/1.3 Manrope,sans-serif}
+body#top .s69-flow-example p{margin:6px 0;color:#b9cbe0;font-size:11px;line-height:1.55}
+body#top .s69-flow-example p b{color:#e9f4ff}
+body#top .s69-flow-example em{display:block;margin-top:10px;padding-top:9px;border-top:1px solid rgba(139,172,209,.16);color:#b9ffd0;font-size:10px;font-style:normal;font-weight:750;line-height:1.5}
+@media(max-width:980px){
+  body#top .s69-more-flows-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  body#top .s69-more-flows-heading{grid-template-columns:1fr;gap:5px}
+  body#top .s69-more-flows-heading p{grid-column:1}
+  body#top .s69-more-flows-grid{grid-template-columns:1fr}
+  body#top .s69-flow-example{padding:15px}
+}

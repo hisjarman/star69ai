@@ -1144,3 +1144,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Adds contained horizontal scrolling for wide data tables so call history and other tables do not widen the entire phone viewport; improves wrapping for long cell content.
 - Raises mobile tap target sizing, protects narrow-screen form controls from overflow, uses 16px form text on small phones to avoid unwanted browser zoom, and adds visible keyboard focus styling.
 - Static source checks are required before review. This remains a source change until merged and published; authenticated visual testing at 320px, 360px, 390px and 430px widths is still required.
+
+
+## THE COCKPIT desktop-site mode and company-heading overflow — 2026-11-16
+
+- Follow-up branch: `fix/cockpit-desktop-mode-and-header-2026-11-16`.
+- Detects browsers explicitly requesting a desktop user-agent mode and applies a desktop workspace layout even when the physical screen is narrow. The sidebar remains expanded, the mobile drawer/menu is suppressed, and the desktop workspace remains horizontally scrollable on narrow devices rather than silently reverting to the mobile drawer.
+- Stabilizes the workspace identity/header grid so the company name and supporting description can wrap within their column without overlapping the status/refresh controls or overflowing the Cockpit content area.
+- Keeps normal mobile user-agent behavior unchanged.
+- Source-only pending review and merge. Verify on Android Chrome with Desktop site enabled and disabled, plus a regular desktop browser; no live browser QA or GitHub Pages deployment is claimed.

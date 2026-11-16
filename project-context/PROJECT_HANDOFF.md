@@ -1171,3 +1171,11 @@ This section supersedes the earlier activation-status notes above where they des
 - Expanded the homepage hero's illustrative call-flow preview so its left column explains what the managed AI receptionist is doing, why the captured context helps the business, and that Star69AI configures and tests the workflow using rules approved by the client. The right column now gives more specific detail for each listen, qualify and hand-off stage. Responsive layouts stack the explanation and stages on narrower screens.
 - Corrected the first/hero **Try the AI Challenge** button to link directly to `./challenge/`. It no longer links to the homepage's `#ai-challenge` section. The separate challenge feature CTA already links directly to the challenge page.
 - Source-only change. No Worker, D1, billing, authentication, customer data or live integrations changed. Validate desktop/mobile rendering and challenge navigation before merge and GitHub Pages publication.
+
+
+## Homepage example flow — full-width horizontal layout — 2026-11-16
+
+- Follow-up correction to the homepage example flow: the prior revision expanded copy only inside a preview card that remained constrained to the right-hand hero column. That did not satisfy the requested left-to-right expansion.
+- On desktop, the hero now uses a full-width single-column flow: marketing headline and primary actions first, followed by the example-flow panel spanning the available content width. Inside the panel, the explanation stays on the left and the three workflow stages display horizontally across the right.
+- The workflow panel is no longer capped at 510px. Desktop content width is up to 1,440px with responsive side gutters. Tablet/mobile retain stacked layouts.
+- Change is source-only on `fix/homepage-example-flow-full-width-2026-11-16`. Validate in a real browser at desktop/tablet/mobile widths and confirm GitHub Pages publication after merge; do not claim live until verified.

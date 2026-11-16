@@ -262,10 +262,20 @@ function renderAgentRequests(items){
    $("#business-title").textContent=customer.businessName||"Your dashboard";
    renderOnboarding(d.onboarding);
    $("#account-status").textContent=customer.status||"Pending";$("#account-status").className="status "+(customer.status||"pending");
-   const plans={starter:["Starter","$149 / month"],growth:["Growth","$249 / month"],pro:["Pro","$399 / month"],flex:["Flex","$0.65 per AI minute"]};
-   $("#plan-name").textContent=plans[customer.plan]?.[0]||"Not selected";
+   const plans={starter:"Starter",growth:"Growth",pro:"Pro",flex:"Flex"};
+   $("#plan-name").textContent=plans[customer.plan]||"Not selected";
     const offerNote=$("#billing-offer-note");if(offerNote){const prepaid=["six_month","annual"].includes(d.onboarding?.billing_cadence);if(prepaid){offerNote.textContent="Your prepaid plan uses its separate 25% six-month or 35% twelve-month savings and waives the setup fee. Partner and AI Challenge discounts do not apply to prepaid purchases.";}else if(customer.hasPartnerReferral&&customer.partnerOfferMode==="discount"){offerNote.textContent="Your verified partner referral provides 15% off eligible monthly subscription payments for the first 12 months. The one-time setup fee remains $99 and is never discounted. This offer cannot be combined with AI Challenge rewards or prepaid savings.";}else if(customer.hasPartnerReferral){offerNote.textContent="Your partner referral is recorded for attribution and commission eligibility, but this standard link does not apply a customer discount. Challenge and prepaid offers are separate and cannot be combined.";}else{offerNote.textContent="AI Challenge rewards are 5%, 10% or 15% off monthly subscription payments for the first 12 months, depending on the level mastered. They never discount setup and cannot be combined with partner or prepaid offers. Secure reward redemption is not yet enabled.";}}
-   $("#plan-price").textContent=plans[customer.plan]?.[1]||"Select a monthly plan";
+   const stripePrice=customer.stripePlanPrice;
+   let planPriceLabel="Price details unavailable";
+   if(customer.plan==="flex")planPriceLabel="$0.65 per AI minute";
+   else if(customer.billingCadence==="six_month")planPriceLabel="6-month prepaid plan";
+   else if(customer.billingCadence==="annual")planPriceLabel="12-month prepaid plan";
+   else if(stripePrice&&Number.isFinite(Number(stripePrice.amountCents))){
+    const currency=String(stripePrice.currency||"usd").toUpperCase(),amount=new Intl.NumberFormat("en-US",{style:"currency",currency}).format(Number(stripePrice.amountCents)/100);
+    const interval=stripePrice.interval||"month",intervalCount=Math.max(1,Number(stripePrice.intervalCount||1));
+    planPriceLabel=amount+" / "+(intervalCount>1?intervalCount+" ":"")+(interval==="month"?"month":interval);
+   }
+   $("#plan-price").textContent=planPriceLabel;
    renderUsage(d.usage||{},customer.includedMinutes||0,customer.plan);
    $("#calls-count").textContent=Number(d.usage?.calls||0).toLocaleString();
    $("#subscription-status").textContent=customer.subscriptionStatus||"Not active";

@@ -1,4 +1,7 @@
 (()=> {
+ // Respect the browser's desktop-site user-agent mode even when the device has a narrow physical screen.
+ const desktopSiteMode = navigator.userAgentData ? !navigator.userAgentData.mobile : !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+ if(desktopSiteMode) document.documentElement.classList.add("cockpit-desktop-mode");
  const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
  const $=s=>document.querySelector(s);
  let clerk=null,customer=null,loading=false;

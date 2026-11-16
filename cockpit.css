@@ -262,3 +262,36 @@ tbody tr:hover{background:var(--cockpit-hover)}
  .client-workspace-header h1{font-size:18px}
  .client-workspace-header .row .btn{font-size:11px;padding:8px 9px}
 }
+
+
+/* Desktop-site mode: browser UA signals desktop mode on mobile browsers.
+   Preserve the full desktop workspace instead of letting narrow viewport media rules turn it into a drawer. */
+html.cockpit-desktop-mode body{min-width:980px}
+html.cockpit-desktop-mode .shell{min-width:980px}
+html.cockpit-desktop-mode .client-workspace-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start}
+html.cockpit-desktop-mode .client-sidebar{position:sticky;top:96px;left:auto;bottom:auto;width:auto;min-width:0;min-height:calc(100vh - 116px);max-height:calc(100vh - 116px);overflow-y:auto;transform:none;padding:18px 14px;border-radius:18px}
+html.cockpit-desktop-mode .cockpit-sidebar-brand{justify-content:flex-start;padding:4px 8px 20px}
+html.cockpit-desktop-mode .cockpit-brand-word,
+html.cockpit-desktop-mode .sidebar-caption,
+html.cockpit-desktop-mode .client-nav-item>span:not(.nav-icon),
+html.cockpit-desktop-mode .cockpit-managed-card,
+html.cockpit-desktop-mode .sidebar-help,
+html.cockpit-desktop-mode .sidebar-footer{display:block}
+html.cockpit-desktop-mode .client-nav-item{justify-content:flex-start;padding:10px 12px}
+html.cockpit-desktop-mode .cockpit-menu-toggle,
+html.cockpit-desktop-mode .cockpit-drawer-backdrop{display:none!important}
+html.cockpit-desktop-mode .client-workspace-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:18px;padding:20px 23px}
+html.cockpit-desktop-mode .client-workspace-header>div:first-of-type{min-width:0}
+html.cockpit-desktop-mode .client-workspace-header h1{max-width:100%;min-width:0;overflow-wrap:anywhere;word-break:normal;line-height:1.12}
+html.cockpit-desktop-mode .client-workspace-header p{max-width:62ch;overflow-wrap:anywhere;line-height:1.5}
+html.cockpit-desktop-mode .client-workspace-header>.row{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;min-width:0}
+html.cockpit-desktop-mode .client-page-content{min-width:0}
+html.cockpit-desktop-mode #workspace.cockpit-drawer-open .client-sidebar{transform:none}
+html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdrop{display:none!important}
+
+/* Keep the company identity block shrinkable and prevent long business names from escaping the header. */
+.client-workspace-header{min-width:0}
+.client-workspace-header>div:first-of-type{min-width:0;max-width:100%}
+.client-workspace-header h1{max-width:100%;min-width:0;overflow-wrap:anywhere;word-break:normal}
+.client-workspace-header p{max-width:100%;overflow-wrap:anywhere}
+.client-workspace-header>.row{min-width:0;max-width:100%;flex-wrap:wrap}

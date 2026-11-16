@@ -1094,3 +1094,14 @@ This section supersedes the earlier activation-status notes above where they des
 - Industry: real estate operations; practical guidance on inquiry ownership, appointment coordination, respectful follow-up, after-hours call coverage, and lead tracking.
 - Article body verified at 756 words; meta description verified at 144 characters.
 - Article HTML, Insights index card, sitemap entry, and this handoff update were committed directly to `main` under the user's standing automatic-publication authorization. No branch or pull request was created.
+
+
+## Sitewide conversion design refresh — 2026-11-16
+
+- Feature branch: `design/full-site-conversion-refresh-2026-11-16`. This is a source-only GitHub Pages website update; it does not change Cloudflare Worker code, D1 data, Stripe, PayPal, Clerk, Retell, Resend, customer records or live billing configuration.
+- Added `design-refresh.css` as a scoped, accessible visual layer for the main public conversion journey: homepage, pricing, get-started, how-it-works, managed-service, demos and FAQ.
+- Homepage hero now uses its previously empty second column for a clearly labeled illustrative call-flow preview (not represented as a live call or customer result). Added a four-step managed-service explanation: Discover, Configure, Test and Maintain.
+- Pricing page now prominently explains the monthly-plan $99 setup fee: SIMIAPP CLOUD sends a separate PayPal invoice only after demo approval; six-/twelve-month prepaid plans waive setup. The detailed competitor comparison is collapsed behind an accessible disclosure so the main plan choices are easier to scan.
+- Preserved the competitor comparison's November 6, 2026 pricing-review date. Competitor pricing entries were not independently re-audited in this design-only change; verify provider pricing before relying on the comparison as a current quote.
+- Preserved current plan prices, included-minute allowances, overage rates, Minute Vault terms, 75% hard overage cap, prepaid discounts, partner rules, AI Challenge disclosures and checkout links.
+- Validation still required: inspect all seven changed pages at desktop and mobile widths, confirm the Pages deployment after merge, verify the homepage demo/video interaction and discovery form, and check the pricing disclosure on a live browser. Do not describe this branch as deployed or merged.

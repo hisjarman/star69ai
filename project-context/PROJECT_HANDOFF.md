@@ -1163,3 +1163,11 @@ This section supersedes the earlier activation-status notes above where they des
 - A minimized-by-default floating Star69AI assistant is added to the homepage. It opens the existing `https://star69ai-concierge.hisjarman.workers.dev/` coach in a lazy-loaded iframe, can be minimized with the close control or Escape, and does not load the assistant until a visitor opens it.
 - New styles are isolated in `home-conversion-flow.css`; existing global styling, lead form endpoint, pricing, reward restrictions, and application integrations are preserved.
 - Validation and publication status must be recorded after static checks and browser review. This branch must be reviewed through a PR; do not merge `main` without approval.
+
+
+## Homepage example-flow explanation and challenge navigation — 2026-11-16
+
+- Follow-up branch: `fix/homepage-example-flow-challenge-link-2026-11-16`.
+- Expanded the homepage hero's illustrative call-flow preview so its left column explains what the managed AI receptionist is doing, why the captured context helps the business, and that Star69AI configures and tests the workflow using rules approved by the client. The right column now gives more specific detail for each listen, qualify and hand-off stage. Responsive layouts stack the explanation and stages on narrower screens.
+- Corrected the first/hero **Try the AI Challenge** button to link directly to `./challenge/`. It no longer links to the homepage's `#ai-challenge` section. The separate challenge feature CTA already links directly to the challenge page.
+- Source-only change. No Worker, D1, billing, authentication, customer data or live integrations changed. Validate desktop/mobile rendering and challenge navigation before merge and GitHub Pages publication.

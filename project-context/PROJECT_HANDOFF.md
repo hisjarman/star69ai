@@ -45,12 +45,12 @@
 
 ## Automatic overage billing implementation — merged to main 2026-11-15
 
-- Feature branch: `feature/automatic-overage-billing-2026-11-15`. Merged through PR #159 (merge commit `aae320a9f6e25bef8e965b762a08c48c43d67aba`). The Worker, client portal and D1 migration are in `main`; production Worker deployment and D1 migration application are still pending.
+- Feature branch: `feature/automatic-overage-billing-2026-11-15`. Merged through PR #159 (merge commit `aae320a9f6e25bef8e965b762a08c48c43d67aba`). As verified 2026-11-16, the production `avr-platform-api` Worker is deployed at 100% traffic and the production D1 schema contains the overage billing ledger and call-reservation tables. The Stripe webhook is enabled and now includes checkout completion, async checkout success, subscription create/update/delete, setup-intent success and invoice payment events. The complete charge lifecycle remains untested with a controlled customer; do not describe overage billing as fully end-to-end verified.
 - All plan customers must separately authorize off-session overage collection in the client portal and save a card through Stripe Checkout Setup mode. Monthly overage invoice items attach to the active Stripe subscription and are charged on its next invoice; PayPal-prepaid six-/twelve-month overage is charged through a separate Stripe invoice. The saved method is set as the customer's default and, for monthly customers, the subscription's default payment method.
 - Rates: Starter $0.55/minute, Growth $0.45/minute, Pro $0.36/minute. The existing 75% hard overage cap and Minute Vault consumption order remain unchanged. Without an overage payment method, calls may use included and vaulted minutes but cannot reserve overage capacity.
 - The Worker stores a D1 billing ledger keyed by customer, period and cumulative overage minutes; Stripe idempotency keys prevent duplicate invoice items/invoices. Failed usage is retained in the ledger to prevent double billing; updating a card retries failed prepaid invoices where an invoice ID exists.
 - Client portal shows card authorization state, overage billing totals and the billing timing.
-- Before production: apply `cloudflare/migrations/20261115_automatic_overage_billing.sql`; confirm Stripe webhook includes `setup_intent.succeeded`, `invoice.payment_succeeded`, and `invoice.payment_failed`; test monthly and prepaid test-mode flows, payment failures/retries, duplicate Retell events, and the 75% stop; then deploy Worker and GitHub Pages. No live Stripe account or Cloudflare configuration was changed by this branch.
+- Remaining validation: test monthly and prepaid payment flows with a controlled test customer, payment failures/retries, duplicate Retell events, and the 75% stop. The production webhook and Worker/D1 deployment are already in place; no real customer charge was initiated during the 2026-11-16 audit.
 
 ## Production release — hard usage ceiling, demo-first onboarding and Flex wallet — 2026-11-15
 
@@ -239,15 +239,27 @@ Known prior issue to recheck against current source: a portal request reported `
 - Never commit secrets or customer data.
 - Do not claim a feature is deployed, healthy, billable or production-ready unless the relevant behavior has been verified.
 
+## Client onboarding readiness audit — 2026-11-16
+
+- Production GitHub Pages workflow for the latest `main` commit `7ac46b377aee1e67afb83f11a51d8cbd9fb08cb8` completed successfully. The public homepage was retrievable during the audit. Checkout, portal and admin URLs could not be independently fetched by the external browser verifier; do not infer their runtime health from source alone.
+- Production `avr-platform-api` is deployed at 100% traffic. The `avr-trust-lab` D1 database has the overage ledger, call reservations, webhook event log and `avr_addon_orders` table. Aggregate state at audit time: one pending customer, no paid-onboarding rows, no active customer accounts, one phone number assigned to that pending customer, five call records and zero overage billing ledger entries. Do not manually activate the pending record; verify whether it is a test/administrative record before changing it.
+- Stripe live monthly prices were verified at $149, $249 and $399. The production webhook endpoint `we_1UXkHiHY3UnchZwdkwxWfqQe` was updated on 2026-11-16 and Stripe confirmed it enabled with 25 event types, including `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `setup_intent.succeeded`, `invoice.payment_succeeded`, and `invoice.payment_failed`. No real checkout or charge was initiated; end-to-end billing remains unverified. The six-/twelve-month checkout implementation uses PayPal, not the unused Stripe prepaid price records.
+- Cloudflare Worker settings show the required Stripe, PayPal, Clerk, Retell and Resend secret bindings are configured by name/type. Secret values were not read. PayPal mode is not explicitly set in the inspected settings; Worker code defaults to PayPal live mode unless `PAYPAL_MODE=sandbox`.
+- Clerk authentication and customer/admin isolation were reviewed statically: client routes call Clerk authentication and customer lookup; `/api/admin/*` routes pass through `requireAdmin`. Real sign-in, invitation, account-linking and cross-tenant negative tests remain outstanding.
+- Retell event storage contains call-started, call-ended and call-analyzed events, demonstrating that signed event ingestion has occurred. The only assigned number currently maps to a pending customer, and the inbound webhook rejects calls unless the mapped customer is active. A controlled inbound call on an active customer number remains outstanding.
+- Resend domain `star69ai.com` is verified with sending enabled. Recent demo acknowledgement and call-details emails show delivered status. No customer call-email preferences are currently enabled in D1, so customer-configured automatic summaries still need a controlled test.
+- The client portal overage notice was corrected on the audit branch: automatic overage billing requires explicit consent and a saved card; Star69AI creates Stripe invoice items rather than using a Stripe metered subscription price. Monthly invoice timing, prepaid separate invoices and the 75% cap are now stated accurately.
+
 ## Open launch work
 
-- Verify the Formspree native POST with an actual demo request and confirm receipt.
-- Verify current Clerk production configuration.
-- Run customer/admin authorization and tenant-isolation tests.
-- Verify Stripe checkout, customer portal, webhooks and cancellation; complete the overage-metering implementation before enabling automatic overage charges.
-- Verify Retell agent/number sync, assignments, call events, recordings and analysis.
-- Verify call email delivery after the Star69AI template deployment.
-- Reconcile the prior `avr_addon_orders` missing-table report against current schema and Worker code.
+- Submit a real Formspree discovery request and confirm the submission reaches the intended inbox/lead workflow.
+- Complete Clerk production login, invitation, admin authorization, account-linking and tenant-isolation tests.
+- Run a controlled monthly Stripe checkout, subscription update/cancellation, invoice failure/retry and customer-portal test. Validate the complete demo approval and $99 PayPal setup-fee sequence without charging an unintended customer.
+- Run a controlled PayPal sandbox or approved low-value live prepaid transaction and verify exact amount/capture reconciliation; confirm the intended PayPal environment explicitly.
+- Verify Retell agent/number sync, assign a number to an active paid pilot customer, and complete inbound/outbound routing, call duration enforcement, recordings, transcripts and analysis tests.
+- Enable call-email settings for a test customer and verify automatic summary delivery and manual call-details delivery to intended recipients.
+- Reconcile the customer-facing billing display with the overage ledger using controlled usage; verify card authorization, invoice-item idempotency, failed-payment handling and the 75% stop.
+- Perform responsive browser QA of public checkout, customer portal and admin console; verify the `avr_addon_orders` flows against the existing table.
 - Update this handoff whenever brand, architecture, implementation or launch status changes.
 
 

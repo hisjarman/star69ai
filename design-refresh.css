@@ -188,3 +188,44 @@ body.multi-page .dashboard-demo-view{border-radius:18px}
  html{scroll-behavior:auto}
  body.multi-page *,body#top *{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* Homepage example flow: use the full page width instead of a narrow right-hand card.
+   The marketing message stays first; the complete workflow then reads horizontally
+   across the page, with the explanation on the left and all three stages on the right. */
+@media(min-width:761px){
+  body#top .s69-hero{align-items:flex-start}
+  body#top .s69-hero-grid{
+    width:min(1440px,calc(100% - 64px));
+    grid-template-columns:minmax(0,1fr);
+    gap:clamp(28px,3.6vw,48px);
+    padding:clamp(54px,6vw,78px) 0 clamp(54px,6vw,76px);
+  }
+  body#top .s69-hero-copy{max-width:1120px}
+  body#top .s69-hero h1{max-width:980px}
+  body#top .s69-subhead{max-width:1000px}
+  body#top .s69-hero-preview{
+    width:100%;max-width:none;justify-self:stretch;
+    padding:clamp(22px,2.5vw,34px);
+  }
+  body#top .s69-preview-body{
+    grid-template-columns:minmax(250px,.78fr) minmax(0,2.22fr);
+    gap:clamp(20px,2.5vw,36px);
+    align-items:stretch;
+  }
+  body#top .s69-preview-steps{grid-template-columns:repeat(3,minmax(0,1fr));align-content:stretch}
+  body#top .s69-preview-step{
+    min-height:100%;grid-template-columns:34px minmax(0,1fr);
+    align-content:start;gap:12px;padding:clamp(14px,1.6vw,20px);
+  }
+  body#top .s69-preview-step em{grid-column:2;justify-self:start;margin-top:4px}
+  body#top .s69-preview-step small{font-size:12px;line-height:1.6}
+}
+@media(min-width:1200px){
+  body#top .s69-preview-explainer .s69-preview-title{font-size:clamp(24px,2vw,30px)}
+  body#top .s69-preview-explainer .s69-preview-subtitle{font-size:14px;line-height:1.75}
+  body#top .s69-preview-why{padding:16px}
+  body#top .s69-preview-why strong{font-size:12px}
+  body#top .s69-preview-why p,body#top .s69-preview-owner{font-size:12px;line-height:1.7}
+  body#top .s69-preview-step strong{font-size:14px}
+}

@@ -1049,6 +1049,24 @@ async function route(req,env){
   if(path==="/api/billing/portal"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c?.stripe_customer_id)throw Error("stripe_customer_not_found");const s=await stripeRequest(env,"billing_portal/sessions",{customer:c.stripe_customer_id,return_url:"https://star69ai.com/client/" });return json({url:s.url},200,origin,env)}
   if(path.startsWith("/api/admin/")){
    const u=await requireAdmin(req,env);
+   // Admin dashboard read routes used by the Agency Admin overview and tabs.
+   // Keep these server-side queries behind requireAdmin above.
+   if(path==="/api/admin/addon-orders"&&req.method==="GET"){
+    const rows=await env.DB.prepare("SELECT o.id,o.customer_id,o.addon_key,o.addon_name,o.billing_type,o.status,o.customer_note,o.admin_note,o.created_at,o.updated_at,c.business_name,c.email FROM avr_addon_orders o LEFT JOIN avr_customers c ON c.id=o.customer_id ORDER BY o.created_at DESC LIMIT 300").all();
+    return json({orders:rows.results||[]},200,origin,env);
+   }
+   if(path==="/api/admin/support-tickets"&&req.method==="GET"){
+    const rows=await env.DB.prepare("SELECT t.id,t.customer_id,t.category,t.subject,t.description,t.priority,t.status,t.admin_reply,t.created_at,t.updated_at,c.business_name,c.email FROM avr_support_tickets t LEFT JOIN avr_customers c ON c.id=t.customer_id ORDER BY t.created_at DESC LIMIT 300").all();
+    return json({tickets:rows.results||[]},200,origin,env);
+   }
+   if(path==="/api/admin/agent-change-requests"&&req.method==="GET"){
+    const rows=await env.DB.prepare("SELECT r.id,r.customer_id,r.agent_id,r.request_type,r.title,r.details,r.request_data_json,r.priority,r.status,r.admin_note,r.quote_summary,r.created_at,r.updated_at,c.business_name,c.email FROM avr_agent_change_requests r LEFT JOIN avr_customers c ON c.id=r.customer_id ORDER BY r.created_at DESC LIMIT 300").all();
+    return json({requests:rows.results||[]},200,origin,env);
+   }
+   if(path==="/api/admin/demo-requests"&&req.method==="GET"){
+    const rows=await env.DB.prepare("SELECT d.*,o.id AS paid_onboarding_id,o.status AS paid_onboarding_status FROM avr_demo_requests d LEFT JOIN avr_paid_onboardings o ON o.demo_request_id=d.id ORDER BY d.created_at DESC LIMIT 300").all();
+    return json({requests:rows.results||[]},200,origin,env);
+   }
    if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
     const rows=await env.DB.prepare("SELECT id,business_name,contact_name,email,industry,notes,status,created_at,last_contacted_at FROM avr_marketing_prospects ORDER BY created_at DESC LIMIT 500").all();
     return json({prospects:rows.results||[]},200,origin,env);

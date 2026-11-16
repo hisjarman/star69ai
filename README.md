@@ -30,7 +30,7 @@ Star69AI handles agent configuration, call-flow customization, phone setup, test
 | Growth | $249/month | 600 | $0.45/minute |
 | Pro | $399/month | 1,200 | $0.36/minute |
 
-A **$99 one-time setup fee** is invoiced separately by SIMIAPP CLOUD through PayPal for monthly customers (eligible discounted partner referrals may receive a 50% setup discount). Six-month prepayment saves 20%, twelve-month prepayment saves 30%, and both prepaid terms waive the setup fee completely. Prepaid offers cannot be combined with partner or AI Challenge discounts.
+A **$99 one-time setup fee** is invoiced separately by SIMIAPP CLOUD through PayPal for every monthly customer, including verified partner referrals; partner discounts apply only to eligible monthly subscription payments. Six-month prepayment saves 25%, twelve-month prepayment saves 35%, and both prepaid terms waive the setup fee completely. Prepaid offers cannot be combined with partner or AI Challenge discounts.
 
 **Minute Vault:** Unused included minutes accumulate while the customer remains active and paid. Current-month included minutes are used first, then the oldest vaulted minutes; vault minutes have no monetary value, cannot be transferred or redeemed, survive plan changes, and are forfeited on cancellation. The client portal displays the server-calculated vault balance.\n\n**Billing implementation note:** The plan prices and overage rates above are published offer details. Automatic Stripe metered overage billing must not be represented as active until Stripe meter reporting, usage reconciliation, rounding rules and end-to-end billing tests have been implemented and verified. Any portal usage estimate must be clearly identified as an estimate.
 

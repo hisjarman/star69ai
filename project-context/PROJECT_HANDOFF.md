@@ -1,3 +1,11 @@
+## November 2026 3FORFREE promotion — implementation branch
+
+- Feature branch: `promo/3forfree-november-2026`. Adds the public November offer banner to the homepage and pricing page, pre-fills and captures `3FORFREE` in checkout, and publishes matching FAQ/Terms copy.
+- Intended terms: new monthly customers only; two successfully paid monthly subscription invoices at standard price, then one 100% subscription-only discount on the third monthly invoice. The $99 setup fee, usage, taxes and third-party charges are not discounted. Not combinable with discounted partner referrals, AI Challenge rewards or prepaid plans. Redemption window ends November 30, 2026.
+- Worker validates the code and configured Stripe coupon, records the promo on the customer, and applies the one-time 100% coupon after the second qualifying paid plan invoice. A D1 migration tracks customer promotion state and deduplicates invoice events.
+- **Activation gate:** set Worker secret/binding `STRIPE_COUPON_3FORFREE` to a Stripe coupon ID configured as 100% off with duration `once`; apply `cloudflare/migrations/20261115_3forfree_promotion.sql` to production D1; deploy the updated `avr-platform-api` Worker; then test the full monthly flow in Stripe test mode before public activation. Do not claim the offer is redeemable until all three steps and end-to-end tests pass. Do not apply the migration twice.
+- The feature branch is not merged or deployed. Production Stripe/Cloudflare configuration has not been changed.
+
 ## Mobile AI assistant and homepage demo disclosure — 2026-11-15
 
 - Homepage mobile assistant layout is adjusted so the receptionist image and chat widget stack vertically, the chat iframe receives a tall mobile viewport (at least 640px, 680px on narrow phones), and the widget is not clipped by the former short image-column height.

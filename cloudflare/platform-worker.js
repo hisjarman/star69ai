@@ -188,11 +188,13 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",opt
  const price=env[p.priceEnv];if(!price||price==="price_replace_me")throw Error("stripe_price_id_missing_"+plan);
  const affiliateId=c.affiliate_partner_id||"",partnerDiscount=affiliateId&&c.affiliate_offer_mode==="discount";let coupons=[],discountType="none";
  const code=String(promoCode||"").trim().toUpperCase();
- if(code)throw Error("challenge_reward_redemption_not_yet_enabled");
+ if(code&&code!=="3FORFREE")throw Error("promotion_code_not_valid");
+ if(code==="3FORFREE"){if(partnerDiscount)throw Error("promotion_cannot_be_combined_with_discounted_partner_referral");discountType="third_month_free";}
  else if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType="partner_15_for_12_months";}
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId},"POST",options.idempotencyKey?options.idempotencyKey+"-customer":null);stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
  const extra=options.metadata||{};const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:options.successUrl||"https://star69ai.com/client/?billing=success",cancel_url:options.cancelUrl||"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"metadata[plan_key]":plan,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType,"subscription_data[metadata][plan_key]":plan};for(const [key,value] of Object.entries(extra))if(value!==undefined&&value!==null){params["metadata["+key+"]"]=String(value);params["subscription_data[metadata]["+key+"]"]=String(value)}
  coupons.forEach((coupon,index)=>{params["discounts["+index+"][coupon]"]=coupon;});
+ if(code==="3FORFREE"){params["metadata[promo_code]"]=code;params["subscription_data[metadata][promo_code]"]=code;}
  const session=await stripeRequest(env,"checkout/sessions",params,"POST",options.idempotencyKey||null);return {url:session.url,id:session.id,cadence:selected,discountType};
 }
 
@@ -241,8 +243,8 @@ async function createPublicStripeSession(env,onboarding,customer,statusToken){
    if(prior.status==="complete")return {completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),sessionId:prior.id};
   }catch{}
  }
- const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),metadata:{avr_paid_onboarding_id:onboarding.id,idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)}};
- const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,"",urls);
+ const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),metadata:{avr_paid_onboarding_id:onboarding.id,promo_code:customer.promo_code||"",idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)}};
+ const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,customer.promo_code||"",urls);
  await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,stripe_attempts=stripe_attempts+1,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();
  return {stripeUrl:session.url,sessionId:session.id};
 }
@@ -361,7 +363,7 @@ async function startPublicCheckout(req,env,origin){
  if(String(p.websiteHoneypot||p.websiteTrap||"").trim())return {accepted:true};
  const contact=String(p.contactName||"").trim().slice(0,120),email=String(p.email||"").trim().toLowerCase(),phone=String(p.phone||"").trim().slice(0,40),business=String(p.businessName||"").trim().slice(0,160),industry=String(p.industry||"").trim().slice(0,100),plan=String(p.plan||"").toLowerCase(),cadence=String(p.cadence||"monthly"),subscribeNow=p.subscribeNow===true;
  if(contact.length<2||business.length<2||phone.length<5||! /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||industry.length<2)throw Error("complete_contact_business_and_industry_details_required");
- if(plan==="flex")return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);
+ if(plan==="flex"){if(String(p.promoCode||"").trim())throw Error("promotion_only_for_monthly_plans");return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);}
  if(!planInfo[plan]||!["monthly","six_month","annual"].includes(cadence))throw Error("valid_subscription_plan_required");
  if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
  if(!env.RETELL_API_KEY||!env.CLERK_SECRET_KEY)throw Error("automated_demo_and_account_provisioning_not_configured");
@@ -373,6 +375,10 @@ async function startPublicCheckout(req,env,origin){
   const referral=await env.DB.prepare("SELECT a.id,r.offer_mode FROM partner_referrals r JOIN affiliate_applications a ON a.id=r.affiliate_application_id WHERE lower(r.lead_email)=? AND a.partner_code=? AND a.application_status='approved' AND r.attribution_expires_at>=? ORDER BY r.created_at DESC LIMIT 1").bind(email,partnerCode,new Date().toISOString()).first();
   if(referral){affiliateId=referral.id;offerMode=referral.offer_mode==="discount"?"discount":"standard"}
  }
+ const promoCode=String(p.promoCode||"").trim().toUpperCase();
+ if(promoCode&&affiliateId&&offerMode==="discount")throw Error("promotion_cannot_be_combined_with_discounted_partner_referral");
+ if(promoCode&&promoCode!=="3FORFREE")throw Error("promotion_code_not_valid");
+ if(promoCode){const today=new Date().toISOString().slice(0,10);if(cadence!=="monthly"||today<"2026-11-01"||today>"2026-11-30")throw Error("promotion_not_available_for_selected_checkout");if(!env.STRIPE_COUPON_3FORFREE)throw Error("november_promotion_not_configured_contact_support");const promo=await stripeRequest(env,"coupons/"+encodeURIComponent(env.STRIPE_COUPON_3FORFREE),{},"GET");if(promo.valid===false||Number(promo.percent_off)!==100||promo.duration!=="once")throw Error("november_promotion_configuration_invalid");}
  const prepaidTotals={starter:{six_month:67050,annual:116220},growth:{six_month:112050,annual:194220},pro:{six_month:179550,annual:311220}};
  const prepaidCents=cadence==="monthly"?0:Number(prepaidTotals[plan][cadence]);
  const setupCents=cadence==="monthly"?9900:0;
@@ -390,7 +396,7 @@ async function startPublicCheckout(req,env,origin){
  const paymentProvider=cadence==="monthly"?"stripe":"paypal",orderPurpose=cadence==="monthly"?"setup_fee":"prepaid_plan";
  const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID(),onboardingId=crypto.randomUUID(),statusToken=crypto.randomUUID()+crypto.randomUUID();
  const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),recordingPreference:String(p.recordingPreference||"").slice(0,500),additionalNeeds:Array.isArray(p.additionalNeeds)?p.additionalNeeds.slice(0,20).map(x=>String(x).slice(0,180)):[],outboundAiCalls:String(p.outboundAiCalls||"").slice(0,500),automatedSms:String(p.automatedSms||"").slice(0,500),humanEscalation:String(p.humanEscalation||"").slice(0,1000),phoneSetup:String(p.phoneSetup||"").slice(0,300),planInterest:plan,billingPreference:cadence,notes:String(p.notes||"").slice(0,4000),privacyConsent:true,submittedAt:now};
- await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,affiliate_partner_id,affiliate_offer_mode,billing_cadence,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?,?,?,?,?,?)").bind(customerId,business,contact,email,phone,plan,affiliateId,offerMode,cadence,"Demo requested. No live phone number or production routing is active until the customer approves the demo, required payment is verified and managed setup is complete.",now,now).run();
+ await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,affiliate_partner_id,affiliate_offer_mode,billing_cadence,promo_code,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?,?,?,?,?,?,?)").bind(customerId,business,contact,email,phone,plan,affiliateId,offerMode,cadence,promoCode||null,"Demo requested. No live phone number or production routing is active until the customer approves the demo, required payment is verified and managed setup is complete.",now,now).run();
  await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'new',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Managed receptionist demo request").slice(0,3000),"Public demo-first checkout",JSON.stringify(discovery),customerId,now,now).run();
  const initialStatus=paymentProvider==="stripe"?"awaiting_subscription":"awaiting_plan_payment";
  await env.DB.prepare("INSERT INTO avr_paid_onboardings(id,customer_id,demo_request_id,email,plan_key,billing_cadence,setup_amount_cents,prepaid_amount_cents,setup_status,paypal_order_purpose,plan_payment_provider,plan_payment_status,status,public_token_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'pending',?,?,?,?)").bind(onboardingId,customerId,leadId,email,plan,cadence,setupCents,prepaidCents,setupCents===0?"not_required":"pending",orderPurpose,paymentProvider,initialStatus,await sha256Hex(statusToken),now,now).run();
@@ -524,7 +530,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  if(ev.type==="invoice.payment_succeeded"&&stripeCustomer){
   if(o.metadata?.avr_overage_ledger_id){await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),o.metadata.avr_overage_ledger_id).run();await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();}
   for(const line of (o.lines?.data||[])){const ledgerId=line.metadata?.avr_overage_ledger_id;if(ledgerId){await env.DB.prepare("UPDATE avr_overage_billing_ledger SET status='paid',stripe_invoice_id=?,updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),ledgerId).run();await env.DB.prepare("UPDATE avr_customers SET overage_payment_status='active',updated_at=? WHERE stripe_customer_id=?").bind(new Date().toISOString(),stripeCustomer).run();}}
-  const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
+  const customer=await env.DB.prepare("SELECT id,email,affiliate_partner_id,promo_code,stripe_subscription_id FROM avr_customers WHERE stripe_customer_id=? LIMIT 1").bind(stripeCustomer).first();
   const partnerId=customer?.affiliate_partner_id||o.metadata?.affiliate_partner_id||null;
   const lines=Array.isArray(o.lines?.data)?o.lines.data:[];
   const eligiblePlanPriceIds=new Set(Object.values(planInfo).flatMap(p=>[env[p.priceEnv],env[p.sixMonthPriceEnv],env[p.annualPriceEnv]]).filter(Boolean));
@@ -537,6 +543,19 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    const amount=Number(line.amount_excluding_tax??line.amount??0),discounts=Array.isArray(line.discount_amounts)?line.discount_amounts.reduce((n,item)=>n+Number(item.amount||0),0):0,netAmount=Math.max(0,amount-discounts);
    return planSubscriptionLine&&subscriptionLine&&!proration&&netAmount>0?sum+netAmount:sum;
   },0);
+  const promoSubscriptionId=o.subscription||o.parent?.subscription_details?.subscription||customer?.stripe_subscription_id||null;
+  if(customer?.promo_code==="3FORFREE"&&promoSubscriptionId&&eligibleLinesCents>0&&env.STRIPE_COUPON_3FORFREE){
+   const recorded=await env.DB.prepare("INSERT OR IGNORE INTO avr_3forfree_invoice_events(invoice_id,customer_id,created_at) VALUES(?,?,?)").bind(o.id,customer.id,new Date().toISOString()).run();
+   if(Number(recorded.meta?.changes||0)>0)await env.DB.prepare("UPDATE avr_customers SET promo_paid_cycles=promo_paid_cycles+1,updated_at=? WHERE id=? AND promo_code='3FORFREE' AND promo_free_applied=0").bind(new Date().toISOString(),customer.id).run();
+   const promoState=await env.DB.prepare("SELECT promo_paid_cycles,promo_free_applied FROM avr_customers WHERE id=?").bind(customer.id).first();
+   if(Number(promoState?.promo_paid_cycles||0)>=2&&Number(promoState?.promo_free_applied||0)===0){
+    const coupon=await stripeRequest(env,"coupons/"+encodeURIComponent(env.STRIPE_COUPON_3FORFREE),{},"GET");
+    if(coupon.valid!==false&&Number(coupon.percent_off)===100&&coupon.duration==="once"){
+     await stripeRequest(env,"subscriptions/"+encodeURIComponent(promoSubscriptionId),{"discounts[0][coupon]":env.STRIPE_COUPON_3FORFREE},"POST","star69ai-3forfree-third-month-"+customer.id);
+     await env.DB.prepare("UPDATE avr_customers SET promo_free_applied=1,updated_at=? WHERE id=? AND promo_free_applied=0").bind(new Date().toISOString(),customer.id).run();
+    }
+   }
+  }
   const invoiceTotalCents=Math.max(0,Number(o.total??o.amount_due??0));
   const amountPaidCents=Math.max(0,Number(o.amount_paid??0));
   const paidRatio=invoiceTotalCents>0?Math.min(1,amountPaidCents/invoiceTotalCents):0;

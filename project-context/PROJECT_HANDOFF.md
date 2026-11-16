@@ -1210,3 +1210,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Copy is illustrative and does not promise guaranteed bookings, transfers or outcomes; actual actions depend on the client's approved call-handling rules and integrations.
 - Changes are limited to `index.html`, `design-refresh.css` and this handoff. No Worker, D1, billing, authentication, customer data or live integrations changed.
 - Static source review is complete; real browser visual QA and GitHub Pages publication remain pending. Submit through a PR and do not merge without explicit approval.
+
+
+## AI Challenge benefit copy and rainbow demo CTA — 2026-11-16
+
+- Feature branch: `design/challenge-benefits-rainbow-demo-cta-2026-11-16`.
+- Removed the homepage line stating challenge reward redemption is not yet enabled and replaced it with the practical visitor benefits: practice real-world call judgment, capture useful details, and learn when to answer, book or hand off.
+- Reworded reward disclosures on the homepage and challenge page to remove “not enabled” / “not connected yet” phrasing while remaining accurate: progress is a browser-saved learning achievement and completing a level does not itself apply a subscription discount.
+- Updated the homepage “Get My Custom Demo” hero CTA and form submit button to the same purple-to-blue-to-green rainbow spectrum as the AI Challenge CTA, with matching glow and hover treatment.
+- Static website changes only. No Worker, D1, Stripe, PayPal, Clerk, Retell, customer data or billing configuration changed. Browser visual QA and GitHub Pages publication remain pending.

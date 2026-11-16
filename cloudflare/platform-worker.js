@@ -1054,7 +1054,7 @@ async function route(req,env){
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
     const p=await body(req,5000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,1000);
-    if(business.length<2||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
+    if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
     const existing=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE normalized_email=?").bind(email).first();
     if(existing){if(existing.status==="unsubscribed")throw Error("prospect_has_unsubscribed_do_not_contact");return json({created:false,alreadyExists:true,id:existing.id},200,origin,env)}
     const id=crypto.randomUUID(),now=new Date().toISOString();
@@ -1062,7 +1062,7 @@ async function route(req,env){
     await audit(env,u,"marketing_prospect_created",null,{prospectId:id,industry});
     return json({created:true,id},201,origin,env);
    }
-   const marketingSend=path.match(/^\\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/send$/i);
+   const marketingSend=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/send$/i);
    if(marketingSend&&req.method==="POST"){
     if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)throw Error("email_sender_not_configured_check_resend");
     const postal=String(env.BUSINESS_POSTAL_ADDRESS||"").trim();
@@ -1078,9 +1078,9 @@ async function route(req,env){
     const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)),hash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
     await env.DB.prepare("INSERT INTO avr_marketing_unsubscribe_tokens(token_hash,prospect_id,created_at) VALUES(?,?,?)").bind(hash,id,new Date().toISOString()).run();
     const unsubscribeUrl="https://avr-platform-api.hisjarman.workers.dev/api/public/marketing/unsubscribe?token="+token;
-    const textBody=message+"\\n\\nStar69AI\\nhttps://star69ai.com/\\n"+postal+"\\n\\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
+    const textBody=message+"\n\nStar69AI\nhttps://star69ai.com/\n"+postal+"\n\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p>"+esc(message).replace(/\\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
+    const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
     const send=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-marketing/"+id+"/"+crypto.randomUUID()},body:JSON.stringify({from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}})});
     const sent=await send.json().catch(()=>({}));
     if(!send.ok)throw Error(send.status===429?"email_provider_rate_limited_try_again":"email_provider_rejected_request_contact_support");
@@ -1098,7 +1098,7 @@ async function route(req,env){
    }
    if(path==="/api/admin/overview"&&req.method==="GET"){const [cc,active,subs,calls,mins]=await Promise.all([env.DB.prepare("SELECT COUNT(*) n FROM avr_customers").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_customers WHERE status='active'").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_customers WHERE subscription_status IN ('active','trialing')").first(),env.DB.prepare("SELECT COUNT(*) n FROM avr_calls").first(),env.DB.prepare("SELECT COALESCE(SUM(duration_ms),0) n FROM avr_calls WHERE start_timestamp>=?").bind(new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).first()]);return json({customers:cc.n,activeCustomers:active.n,activeSubscriptions:subs.n,totalCalls:calls.n,minutesThisMonth:Math.ceil(Number(mins.n||0)/60000)},200,origin,env)}
    if(path==="/api/admin/customers"&&req.method==="GET"){const r=await env.DB.prepare("SELECT c.*, (SELECT COUNT(*) FROM avr_calls x WHERE x.customer_id=c.id) AS total_calls,(SELECT COALESCE(SUM(duration_ms),0) FROM avr_calls x WHERE x.customer_id=c.id AND x.start_timestamp>=?) AS usage_ms FROM avr_customers c ORDER BY c.created_at DESC LIMIT 500").bind(new Date(new Date().getFullYear(),new Date().getMonth(),1).getTime()).all();return json({customers:(r.results||[]).map(c=>({...c,usage_minutes:Math.ceil(Number(c.usage_ms||0)/60000),usage_ms:undefined}))},200,origin,env)}
-   if(path==="/api/admin/customers"&&req.method==="POST"){const p=await body(req),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase();if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");const exists=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=?").bind(email).first();if(exists)throw Error("customer_email_already_exists");const referral=await env.DB.prepare("SELECT id,affiliate_application_id,offer_mode FROM partner_referrals WHERE lower(lead_email)=? AND lead_status='lead' AND attribution_expires_at>=? LIMIT 1").bind(email,new Date().toISOString()).first();const id=crypto.randomUUID();await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,clerk_user_id,status,admin_notes,affiliate_partner_id,affiliate_offer_mode) VALUES(?,?,?,?,?,?,?,?,?,?)").bind(id,business,String(p.contactName||"").slice(0,120),email,String(p.phone||"").slice(0,40),String(p.clerkUserId||"").trim()||null,"pending",String(p.notes||"").slice(0,2000),referral?.affiliate_application_id||null,referral?.offer_mode==="discount"?"discount":"standard").run();if(referral)await env.DB.prepare("UPDATE partner_referrals SET lead_status='customer',customer_id=? WHERE id=?").bind(id,referral.id).run();await audit(env,u,"customer_created",id,{email,partnerAttributed:!!referral});return json({created:true,id,partnerAttributed:!!referral},201,origin,env)}
+    if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
    const workspaceMatch=path.match(/^\/api\/admin\/customers\/([a-f0-9-]{36})\/workspace$/i);
    if(workspaceMatch&&req.method==="GET"){
     const id=workspaceMatch[1],customer=await env.DB.prepare("SELECT id,business_name,contact_name,email,phone,status,plan_key,payg_enabled,included_minutes,subscription_status,stripe_customer_id,overage_limit_minutes,admin_notes,created_at,updated_at FROM avr_customers WHERE id=?").bind(id).first();

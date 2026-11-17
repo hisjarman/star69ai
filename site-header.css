@@ -1,48 +1,83 @@
-/* Canonical Star69AI header: one full-width sticky banner and three actions. */
+/* Star69AI public navigation — compact, non-sticky, with a real responsive menu. */
 .site-global-header{
-  position:sticky;top:0;z-index:100000;width:100%;isolation:isolate;
-  color:#f5faff;background:#030918;box-shadow:0 8px 28px rgba(0,0,0,.34);
+  position:relative;z-index:80;display:flex;align-items:center;gap:clamp(12px,1.4vw,22px);
+  width:100%;min-height:82px;padding:10px clamp(16px,3vw,44px);
+  color:#f4f8fc;background:linear-gradient(100deg,#030918 0%,#08172d 52%,#030918 100%);
+  border-bottom:1px solid rgba(67,180,254,.28);box-shadow:0 8px 24px rgba(0,0,0,.22);
 }
-.site-global-cover{
-  position:relative;height:clamp(86px,10vw,124px);min-height:86px;overflow:hidden;
-  background:#030918;isolation:isolate;
+.site-global-brand{display:flex;align-items:center;flex:0 0 auto;min-width:0}
+.site-global-brand img{display:block;width:clamp(150px,16vw,205px);max-width:100%;max-height:52px;height:auto;object-fit:contain}
+.site-global-nav{display:flex;align-items:center;justify-content:center;gap:clamp(10px,1.25vw,19px);margin-left:auto;min-width:0}
+.site-global-nav>a,.site-global-more>summary,.site-global-language>summary{
+  color:#dce8f4;font:700 11px/1.35 'DM Sans',Arial,sans-serif;white-space:nowrap;cursor:pointer;
 }
-.site-global-cover-image{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 48%;z-index:0}
-.site-global-cover-shade{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(1,6,20,.22),rgba(1,6,20,.08) 42%,rgba(1,6,20,.78))}
-.site-global-cover-topline{
-  position:absolute;z-index:2;left:clamp(14px,3vw,42px);right:clamp(14px,3vw,42px);top:50%;
-  transform:translateY(-50%);display:flex;justify-content:space-between;align-items:center;gap:12px;
-  pointer-events:none;font:700 10px/1.3 'IBM Plex Mono',monospace;letter-spacing:1.7px;color:#e3f3ff;
-  text-shadow:0 2px 9px #000;
+.site-global-nav>a:hover,.site-global-nav>a[aria-current=page],.site-global-more>summary:hover,.site-global-language>summary:hover{color:#43b4fe}
+.site-global-more,.site-global-language{position:relative}
+.site-global-more>summary,.site-global-language>summary{list-style:none}
+.site-global-more>summary::-webkit-details-marker,.site-global-language>summary::-webkit-details-marker{display:none}
+.site-global-more-panel,.site-global-language-panel{
+  position:absolute;top:calc(100% + 17px);right:0;z-index:100;display:grid;gap:2px;min-width:220px;
+  padding:9px;border:1px solid #294665;border-radius:10px;background:#071326;box-shadow:0 16px 40px rgba(0,0,0,.42)
 }
-.site-global-status{display:flex;align-items:center;gap:8px}
-.site-global-status i{width:7px;height:7px;border-radius:50%;background:#34fd78;box-shadow:0 0 12px #34fd78;display:inline-block}
-.site-global-tagline{color:#c7eaff}
-.site-global-utility{
-  display:flex;align-items:center;justify-content:center;gap:clamp(9px,2vw,22px);
-  min-height:58px;padding:8px clamp(12px,3vw,42px);
-  background:linear-gradient(90deg,#030918,#07152b 50%,#030918);
-  border-top:1px solid rgba(67,180,254,.28);border-bottom:1px solid rgba(67,180,254,.2);
+.site-global-more-panel a{padding:10px 11px;border-radius:6px;color:#dce8f4;font:600 12px 'DM Sans',Arial,sans-serif}
+.site-global-more-panel a:hover{background:#102943;color:#43b4fe}
+.site-global-language-panel{min-width:205px;gap:8px;color:#dce8f4;font:500 12px 'DM Sans',Arial,sans-serif}
+.site-global-language-panel strong{color:#fff;font-size:11px;margin-bottom:3px}
+.site-global-language-panel small{color:#9eb4c9}
+.site-global-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.site-global-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:37px;padding:8px 11px;border-radius:7px;font:800 10px 'DM Sans',Arial,sans-serif;white-space:nowrap;text-decoration:none}
+.site-global-login{border:1px solid rgba(67,180,254,.58);color:#e5f4ff;background:rgba(17,51,81,.58)}
+.site-global-partner{border:1px solid rgba(166,107,226,.75);color:#e8d4ff;background:rgba(116,67,160,.16)}
+.site-global-start{border:1px solid #34fd78;background:#34fd78;color:#061a12}
+.site-global-actions a:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.site-global-mobile-partner,.site-global-mobile-start,.site-global-toggle{display:none}
+.site-global-toggle{
+  width:43px;height:43px;flex:0 0 43px;align-items:center;justify-content:center;flex-direction:column;gap:5px;
+  border:1px solid #35516a;border-radius:8px;background:#10233a;color:#fff;cursor:pointer
 }
-.site-global-utility a{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:38px;
-  padding:10px clamp(13px,2vw,23px);border:1px solid #34516e;border-radius:6px;
-  color:#eaf5ff;text-decoration:none;font:800 10px/1 'IBM Plex Mono',monospace;letter-spacing:1px;
-  white-space:nowrap;transition:transform .18s,border-color .18s,box-shadow .18s,background .18s;
+.site-global-toggle span{display:block;width:19px;height:2px;border-radius:3px;background:#eaf5ff;transition:transform .2s,opacity .2s}
+.site-global-toggle[aria-expanded=true] span:first-child{transform:translateY(7px) rotate(45deg)}
+.site-global-toggle[aria-expanded=true] span:nth-child(2){opacity:0}
+.site-global-toggle[aria-expanded=true] span:last-child{transform:translateY(-7px) rotate(-45deg)}
+.site-global-nav a:focus-visible,.site-global-toggle:focus-visible,.site-global-more summary:focus-visible,.site-global-language summary:focus-visible{outline:3px solid #34fd78;outline-offset:4px}
+@media(max-width:1120px){
+  .site-global-header{gap:10px;padding-left:18px;padding-right:18px}
+  .site-global-nav{gap:10px}
+  .site-global-nav>a,.site-global-more>summary,.site-global-language>summary{font-size:10px}
+  .site-global-brand img{width:155px}
+  .site-global-actions a{padding:8px 9px;font-size:9px}
 }
-.site-global-utility a span{font-size:14px}
-.site-global-partner{border-color:#a66be2!important;color:#e5c7ff!important;background:rgba(166,107,226,.08)}
-.site-global-login{border-color:#43b4fe!important;color:#cceeff!important;background:rgba(67,180,254,.08)}
-.site-global-start{border-color:#34fd78!important;background:rgba(52,253,120,.12);color:#8dffb5!important}
-.site-global-utility a:hover{transform:translateY(-2px);box-shadow:0 0 18px rgba(67,180,254,.24);background:#102642}
-.site-global-utility a:focus-visible{outline:3px solid #34fd78;outline-offset:3px}
-.site-global-footer-brand{display:flex;align-items:center;justify-content:center;width:min(280px,75%);margin:0 auto 22px;padding:12px 0}
-.site-global-footer-brand img{display:block;width:100%;max-height:72px;object-fit:contain}
+@media(max-width:1040px){
+  .site-global-header{min-height:72px;padding:9px 16px;gap:9px}
+  .site-global-brand img{width:clamp(145px,35vw,185px);max-height:46px}
+  .site-global-toggle{display:flex;margin-left:auto}
+  .site-global-nav{
+    display:none;position:absolute;top:100%;left:0;right:0;z-index:100;max-height:calc(100svh - 72px);overflow-y:auto;
+    align-items:stretch;justify-content:flex-start;flex-direction:column;gap:0;margin:0;padding:12px 18px 18px;
+    border-bottom:1px solid #244363;background:#061326;box-shadow:0 18px 30px rgba(0,0,0,.42)
+  }
+  .site-global-nav.is-open{display:flex}
+  .site-global-nav>a,.site-global-more>summary,.site-global-language>summary{display:block;padding:13px 9px;font-size:14px}
+  .site-global-more-panel,.site-global-language-panel{position:static;min-width:0;margin:4px 0 9px;border-radius:8px;box-shadow:none}
+  .site-global-actions{margin-left:0}
+  .site-global-actions .site-global-partner,.site-global-actions .site-global-start{display:none}
+  .site-global-mobile-partner,.site-global-mobile-start{display:block!important;font-weight:800!important}
+  .site-global-mobile-partner{color:#d9b8ff!important}
+  .site-global-mobile-start{color:#34fd78!important}
+  .site-global-login{min-height:37px;padding:8px 10px;font-size:10px}
+}
+@media(max-width:390px){
+  .site-global-header{padding-left:10px;padding-right:10px;gap:7px}
+  .site-global-brand img{width:136px}
+  .site-global-login{padding:7px 8px;font-size:9px}
+  .site-global-toggle{width:39px;height:39px;flex-basis:39px}
+}
 
-/* Enforce the same dark, readable footer after page-specific styles. */
+/* Compact, readable footer: keep the wordmark secondary to useful links. */
+.site-global-footer-brand{display:flex;align-items:center;justify-content:flex-start;width:min(160px,55%);margin:0 0 8px;padding:0}
+.site-global-footer-brand img{display:block;width:100%;max-height:42px;object-fit:contain;object-position:left center}
 html body footer,html body footer.footer,html body footer.site-footer,html body footer.footer.site-footer{
-  background-color:#030918!important;
-  background-image:linear-gradient(135deg,#030918 0%,#061326 55%,#030918 100%)!important;
+  background:#030918!important;background-image:linear-gradient(135deg,#030918 0%,#061326 55%,#030918 100%)!important;
   color:#eaf3ff!important;border-color:rgba(67,180,254,.24)!important;color-scheme:dark!important;
 }
 html body footer :where(.footer-main,.footer-bottom,.footer-disclaimer,.footer-brand-column,.footer-column,.footer-contact){
@@ -50,16 +85,16 @@ html body footer :where(.footer-main,.footer-bottom,.footer-disclaimer,.footer-b
 }
 html body footer :where(h1,h2,h3,h4,strong,b){color:#f4f8ff!important}
 html body footer :where(p,span,small,li,label){color:#c4d5e8!important}
-html body footer a{color:#9edcff!important}
-html body footer img{background:transparent!important}
-@media(max-width:640px){
-  .site-global-cover{height:88px;min-height:88px}
-  .site-global-cover-topline{font-size:8px;letter-spacing:1px}
-  .site-global-utility{min-height:54px;gap:6px;padding:7px 8px}
-  .site-global-utility a{min-height:36px;padding:9px 10px;font-size:8px;letter-spacing:.35px;gap:5px}
-}
-@media(max-width:360px){
-  .site-global-cover{height:82px;min-height:82px}
-  .site-global-utility a{padding:8px 7px;font-size:7px}
+html body footer a{color:#a9ddff!important;text-decoration:none}
+html body footer a:hover{color:#34fd78!important;text-decoration:underline}
+html body footer .brand-footer{margin:0 0 8px;padding:0;min-height:0}
+html body footer .brand-footer img{width:150px!important;max-width:150px!important;max-height:42px!important;height:auto!important;object-fit:contain;object-position:left center}
+html body footer .footer-brand-column{padding:0!important;gap:7px}
+html body footer .footer-tagline{max-width:270px;margin:4px 0 8px;line-height:1.65}
+html body footer .footer-social{margin-top:4px}
+html body footer .footer-main{row-gap:24px}
+@media(max-width:760px){
+  html body footer .footer-main{row-gap:22px}
+  html body footer .brand-footer img{width:138px!important;max-width:138px!important}
 }
 @media(prefers-reduced-motion:reduce){.site-global-header *{transition:none!important}}

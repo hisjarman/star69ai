@@ -1,3 +1,13 @@
+
+## Learning Center dark-text contrast repair — 2026-11-16
+
+- Feature branch: `fix/learning-center-dark-text-contrast-2026-11-16`, created from current `main`.
+- Root cause: the shared `readability.css` applies dark foreground defaults to generic `main` headings, paragraphs and links. The Learning Center uses a dark `.ih-page` theme, but its own stylesheet did not explicitly override all heading and nested-list colors. Existing card headings and list text could therefore inherit dark text on dark navy surfaces.
+- Added page-scoped contrast rules to the existing `intelligence-hub.css` used by both the Learning Center landing page and the Receptionist Architect curriculum. Explicitly covers headings, body copy, nested lists, cards, tags, links, estimator results and footer text while preserving the green primary CTA and outlined secondary CTA colors.
+- No new stylesheet, duplicate component, page redesign, JavaScript, Worker, D1, billing, authentication or customer data changes.
+- Source-level review confirms both Learning Center pages load `intelligence-hub.css` after `readability.css`; the scoped rules are appended to the latter-loaded page stylesheet. Browser visual QA at desktop/mobile widths and live GitHub Pages publication remain to be verified.
+- Review through PR; do not merge `main` without the user's explicit approval.
+
 ## Site-wide contrast, radio-choice guidance and AI Challenge CTA copy — 2026-11-16
 
 - Feature branch: `fix/sitewide-contrast-radio-and-challenge-copy-2026-11-16`, created from current `main`.

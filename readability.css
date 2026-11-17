@@ -193,3 +193,44 @@ body#top .s69-proof{margin-top:28px}
   body#top .s69-hero h1{font-size:clamp(42px,11.5vw,58px)!important}
   body#top .s69-proof{margin-top:22px}
 }
+
+
+/* Final dark-surface contrast pass — 2026-11-16.
+   Cover legacy dark sections and the standalone challenge UI as well as newer cards. */
+body :where(
+  .dark-band,.industry-section,.final-cta,.trust-strip,.step-card,
+  .game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example,
+  .prepay-offers,.prepay-grid article,.billing-choice,.technology-history-section,
+  .technology-history-card,.home-challenge-feature,.home-challenge-copy
+){color:#f4f8fc!important}
+body :where(
+  .dark-band,.industry-section,.final-cta,.trust-strip,.step-card,
+  .game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example,
+  .prepay-offers,.prepay-grid article,.billing-choice,.technology-history-section,
+  .technology-history-card,.home-challenge-feature,.home-challenge-copy
+) :where(p,li,dd,dt,label,legend,small,.small,.small-text,.muted,.hint,.helper-text,.disclaimer,td,th,span){
+  color:#d7e4f1;
+}
+body :where(
+  .dark-band,.industry-section,.final-cta,.trust-strip,.step-card,
+  .game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example,
+  .prepay-offers,.prepay-grid article,.billing-choice,.technology-history-section,
+  .technology-history-card,.home-challenge-feature,.home-challenge-copy
+) :where(h1,h2,h3,h4,h5,h6,strong,b){color:#f8fbff}
+body :where(
+  .dark-band,.industry-section,.final-cta,.trust-strip,.step-card,
+  .game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example,
+  .prepay-offers,.prepay-grid article,.billing-choice,.technology-history-section,
+  .technology-history-card,.home-challenge-feature,.home-challenge-copy
+) a:not(.button):not(.btn):not(.game-button){color:#9be3ff}
+body :where(.game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example)
+  :where(.game-kicker,.stage-label,.scenario-tag,.workflow-number,.workflow-step b,.workflow-example>span){color:#b8f34b}
+body :where(.game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example)
+  :where(.answer,.difficulty-option,.game-button){color:inherit}
+body :where(.checkout-field[role="group"]) :where(.radio-help,.checkout-note){color:#50677b!important}
+
+
+/* Supporting copy for choice controls and challenge entry points. */
+body .radio-help{margin:7px 0 12px;color:#50677b!important;font-size:14px;line-height:1.6}
+body .home-challenge-reason{max-width:650px;margin:14px 0 0;color:#d7e4f1!important;font-size:14px;line-height:1.7}
+body .challenge-start-reason{max-width:690px;margin:14px auto 18px;color:#d0dfec!important;font-size:14px;line-height:1.7}

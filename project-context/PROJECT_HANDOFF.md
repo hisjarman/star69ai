@@ -1,3 +1,12 @@
+## Star69AI marketing email space-horizon banner — 2026-11-17
+
+- Feature branch: `branding/marketing-email-space-banner-2026-11-17`, based on current `main`.
+- Added the supplied `assets/Logo Star69AI horizonte espacial.webp` image as a responsive, linked banner in the existing Admin Marketing HTML email template, hosted from the public Star69AI website.
+- Kept the `ADVERTISEMENT` disclosure as the first HTML paragraph and first plain-text line. The banner appears immediately after the disclosure and before the prospect-specific message.
+- Preserved the plain-text email, reviewed subject, business phone and protected postal-address footer, unsubscribe URL, List-Unsubscribe headers, per-prospect initial/follow-up restrictions, seven-day cooldown and 25-send rolling 24-hour limit.
+- No email was sent; no prospect/customer records, D1 data, Resend configuration or production Worker deployment were changed.
+- Source-level validation and PR review required before merge; deploy `avr-platform-api` after merge for the change to reach marketing sends.
+
 ## Star69AI marketing email advertisement disclosure — 2026-11-17
 
 - Feature branch: `fix/marketing-advertisement-disclosure-2026-11-17`.

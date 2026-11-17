@@ -89,3 +89,7 @@
 .tl-contact-choice input{accent-color:#70e1cb;margin-top:4px}
 .tl-privacy p{margin:8px 0;color:var(--muted,#aebbc0);font-size:.88rem;line-height:1.65}
 .tl-privacy a{color:#70e1cb;text-decoration:underline}
+
+
+/* Canonical Star69AI wordmark and readable Trust Lab footer. */
+.tl-footer{align-items:center;color:#c6d8eb;font-size:12px;line-height:1.6}.tl-footer-brand{display:flex;align-items:center;width:min(220px,48vw);min-width:150px}.tl-footer-brand img{display:block;width:100%;max-height:58px;object-fit:contain;object-position:left center}.tl-footer>a:not(.tl-footer-brand){color:#a9ddff;text-decoration:none}.tl-footer>a:not(.tl-footer-brand):hover{color:#34fd78;text-decoration:underline}@media(max-width:560px){.tl-footer{align-items:flex-start;flex-direction:column;gap:14px}.tl-footer-brand{width:200px}}

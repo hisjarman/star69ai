@@ -64,6 +64,20 @@
         <article class="card metric"><small>SUBSCRIPTION</small><strong id="subscription-status">—</strong><em id="renewal-date">Billing status</em></article>
       </div>
 
+      <section class="panel performance-panel" aria-labelledby="performance-title">
+        <div class="panel-head"><div><div class="eyebrow">RECEPTIONIST PERFORMANCE</div><h2 id="performance-title">Your call activity at a glance</h2><p class="small">Measured from recorded calls in your Star69AI account. Business outcomes such as booked jobs and revenue are not inferred.</p></div><span class="performance-period" id="performance-period">This month</span></div>
+        <div class="performance-kpis">
+          <article class="performance-kpi"><small>CALLS THIS MONTH</small><strong id="performance-calls">—</strong><span id="performance-calls-trend">Compared with last month</span></article>
+          <article class="performance-kpi"><small>TOTAL CALL TIME</small><strong id="performance-minutes">—</strong><span id="performance-average">Average call —</span></article>
+          <article class="performance-kpi"><small>POSITIVE SENTIMENT</small><strong id="performance-positive">—</strong><span id="performance-sentiment-note">Based on provider call analysis</span></article>
+        </div>
+        <div class="performance-lower-grid">
+          <section class="performance-chart-card"><div class="performance-subhead"><b>Calls over the last 14 days</b><span id="performance-daily-total">—</span></div><div id="performance-daily-chart" class="performance-daily-chart" role="img" aria-label="Daily call volume for the last 14 days"><div class="performance-empty">Call activity will appear here when calls are recorded.</div></div></section>
+          <section class="performance-chart-card"><div class="performance-subhead"><b>Caller sentiment</b><span id="performance-sentiment-total">—</span></div><div class="sentiment-track" role="img" aria-label="Positive, neutral and negative sentiment breakdown"><span id="sentiment-positive-bar"></span><span id="sentiment-neutral-bar"></span><span id="sentiment-negative-bar"></span></div><div class="sentiment-legend"><span><i class="sentiment-positive-dot"></i>Positive <b id="sentiment-positive-count">0</b></span><span><i class="sentiment-neutral-dot"></i>Neutral <b id="sentiment-neutral-count">0</b></span><span><i class="sentiment-negative-dot"></i>Negative <b id="sentiment-negative-count">0</b></span></div><p class="small">Sentiment is the voice provider’s analysis, not a measure of lead quality or customer satisfaction.</p></section>
+        </div>
+        <p class="performance-footnote" id="performance-data-note" role="status">Only recorded call data is included. Missed-call classification, bookings, qualified leads and revenue require additional structured tracking.</p>
+      </section>
+
       <section class="panel usage-panel">
         <div class="panel-head"><div><div class="eyebrow">PLAN USAGE</div><h2>Monthly voice minutes</h2></div><strong id="usage-percent" class="usage-percent">0%</strong></div>
         <div class="usage-track" role="progressbar" aria-label="Monthly included voice minute usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="usage-fill" class="usage-fill" style="width:0%"></div></div>

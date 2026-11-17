@@ -50,12 +50,23 @@
         img.alt = 'Star69AI — Communications. Evolved.';
       }
     });
-    const pageFooter = document.querySelector('body > footer, main + footer, footer');
-    if (pageFooter) {
-      const existingFooterLogo = Array.from(pageFooter.querySelectorAll('img')).find(img => /logo|star69ai/i.test((img.getAttribute('alt') || '') + ' ' + (img.getAttribute('src') || '')));
-      if (existingFooterLogo) {
-        existingFooterLogo.src = '/assets/main_logo.webp';
-        existingFooterLogo.alt = 'Star69AI — Communications. Evolved.';
+    const isBrandLogo = img => {
+      const src = (img.getAttribute('src') || '').toLowerCase();
+      const alt = (img.getAttribute('alt') || '').toLowerCase();
+      return /main_logo\.(?:webp|png|svg)|icon_main\.(?:webp|png|svg)|star69ai-logo|logo(?:%20|[ _-])*star69ai|star69ai(?:%20|[ _-])*logo|logo-transparent/.test(src) ||
+        ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark|mark/.test(alt));
+    };
+    document.querySelectorAll('footer').forEach(pageFooter => {
+      const brandImages = Array.from(pageFooter.querySelectorAll('img')).filter(isBrandLogo);
+      const keeper = brandImages.find(img => !/icon_main\./i.test(img.getAttribute('src') || '')) || brandImages[0];
+      if (keeper) {
+        keeper.src = '/assets/main_logo.webp';
+        keeper.alt = 'Star69AI — Communications. Evolved.';
+        brandImages.filter(img => img !== keeper).forEach(img => {
+          const link = img.parentElement;
+          if (link && link.tagName === 'A' && link.children.length === 1) link.remove();
+          else img.remove();
+        });
       } else if (!pageFooter.querySelector('[data-star69ai-footer-brand]')) {
         const footerBrand = document.createElement('a');
         footerBrand.className = 'site-global-footer-brand';
@@ -65,7 +76,7 @@
         footerBrand.innerHTML = '<img src="/assets/main_logo.webp" alt="Star69AI — Communications. Evolved.">';
         pageFooter.insertBefore(footerBrand, pageFooter.firstChild);
       }
-    }
+    });
     const header = document.querySelector('[data-site-global-header]');
     const toggle = header.querySelector('.site-global-toggle');
     const nav = header.querySelector('.site-global-nav');
@@ -82,9 +93,9 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { setMenu(false); toggle.focus(); }
     });
-    const currentPath = location.pathname.replace(/index\\.html$/, '').replace(/\\/$/, '') || '/';
+    const currentPath = location.pathname.replace(/index\.html$/, '').replace(/\/$/, '') || '/';
     header.querySelectorAll('[data-nav-path]').forEach(link => {
-      const target = link.getAttribute('data-nav-path').replace(/\\/$/, '') || '/';
+      const target = link.getAttribute('data-nav-path').replace(/\/$/, '') || '/';
       if (currentPath === target || (target !== '/' && currentPath.startsWith(target + '/'))) {
         link.setAttribute('aria-current','page');
         link.classList.add('is-current');

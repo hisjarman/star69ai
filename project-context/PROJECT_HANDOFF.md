@@ -1,3 +1,16 @@
+## Sitewide header/footer cleanup and Navigator AI Assistant Eli — 2026-11-17
+
+- Feature branch: `fix/sitewide-brand-cockpit-eli-2026-11-17`, created from current `main` commit `c4cbbd0608f6efbca3b3b8b7e2dd01c858155f90`.
+- Audited the shared public header installer, canonical logo normalization, footer insertion behavior, client portal header/greeting, and cockpit layout. The shared installer previously normalized only the first footer and only its first matching brand image, allowing duplicate/legacy footer logos to survive.
+- Root cause also included malformed trailing-slash regular expressions in the shared header script. Corrected both path matchers; the previous invalid regex flags could prevent the entire shared header/footer installer from executing.
+- Updated the shared installer to normalize every footer, keep exactly one canonical full Star69AI wordmark per footer, and remove duplicate legacy/icon-only Star69AI logo images and their otherwise-empty links. Existing header/navigation behavior and non-brand footer content remain.
+- Replaced retired logo asset references with `assets/main_logo.webp` in the About, Pricing, Trust Lab, partner program/admin, newsletter admin, Trust Lab admin/dashboard, blog index/episode, and roofing industry pages inspected during this pass. Other public pages using the shared installer are normalized at runtime.
+- Refined the client cockpit's cinematic `image_hero.webp` banner to a slightly taller but still compact header with a lighter overlay and improved focal positioning. The yin-yang icon remains the compact header mark; the large wordmark is not reintroduced.
+- Replaced device-time “Good morning/afternoon/evening” copy with “Welcome back” plus the customer's first name when available, avoiding incorrect time-of-day greetings from device timezone/clock differences.
+- Added the minimized-by-default **Eli — Navigator AI Assistant** launcher on the left side of the authenticated cockpit. Opening it lazily loads the existing Star69AI Concierge Worker iframe; the panel has a clear identity header, close/minimize control, responsive sizing, safe-area spacing and keyboard-accessible controls. It is hidden until a customer workspace is loaded and does not cover the dashboard while minimized.
+- No Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer/prospect records or production configuration changed.
+- Required validation: JavaScript syntax checks for the shared header and client script; verify footer deduplication on pages using the shared installer; inspect cockpit banner and Eli widget at desktop/tablet/mobile sizes; confirm the Concierge iframe loads and conversation works in an authenticated browser session. Source changes remain unmerged and unpublished. Do not merge `main` without explicit user approval.
+
 ## Brand asset roles, visible banner repair and client greeting — 2026-11-17
 
 - Canonical brand assets are distinct: `assets/main_logo.webp` is the full Star69AI wordmark; `assets/Icon_main.webp` is the standalone yin-yang mark; `assets/image_hero.webp` is the cinematic banner artwork. Never use the yin-yang icon as a replacement for the full logo in full-brand contexts.

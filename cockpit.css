@@ -425,9 +425,9 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 
 /* Compact client identity: cinematic banner header + yin-yang icon, not a large wordmark. */
 .top.cockpit-banner-header{
-  min-height:88px;padding:12px 20px;border:1px solid rgba(67,180,254,.24);
+  min-height:112px;padding:14px 20px;border:1px solid rgba(67,180,254,.3);
   border-radius:15px;overflow:hidden;
-  background:linear-gradient(90deg,rgba(3,9,24,.76),rgba(3,9,24,.34) 55%,rgba(3,9,24,.76)),url("../assets/image_hero.webp") center 48%/cover no-repeat;
+  background:linear-gradient(90deg,rgba(3,9,24,.66),rgba(3,9,24,.18) 52%,rgba(3,9,24,.58)),url("/assets/image_hero.webp") center 52%/cover no-repeat;
   box-shadow:0 8px 28px rgba(0,0,0,.24);
 }
 .top.cockpit-banner-header .brand{display:flex;align-items:center;justify-content:center;width:50px;height:50px;flex:0 0 50px;border:1px solid rgba(67,180,254,.5);border-radius:13px;background:rgba(3,9,24,.62);box-shadow:0 0 18px rgba(67,180,254,.16)}
@@ -437,8 +437,29 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 .cockpit-sidebar-brand .cockpit-brand-word{display:none}
 #client-greeting{color:var(--cockpit-green);font-size:10px;font-weight:850;letter-spacing:.15em;text-transform:uppercase}
 @media(max-width:700px){
- .top.cockpit-banner-header{min-height:68px;padding:8px 11px;border-radius:12px}
+ .top.cockpit-banner-header{min-height:78px;padding:8px 11px;border-radius:12px}
  .top.cockpit-banner-header .brand{width:44px;height:44px;flex-basis:44px}
  .top.cockpit-banner-header .brand img{width:34px!important;height:34px!important;max-width:34px!important;max-height:34px!important}
 }
-@media(max-width:480px){.top.cockpit-banner-header{min-height:62px}.top.cockpit-banner-header .brand{width:40px;height:40px;flex-basis:40px}}
+@media(max-width:480px){.top.cockpit-banner-header{min-height:72px}.top.cockpit-banner-header .brand{width:40px;height:40px;flex-basis:40px}}
+
+
+/* Navigator AI Assistant — Eli. Minimized by default and kept outside the main work area. */
+.eli-widget{position:fixed;z-index:35;left:max(14px,calc((100vw - 1680px)/2 + 282px));bottom:max(16px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.eli-widget[hidden],.eli-panel[hidden]{display:none!important}
+.eli-launcher{display:flex;align-items:center;gap:10px;min-height:52px;padding:7px 15px 7px 8px;border:1px solid rgba(67,180,254,.55);border-radius:999px;background:rgba(7,19,45,.96);color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.42),0 0 18px rgba(67,180,254,.12);cursor:pointer;backdrop-filter:blur(14px)}
+.eli-launcher:hover,.eli-launcher:focus-visible{border-color:var(--cockpit-green);box-shadow:0 8px 30px rgba(0,0,0,.48),0 0 20px rgba(62,255,122,.18)}
+.eli-launcher-mark,.eli-avatar{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border:1px solid rgba(62,255,122,.55);border-radius:50%;background:linear-gradient(145deg,rgba(62,255,122,.18),rgba(67,180,254,.16));color:var(--cockpit-green);font-size:18px;text-shadow:0 0 12px rgba(62,255,122,.5)}
+.eli-launcher>span:last-child,.eli-identity{display:grid;gap:2px;text-align:left}
+.eli-launcher b,.eli-identity strong{font-size:12px;line-height:1.2}
+.eli-launcher small,.eli-identity small{color:#a9bfd7;font-size:10px;line-height:1.2}
+.eli-panel{display:flex;width:min(370px,calc(100vw - 28px));height:min(510px,calc(100dvh - 110px));min-height:300px;flex-direction:column;overflow:hidden;border:1px solid rgba(67,180,254,.42);border-radius:17px;background:#07132c;box-shadow:0 18px 55px rgba(0,0,0,.55),0 0 28px rgba(67,180,254,.12)}
+.eli-panel-head{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px 12px;border-bottom:1px solid rgba(67,180,254,.2);background:linear-gradient(100deg,#0b1a38,#10233b)}
+.eli-identity{min-width:0;flex:1}
+.eli-online{display:flex;align-items:center;gap:6px;color:#a9d9bd;font:700 9px/1 "DM Mono",monospace;letter-spacing:.08em}
+.eli-online i{width:6px;height:6px;border-radius:50%;background:var(--cockpit-green);box-shadow:0 0 8px var(--cockpit-green)}
+.eli-close{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06);color:#fff;font-size:23px;line-height:1;cursor:pointer}
+.eli-panel iframe{display:block;width:100%;height:100%;min-height:0;flex:1;border:0;background:#07132c}
+@media(max-width:1100px){.eli-widget{left:14px}}
+@media(max-width:700px){.eli-widget{left:12px;bottom:max(12px,env(safe-area-inset-bottom));gap:8px}.eli-launcher{min-height:48px;padding-right:13px}.eli-panel{width:min(350px,calc(100vw - 24px));height:min(470px,calc(100dvh - 92px))}}
+@media(prefers-reduced-motion:reduce){.eli-launcher,.eli-panel{scroll-behavior:auto;transition:none}}

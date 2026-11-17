@@ -1,3 +1,14 @@
+## Restore the approved cinematic menu and retain footer refinements — 2026-11-17
+
+- Feature branch: `restore/cinematic-menu-pr215-footer-refinement-2026-11-17`, based on current `main` after inspecting the project handoff, current shared header/footer files, and the exact merged PR #215 implementation.
+- User reconfirmed PR #215's design as the approved baseline after the simplified navigation in PR #243 failed to meet expectations.
+- Restores PR #215's full-width cinematic cover and interactive MENU control, translucent Mission Control destination panel, 18 illuminated navigation destinations, active-page state, responsive grid, keyboard Escape behavior, outside-click close, focus return, and inert-state accessibility.
+- Uses the current designated hero asset `/assets/image_hero.webp` instead of the obsolete filename referenced by the original PR #215 implementation.
+- Restores the PR #215 compact utility strip for Partner Login, Client Console and Initiate Contact; removes the conventional permanent navigation bar.
+- Retains PR #243's footer readability and compact logo refinements, including high-contrast footer text/links and reduced wordmark size/padding. Retains canonical `main_logo.webp` normalization for legacy footer logos.
+- No Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer/prospect data or production configuration changed.
+- Source-level JavaScript syntax and CSS structure checks are required before review. Browser visual QA and GitHub Pages deployment must be verified separately; this branch is not merged or published. Do not merge `main` without explicit user approval.
+
 ## Restore full public navigation and compact readable footer — 2026-11-17
 
 - Feature branch: `fix/restore-navigation-compact-readable-footer-2026-11-17`, created from current `main` after inspecting the simplified shared header, homepage markup, prior navigation implementation and footer styles.

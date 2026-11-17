@@ -386,3 +386,8 @@ body :where(.dark-shell,.dark-band,.industry-section,.trust-strip,.footer,.site-
 body :where(.dark-shell,.dark-band,.industry-section,.trust-strip,.footer,.site-footer,.product-stage,.console,.dashboard-preview-window) :where(a:not(.button):not(.btn),.text-link,.section-kicker,.eyebrow){color:var(--brand-blue)!important}
 body :where(.dark-shell,.dark-band,.industry-section,.trust-strip,.footer,.site-footer,.product-stage,.console,.dashboard-preview-window) :where(h1 em,h2 em,h3 em,.accent,.highlight,.brand b){color:var(--brand-purple)!important}
 ::selection{background:rgba(225,86,255,.28);color:#172B40}
+
+
+/* Footer brand prominence: restore a clearly visible full Star69AI wordmark. */
+html body footer.site-footer .brand-footer img{display:block;width:320px!important;max-width:100%!important;max-height:none!important;height:auto!important;object-fit:contain;object-position:left center}
+@media(max-width:600px){html body footer.site-footer .brand-footer img{width:280px!important;max-width:100%!important}}

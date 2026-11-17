@@ -35,6 +35,9 @@
     </header>`;
   const install = () => {
     if (!document.body) return;
+    const homePath = location.pathname.replace(/index\.html$/, "").replace(/\/$/, "") || "/";
+    document.body.classList.toggle("site-home-page", homePath === "/");
+    document.body.classList.toggle("site-interior-page", homePath !== "/");
     document.querySelectorAll(".reference-topbar,.s69-header,header.topbar,header.site-header,[data-legacy-site-header]").forEach(node => node.remove());
     if (!document.querySelector("[data-site-global-header]")) document.body.insertAdjacentHTML("afterbegin", markup);
     document.querySelectorAll("[data-site-global-header]").forEach((node,index) => { if (index > 0) node.remove(); });

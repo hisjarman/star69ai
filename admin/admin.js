@@ -130,8 +130,9 @@ async function performMarketingSend(){
  b.disabled=true;confirmButton.disabled=true;confirmButton.textContent="Sending…";feedback.textContent="Submitting the individually approved email to Resend…";feedback.classList.remove("hidden","error");
  try{
   const prospectId=String(selectedMarketingProspectId||selectedMarketingProspect?.id||"").trim();
-  if(!/^[a-f0-9-]{36}$/i.test(prospectId))throw Error("The selected prospect ID is missing or invalid. Refresh the prospect list and select the prospect again.");
-  const result=await api("/api/admin/marketing/send",{method:"POST",body:JSON.stringify({prospectId,prospect_id:prospectId,id:prospectId,prospectEmail:selectedMarketingProspect.email,subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});
+  const prospectEmail=String(selectedMarketingProspect?.email||"").trim();
+  if(!/^[a-f0-9-]{36}$/i.test(prospectId)&&!prospectEmail)throw Error("The selected prospect could not be identified. Refresh the prospect list and select the prospect again.");
+  const result=await api("/api/admin/marketing/send",{method:"POST",body:JSON.stringify({prospectId,prospect_id:prospectId,id:prospectId,prospectEmail,subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});
   if(!result.sent)throw Error("The email provider did not confirm acceptance. No send was recorded.");
   feedback.textContent="Resend accepted this email (reference "+(result.emailId||"received") +"). Delivery is not yet confirmed; check the recipient's inbox and spam folder.";
   noteFn("Email accepted by Resend. Delivery is not yet confirmed.");

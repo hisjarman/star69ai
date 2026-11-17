@@ -176,13 +176,24 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
  async function loadCallEmailSettings(){
   const enabled=$("#call-email-enabled"),recipients=$("#call-email-recipients"),status=$("#call-email-settings-status");
   if(!enabled||!recipients)return;
-  try{const d=await api("/api/client/call-email-settings");enabled.checked=!!d.enabled;recipients.value=(d.recipients||[]).join("\n");if(status)status.textContent=""}
+  try{const d=await api("/api/client/call-email-settings");enabled.checked=!!d.enabled;recipients.value=(d.recipients||[]).join("\n");renderCallEmailSummary(d.enabled,d.recipients||[]);if(status)status.textContent=""}
   catch(e){if(status)status.textContent=e.message}
+ }
+ function renderCallEmailSummary(enabled,recipients){
+  const node=$("#call-email-preference-summary");if(!node)return;
+  const count=Array.isArray(recipients)?recipients.length:0;
+  node.textContent=enabled?"Automatic summaries are ON · "+count+" authorized recipient"+(count===1?"":"s")+".":"Automatic summaries are OFF · No automatic call emails will be sent.";
+  node.dataset.state=enabled?"enabled":"disabled";
  }
  async function saveCallEmailSettings(e){
   e.preventDefault();const button=$("#save-call-email-settings"),status=$("#call-email-settings-status");
   button.disabled=true;status.textContent="Saving…";
-  try{const recipients=$("#call-email-recipients").value.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);await api("/api/client/call-email-settings",{method:"PUT",body:JSON.stringify({enabled:$("#call-email-enabled").checked,recipients})});status.textContent="Email preferences saved."}
+  try{const recipients=$("#call-email-recipients").value.split(";").join(",").split(",").join("\n").split("\n").map(x=>x.trim()).filter(Boolean);
+   if(recipients.length>10)throw Error("You can add up to 10 email recipients.");
+   if(recipients.some(x=>x.length>254||x.indexOf("@")<1||x.lastIndexOf(".")<x.indexOf("@")+2))throw Error("Check the recipient email addresses and try again.");
+   if($("#call-email-enabled").checked&&!recipients.length)throw Error("Add at least one authorized recipient before enabling automatic summaries.");
+   const saved=await api("/api/client/call-email-settings",{method:"PUT",body:JSON.stringify({enabled:$("#call-email-enabled").checked,recipients})});
+   renderCallEmailSummary(saved.enabled,saved.recipients||recipients);status.textContent="Email preferences saved."}
   catch(err){status.textContent=err.message}
   finally{button.disabled=false}
  }
@@ -336,6 +347,7 @@ function renderAgentRequests(items){
 
  $("#support-ticket-form")?.addEventListener("submit",submitTicket);
  $("#call-email-settings-form")?.addEventListener("submit",saveCallEmailSettings);
+ $("#call-email-enabled")?.addEventListener("change",()=>renderCallEmailSummary($("#call-email-enabled").checked,$("#call-email-recipients").value.split(";").join(",").split(",").join("\n").split("\n").map(x=>x.trim()).filter(Boolean)));
  $("#call-search")?.addEventListener("input",renderFilteredCalls);
  $("#call-status-filter")?.addEventListener("change",renderFilteredCalls);
  $("#refresh-tickets")?.addEventListener("click",loadTickets);

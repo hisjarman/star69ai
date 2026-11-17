@@ -1288,3 +1288,11 @@ This section supersedes the earlier activation-status notes above where they des
 - Static structure and responsive CSS review are required before merge. Verify desktop and mobile layout, image crop, CTA destination, challenge section and demo form in a real browser after Pages publishes. This branch is not merged or confirmed live.
 
 - Follow-through source checks: all nine new HTML IDs are present and unique; the appended CSS braces are balanced and responsive breakpoints are present; the UI reuses existing dashboard and call-email-settings endpoints. A fresh JavaScript syntax-parser run after the follow-through edits is still required; earlier syntax checks predate these edits.
+
+
+## Pricing-page AI Challenge CTA — 2026-11-16
+
+- Feature branch: `feature/pricing-ai-challenge-cta-2026-11-16`, created from current `main`.
+- Added a clearly labelled “Take the AI Challenge” button directly inside the existing Receptionist Architect / Challenge Rewards section on `pricing.html`, linking to the existing `./challenge/` page.
+- Added one short explanatory sentence describing the practical value of trying the challenge. Preserved the existing reward percentages, eligibility/stacking terms and explicit disclosure that secure account-based reward redemption is not yet enabled.
+- No challenge logic, scoring, reward redemption, checkout, billing, Worker, D1 or customer data changed. Review via PR; do not merge `main` without explicit user approval.

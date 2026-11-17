@@ -1396,3 +1396,11 @@ This section supersedes the earlier activation-status notes above where they des
 - Removed the blocking `window.confirm()` prompt from the Admin Marketing compose form. Clicking the reviewed Send button now proceeds directly to the existing authenticated Worker send request.
 - Preserved the in-flight disabled button state, `Sending…` feedback, success/error notices, individual prospect selection, explicit follow-up flag, unsubscribe handling, seven-day cooldown, 25-send rolling 24-hour cap, and server-side send eligibility checks.
 - No email was sent during this source change. No production deployment or merge was performed; review through PR before merging and deploying.
+
+
+## Marketing email footer founder identity — 2026-11-17
+
+- Feature branch: `fix/marketing-founder-footer-identity-2026-11-17`, created from current `main` after reading this handoff and inspecting the current Worker marketing-send footer and the existing About the Founder page.
+- Replaces the footer's standalone `Star69AI` identity with **Solomon Jarman · Founder & Operator**, linked to the existing canonical page `https://star69ai.com/about.html`, in both HTML and plain-text marketing emails.
+- Keeps the Advertisement disclosure, prominent unsubscribe link, phone number, protected postal address, website/brand context in the destination URL, and List-Unsubscribe / one-click headers. No unsubscribe logic, sending rules, prospect records or email delivery behavior changed.
+- Source-only change. No emails sent. Review through PR; do not merge `main` or deploy the Worker without the user's separate explicit approval.

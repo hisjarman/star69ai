@@ -95,8 +95,8 @@ function marketingFillTemplate(p,followUp=false){
  }
  if(preview){
   if(research){
-   const sources=(Array.isArray(research.sourceUrls)?research.sourceUrls:[]).map(raw=>String(raw||"").trim()).filter(url=>/^https?:\\/\\//i.test(url)).slice(0,8);
-   const website=/^https?:\\/\\//i.test(String(research.website||""))?String(research.website):"";
+   const sources=(Array.isArray(research.sourceUrls)?research.sourceUrls:[]).map(raw=>String(raw||"").trim()).filter(url=>/^https?:\/\//i.test(url)).slice(0,8);
+   const website=/^https?:\/\//i.test(String(research.website||""))?String(research.website):"";
    preview.innerHTML='<b>'+(followUp?"Follow-up needs a fresh review":"Saved prospect research")+'</b><p>'+safe(research.researchObservation||"No research observation recorded.")+'</p><p class="small">Industry: '+safe(research.industry||p.industry||"Not recorded")+' · Location: '+safe(research.location||"Not recorded")+(website?' · <a href="'+safe(website)+'" target="_blank" rel="noopener">Business website</a>':'')+'</p><p class="small">'+(sources.length?sources.map((url,i)=>'<a href="'+safe(url)+'" target="_blank" rel="noopener">Source '+(i+1)+'</a>').join(' · '):"No source links recorded")+'</p><p class="small">'+(followUp?"The initial email is not reused as a follow-up. Write a new message that responds to the prior outreach.":"Saved individualized draft loaded. Review every factual detail and edit before sending.")+'</p>';
   }else{
    preview.innerHTML='<b>No structured research draft found</b><p class="small">This prospect does not have a saved Star69AI research record. No generic template has been inserted. Add verified business context and write a genuinely relevant message before sending.</p>';

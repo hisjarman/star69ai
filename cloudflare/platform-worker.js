@@ -1101,12 +1101,15 @@ async function route(req,env){
     await audit(env,u,"marketing_prospect_created",null,{prospectId:id,industry});
     return json({created:true,id},201,origin,env);
    }
-   const marketingSend=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/send$/i);
-   if(marketingSend&&req.method==="POST"){
+   const marketingSend=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/send\/?$/i);
+   const marketingSendFixed=path==="/api/admin/marketing/send";
+   if((marketingSend||marketingSendFixed)&&req.method==="POST"){
     if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)throw Error("email_sender_not_configured_check_resend");
     const postal=String(env.BUSINESS_POSTAL_ADDRESS||"").trim();
     if(postal.length<8)throw Error("business_postal_address_required_for_marketing");
-    const id=marketingSend[1],p=await body(req,10000),subject=String(p.subject||"").trim(),message=String(p.body||"").trim();
+    const p=await body(req,10000),id=marketingSend?.[1]||String(p.prospectId||"").trim();
+    if(!/^[a-f0-9-]{36}$/i.test(id))throw Error("valid_marketing_prospect_id_required");
+    const subject=String(p.subject||"").trim(),message=String(p.body||"").trim();
     if(subject.length<4||subject.length>180||message.length<30||message.length>6000)throw Error("valid_subject_and_email_body_required");
     const prospect=await env.DB.prepare("SELECT * FROM avr_marketing_prospects WHERE id=?").bind(id).first();
     if(!prospect)throw Error("marketing_prospect_not_found");

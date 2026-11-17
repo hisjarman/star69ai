@@ -228,3 +228,9 @@ body :where(.game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-exam
 body :where(.game-shell,.game-card,.workflow-guide,.workflow-step,.workflow-example)
   :where(.answer,.difficulty-option,.game-button){color:inherit}
 body :where(.checkout-field[role="group"]) :where(.radio-help,.checkout-note){color:#50677b!important}
+
+
+/* Supporting copy for choice controls and challenge entry points. */
+body .radio-help{margin:7px 0 12px;color:#50677b!important;font-size:14px;line-height:1.6}
+body .home-challenge-reason{max-width:650px;margin:14px 0 0;color:#d7e4f1!important;font-size:14px;line-height:1.7}
+body .challenge-start-reason{max-width:690px;margin:14px auto 18px;color:#d0dfec!important;font-size:14px;line-height:1.7}

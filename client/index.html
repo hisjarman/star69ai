@@ -15,8 +15,8 @@
 </head>
 <body>
 <main class="shell">
-  <header class="top">
-    <a class="brand" href="../index.html" style="color:#f1f8f5;text-decoration:none"><img src="../assets/main_logo.webp" alt="Star69AI — Smarter Calls. Bigger Opportunity." style="display:block;width:280px;max-width:42vw;max-height:66px;height:auto;object-fit:contain"></a>
+  <header class="top cockpit-banner-header">
+    <a class="brand cockpit-header-brand" href="../index.html" aria-label="Star69AI home"><img src="../assets/Icon_main.webp" alt="Star69AI" width="48" height="48"></a>
     <div class="top-right"><span id="session-pill" class="pill">Checking session</span><div id="user-button"></div></div>
   </header>
 
@@ -39,7 +39,7 @@
       <button id="cockpit-drawer-backdrop" class="cockpit-drawer-backdrop" type="button" aria-label="Close dashboard navigation"></button>
       <div class="client-workspace-layout">
         <aside class="client-sidebar" id="client-sidebar" aria-label="Client navigation">
-          <a class="cockpit-sidebar-brand" href="../index.html" aria-label="Star69AI home"><img class="cockpit-brand-mark" src="../assets/main_logo.webp" alt="Star69AI" style="width:150px;height:auto;max-width:100%;object-fit:contain"><span class="cockpit-brand-word">STAR<span>69</span>AI<small>THE COCKPIT</small></span></a>
+          <a class="cockpit-sidebar-brand" href="../index.html" aria-label="Star69AI home"><img class="cockpit-brand-mark" src="../assets/Icon_main.webp" alt="" width="38" height="38"><span class="cockpit-brand-word">THE COCKPIT</span></a>
           <div class="sidebar-caption">YOUR WORKSPACE</div>
           <nav class="client-nav">
             <button class="client-nav-item active" type="button" data-page="overview" aria-current="page"><span class="nav-icon">⌂</span><span>Overview</span></button>
@@ -55,7 +55,7 @@
           <div class="sidebar-footer"><span class="sidebar-status-dot"></span> Secure client workspace</div>
         </aside>
         <div class="client-page-content">
-          <div class="intro client-workspace-header"><button id="cockpit-menu-toggle" class="cockpit-menu-toggle" type="button" aria-label="Open dashboard navigation" aria-expanded="false">☰</button><div><div class="eyebrow">THE COCKPIT</div><h1 id="business-title">Your dashboard</h1><p>Your receptionist, calls, usage and account details—all in one place.</p></div><div class="row"><span id="receptionist-live-status" class="status cockpit-receptionist-state" data-state="checking" aria-live="polite">Checking receptionist</span><span id="account-status" class="status">Loading</span><button id="refresh-dashboard" class="btn secondary" type="button">↻ Refresh</button></div></div>
+          <div class="intro client-workspace-header"><button id="cockpit-menu-toggle" class="cockpit-menu-toggle" type="button" aria-label="Open dashboard navigation" aria-expanded="false">☰</button><div><div class="eyebrow" id="client-greeting" aria-live="polite">YOUR COCKPIT</div><h1 id="business-title">Your dashboard</h1><p>Your receptionist, calls, usage and account details—all in one place.</p></div><div class="row"><span id="receptionist-live-status" class="status cockpit-receptionist-state" data-state="checking" aria-live="polite">Checking receptionist</span><span id="account-status" class="status">Loading</span><button id="refresh-dashboard" class="btn secondary" type="button">↻ Refresh</button></div></div>
           <div class="client-page-heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h2 id="client-page-title">Overview</h2><p id="client-page-description">A clear view of your receptionist and business activity.</p></div><span class="client-page-label">CLIENT PORTAL</span></div>
           <section class="client-page active" data-page-panel="overview">      <div class="grid">
         <article class="card metric"><small>MONTHLY PLAN</small><strong id="plan-name">—</strong><em id="plan-price">Choose a plan</em></article>

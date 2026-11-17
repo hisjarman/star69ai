@@ -51,3 +51,15 @@
 .site-global-yinyang-mark{display:block;width:30px;height:30px;flex:0 0 30px;filter:drop-shadow(0 0 7px rgba(67,180,254,.5))}
 .site-global-nav-identity>span{display:flex;flex-direction:column;gap:3px}
 @media(max-width:700px){.site-global-yinyang-mark{width:26px;height:26px;flex-basis:26px}}
+
+
+/* Banner visibility repair: keep the hero artwork above the cover background layer. */
+.site-global-cover{isolation:isolate;background:#030918}
+.site-global-cover-image{z-index:0;object-fit:cover;object-position:center 48%}
+.site-global-cover-shade{z-index:1}
+.site-global-cover-topline{z-index:2}
+.site-global-toggle{z-index:6}
+.site-global-nav{z-index:5}
+.site-global-nav-identity{display:flex;align-items:center;gap:11px}
+.site-global-yinyang-mark{display:block;width:30px;height:30px;flex:0 0 30px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(67,180,254,.5))}
+@media(max-width:700px){.site-global-yinyang-mark{width:26px;height:26px;flex-basis:26px}}

@@ -35,7 +35,7 @@
 }
 document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-category-grid a");if(link){const target=document.querySelector(link.getAttribute("href"));if(target){document.querySelectorAll(".knowledge-group").forEach(g=>g.hidden=false);const input=$("#knowledge-search");if(input){input.value="";input.dispatchEvent(new Event("input"))}}}});
 
- function showSignedOut(){$("#auth").classList.remove("hidden");$("#app").classList.add("hidden");$("#session-pill").textContent="Signed out"}
+ function showSignedOut(){$("#auth").classList.remove("hidden");$("#app").classList.add("hidden");$("#session-pill").textContent="Signed out";$("#eli-widget")?.setAttribute("hidden","")}
  function renderOnboarding(onboarding){
   const root=$("#onboarding-panel");if(!root)return;
   const stage=$("#onboarding-stage"),message=$("#onboarding-message"),approve=$("#approve-demo"),subscribe=$("#start-subscription"),setup=$("#pay-setup-fee");
@@ -397,7 +397,7 @@ function renderAgentRequests(items){
  function closeVoiceModal(){voiceModal?.classList.remove("open");voiceModal?.setAttribute("aria-hidden","true");document.body.classList.remove("voice-modal-open")}
  $("#open-voice-clone")?.addEventListener("click",()=>{voiceModal?.classList.add("open");voiceModal?.setAttribute("aria-hidden","false");document.body.classList.add("voice-modal-open");voiceModal.querySelector(".voice-modal-panel")?.focus()});
  voiceModal?.querySelectorAll("[data-close-voice-modal]").forEach(b=>b.addEventListener("click",closeVoiceModal));
- document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(voiceModal?.classList.contains("open"))closeVoiceModal();if($("#workspace")?.classList.contains("cockpit-drawer-open")){$("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false");cockpitMenu?.focus()}}});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(eliPanel&&!eliPanel.hidden)setEliOpen(false);if(voiceModal?.classList.contains("open"))closeVoiceModal();if($("#workspace")?.classList.contains("cockpit-drawer-open")){$("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false");cockpitMenu?.focus()}}});
  document.querySelectorAll(".addon-request").forEach(b=>b.onclick=()=>{closeVoiceModal();requestAddon(b.dataset.addon,b)});
  $("#refresh-addons")?.addEventListener("click",loadAddons);
  $("#agent-change-form")?.addEventListener("submit",submitAgentChange);$("#agent-change-type")?.addEventListener("change",toggleSmsFields);toggleSmsFields();

@@ -1,3 +1,11 @@
+## Prevent legacy header/logo flash — 2026-11-16
+
+- Root cause confirmed on the homepage: the original inline `.s69-header` (including its shooting-star logo) is present in the HTML and is removed/replaced by the deferred shared-header script. Its own page CSS can paint it before JavaScript runs, creating a visible old-logo flash.
+- Added an early shared CSS guard that keeps any direct-child legacy `header` hidden until the shared header replaces it. The new `.site-global-header` is explicitly excluded and remains visible. This uses the existing shared header system and does not add a second header or alter logo assets.
+- The guard is shared across pages and targets only direct-child headers, matching the existing replacement behavior in `site-header.js`.
+- Static source validation: confirmed the homepage's old `.s69-header` is a direct child of `body`; confirmed the new shared header class is excluded from the guard; confirmed the replacement script still removes the old header and inserts the shared header.
+- Browser visual QA and live GitHub Pages verification remain outstanding. Review via PR; do not merge `main` without explicit user approval.
+
 
 ## Learning Center dark-text contrast repair — 2026-11-16
 

@@ -1255,3 +1255,5 @@ This section supersedes the earlier activation-status notes above where they des
 - Moved the six industry examples into a separate responsive section after the hero so they remain available without overwhelming the first screen. Preserved pricing/demo disclosure and the existing custom-demo anchor.
 - Added `homepage-hero-rethought.css` as a final stylesheet override. This is a static GitHub Pages change only; no Worker, D1, Stripe, PayPal, Clerk, Retell, Resend, customer data or billing behavior changed.
 - Static structure and responsive CSS review are required before merge. Verify desktop and mobile layout, image crop, CTA destination, challenge section and demo form in a real browser after Pages publishes. This branch is not merged or confirmed live.
+
+- Follow-through source checks: all nine new HTML IDs are present and unique; the appended CSS braces are balanced and responsive breakpoints are present; the UI reuses existing dashboard and call-email-settings endpoints. A fresh JavaScript syntax-parser run after the follow-through edits is still required; earlier syntax checks predate these edits.

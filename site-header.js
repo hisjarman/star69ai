@@ -20,7 +20,7 @@
           <span class="site-global-toggle-label">MENU</span><span class="site-global-toggle-icon"><i></i><i></i><i></i></span>
         </button>
         <nav class="site-global-nav" id="site-global-navigation" aria-label="Star69AI main navigation" inert>
-          <div class="site-global-nav-head"><span class="site-global-nav-identity"><svg class="site-global-yinyang-mark" viewBox="0 0 64 64" role="img" aria-label="Star69AI yin-yang symbol" focusable="false"><circle cx="32" cy="32" r="30" fill="#f5fbff"/><path d="M32 2a30 30 0 0 1 0 60 15 15 0 0 1 0-30 15 15 0 0 0 0-30Z" fill="#061326"/><circle cx="32" cy="17" r="4.2" fill="#061326"/><circle cx="32" cy="47" r="4.2" fill="#f5fbff"/></svg><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
+          <div class="site-global-nav-head"><span class="site-global-nav-identity"><img class="site-global-yinyang-mark" src="/assets/icon_main.webp" alt="Star69AI yin-yang symbol" width="30" height="30" decoding="async"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
           <div class="site-global-nav-grid">
             ${links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${({home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤"})[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}
           </div>
@@ -39,9 +39,16 @@
     const legacyHeader = document.querySelector('body > header.topbar, body > header.reference-topbar, body > header.site-header') || document.querySelector('body > header');
     if (legacyHeader) legacyHeader.remove();
     document.body.insertAdjacentHTML('afterbegin', markup);
-    document.querySelectorAll('img[src*="star69ai-logo-transparent"], img[src*="Logo%20Star69AI"]').forEach(img => {
-      img.src = '/assets/main_logo.webp';
-      img.alt = 'Star69AI — Communications. Evolved.';
+    document.querySelectorAll('img').forEach(img => {
+      const src = (img.getAttribute('src') || '').toLowerCase();
+      const alt = (img.getAttribute('alt') || '').toLowerCase();
+      const looksLikeLegacyBrandLogo =
+        /star69ai-logo-transparent|logo[ _-]*star69ai|star69ai[ _-]*logo|logo-transparent/.test(src) ||
+        ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark/.test(alt));
+      if (looksLikeLegacyBrandLogo && !src.includes('icon_main.webp')) {
+        img.src = '/assets/main_logo.webp';
+        img.alt = 'Star69AI — Communications. Evolved.';
+      }
     });
     const pageFooter = document.querySelector('body > footer, main + footer, footer');
     if (pageFooter) {

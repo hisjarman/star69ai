@@ -390,3 +390,34 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 .call-email-preference-summary[data-state="enabled"]{border-color:rgba(62,255,122,.3);background:rgba(62,255,122,.06);color:var(--cockpit-green)}
 @media(max-width:900px){.launch-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.usage-breakdown{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.call-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.launch-steps{grid-template-columns:1fr}.usage-breakdown{grid-template-columns:1fr}}
+
+
+/* Business intelligence — derived only from customer-scoped recorded calls. */
+.performance-panel{margin-top:20px}
+.performance-period{display:inline-flex;align-items:center;padding:7px 11px;border:1px solid rgba(62,255,122,.22);border-radius:999px;background:rgba(62,255,122,.07);color:var(--cockpit-green);font-size:11px;font-weight:800;white-space:nowrap}
+.performance-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+.performance-kpi,.performance-chart-card{min-width:0;padding:16px;border:1px solid var(--cockpit-border);border-radius:14px;background:rgba(255,255,255,.025)}
+.performance-kpi small{display:block;color:var(--cockpit-muted);font-size:10px;font-weight:800;letter-spacing:.09em}
+.performance-kpi strong{display:block;margin:9px 0 5px;color:#fff;font-size:clamp(22px,3vw,30px);font-weight:850;letter-spacing:-.04em}
+.performance-kpi span{color:var(--cockpit-muted);font-size:11px}
+.performance-lower-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+.performance-subhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;color:#fff;font-size:13px}
+.performance-subhead span{color:var(--cockpit-muted);font-size:11px}
+.performance-daily-chart{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));align-items:end;gap:5px;min-height:138px}
+.performance-day{display:flex;min-width:0;height:138px;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px}
+.performance-bar-wrap{display:flex;width:100%;height:104px;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--cockpit-border)}
+.performance-bar{display:block;width:min(20px,78%);min-height:2px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,#3EFF7A,#168B54);box-shadow:0 0 12px rgba(62,255,122,.12)}
+.performance-day small{color:var(--cockpit-muted);font-size:9px;white-space:nowrap;transform:rotate(-28deg);transform-origin:center}
+.performance-empty{grid-column:1/-1;align-self:center;padding:34px 8px;color:var(--cockpit-muted);font-size:12px;text-align:center}
+.sentiment-track{display:flex;width:100%;height:13px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.08)}
+.sentiment-track span{display:block;height:100%;width:0;transition:width .2s ease}
+#sentiment-positive-bar{background:#3EFF7A}#sentiment-neutral-bar{background:#43B4FE}#sentiment-negative-bar{background:#F461FE}
+.sentiment-legend{display:grid;gap:12px;margin:18px 0}
+.sentiment-legend span{display:flex;align-items:center;gap:8px;color:var(--cockpit-muted);font-size:12px}
+.sentiment-legend b{margin-left:auto;color:#fff;font-variant-numeric:tabular-nums}
+.sentiment-legend i{width:8px;height:8px;border-radius:50%}
+.sentiment-positive-dot{background:#3EFF7A}.sentiment-neutral-dot{background:#43B4FE}.sentiment-negative-dot{background:#F461FE}
+.performance-chart-card>.small,.performance-footnote{color:var(--cockpit-muted);font-size:11px;line-height:1.55}
+.performance-footnote{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--cockpit-border)}
+@media(max-width:900px){.performance-lower-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.performance-kpis{grid-template-columns:1fr;gap:9px}.performance-kpi{padding:13px}.performance-kpi strong{font-size:24px}.performance-daily-chart{gap:2px}.performance-day small{font-size:8px}.performance-chart-card{padding:12px}}

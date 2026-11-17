@@ -275,6 +275,32 @@ function renderAgentRequests(items){
   }
   return {liveReady,hasDemo,hasAgent,assignedLive};
  }
+ function renderPerformance(data){
+  const current=data.current||{},previous=data.previous||{},daily=Array.isArray(data.daily)?data.daily:[];
+  const count=Math.max(0,Number(current.calls||0)),prior=Math.max(0,Number(previous.calls||0)),minutes=Math.max(0,Number(current.minutes||0));
+  const average=Math.max(0,Number(current.averageSeconds||0)),positive=Math.max(0,Number(current.positive||0)),neutral=Math.max(0,Number(current.neutral||0)),negative=Math.max(0,Number(current.negative||0)),known=positive+neutral+negative;
+  const set=(id,value)=>{const el=$(id);if(el)el.textContent=value};
+  set("#performance-calls",count.toLocaleString());
+  const delta=count-prior,trend=prior?((delta>0?"+":"")+delta.toLocaleString()+" vs. last month"):(count?"No previous-month baseline":"No previous-month calls");
+  set("#performance-calls-trend",trend);
+  set("#performance-minutes",minutes.toLocaleString(undefined,{maximumFractionDigits:1})+" min");
+  set("#performance-average","Average call "+(average?Math.floor(average/60)+"m "+Math.round(average%60)+"s":"—"));
+  set("#performance-positive",known?Math.round(positive/known*100)+"%":"—");
+  set("#performance-sentiment-note",known?known.toLocaleString()+" calls with analyzed sentiment":"No analyzed sentiment yet");
+  set("#performance-sentiment-total",known.toLocaleString()+" analyzed");
+  set("#sentiment-positive-count",positive.toLocaleString());set("#sentiment-neutral-count",neutral.toLocaleString());set("#sentiment-negative-count",negative.toLocaleString());
+  [["#sentiment-positive-bar",positive],["#sentiment-neutral-bar",neutral],["#sentiment-negative-bar",negative]].forEach(([id,value])=>{const el=$(id);if(el)el.style.width=(known?value/known*100:0)+"%"});
+  const chart=$("#performance-daily-chart");
+  if(chart){
+   const today=new Date(),days=[];
+   for(let i=13;i>=0;i--){const d=new Date(Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate()-i));const key=d.toISOString().slice(0,10);const row=daily.find(x=>x.day===key);days.push({key,label:d.toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"}),calls:Math.max(0,Number(row?.calls||0))})}
+   const max=Math.max(1,...days.map(x=>x.calls)),total=days.reduce((sum,x)=>sum+x.calls,0);
+   set("#performance-daily-total",total.toLocaleString()+" calls");
+   chart.innerHTML=days.map(day=>'<div class="performance-day" title="'+safe(day.label+": "+day.calls+" calls")+'"><div class="performance-bar-wrap"><span class="performance-bar" style="height:'+Math.max(day.calls?5:2,day.calls/max*100)+'%" aria-hidden="true"></span></div><small>'+safe(day.label)+'</small></div>').join("");
+   chart.setAttribute("aria-label","Daily call volume over the last 14 days, "+total+" calls total");
+  }
+  set("#performance-data-note",count?"Based on all recorded calls in the current UTC calendar month; daily bars show the last 14 days. Bookings, qualified leads and revenue are not yet captured as structured outcomes.":"No calls are recorded for the current month yet. Once calls arrive, this panel will show verified activity and provider-analyzed sentiment.");
+ }
  async function load(){
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
@@ -301,6 +327,7 @@ function renderAgentRequests(items){
    $("#plan-price").textContent=planPriceLabel;
    renderUsage(d.usage||{},customer.includedMinutes||0,customer.plan);
    $("#calls-count").textContent=Number(d.usage?.calls||0).toLocaleString();
+   renderPerformance(d.performance||{});
    $("#subscription-status").textContent=customer.subscriptionStatus||"Not active";
    const cardButton=$("#overage-card-setup");if(cardButton){cardButton.textContent=customer.hasOveragePaymentMethod?"Update card for overage":"Add card for automatic overage";cardButton.disabled=false;}
    $("#billing-portal").disabled=!customer.hasBillingAccount;

@@ -421,3 +421,24 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 .performance-footnote{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--cockpit-border)}
 @media(max-width:900px){.performance-lower-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.performance-kpis{grid-template-columns:1fr;gap:9px}.performance-kpi{padding:13px}.performance-kpi strong{font-size:24px}.performance-daily-chart{gap:2px}.performance-day small{font-size:8px}.performance-chart-card{padding:12px}}
+
+
+/* Compact client identity: cinematic banner header + yin-yang icon, not a large wordmark. */
+.top.cockpit-banner-header{
+  min-height:88px;padding:12px 20px;border:1px solid rgba(67,180,254,.24);
+  border-radius:15px;overflow:hidden;
+  background:linear-gradient(90deg,rgba(3,9,24,.76),rgba(3,9,24,.34) 55%,rgba(3,9,24,.76)),url("../assets/image_hero.webp") center 48%/cover no-repeat;
+  box-shadow:0 8px 28px rgba(0,0,0,.24);
+}
+.top.cockpit-banner-header .brand{display:flex;align-items:center;justify-content:center;width:50px;height:50px;flex:0 0 50px;border:1px solid rgba(67,180,254,.5);border-radius:13px;background:rgba(3,9,24,.62);box-shadow:0 0 18px rgba(67,180,254,.16)}
+.top.cockpit-banner-header .brand img{display:block;width:38px!important;height:38px!important;max-width:38px!important;max-height:38px!important;object-fit:contain}
+.cockpit-sidebar-brand{justify-content:center;gap:0;padding:5px 6px 15px}
+.cockpit-sidebar-brand .cockpit-brand-mark{display:block;width:38px;height:38px;flex:0 0 38px;padding:0;border:0;border-radius:0;object-fit:contain;filter:drop-shadow(0 0 9px rgba(67,180,254,.28))}
+.cockpit-sidebar-brand .cockpit-brand-word{display:none}
+#client-greeting{color:var(--cockpit-green);font-size:10px;font-weight:850;letter-spacing:.15em;text-transform:uppercase}
+@media(max-width:700px){
+ .top.cockpit-banner-header{min-height:68px;padding:8px 11px;border-radius:12px}
+ .top.cockpit-banner-header .brand{width:44px;height:44px;flex-basis:44px}
+ .top.cockpit-banner-header .brand img{width:34px!important;height:34px!important;max-width:34px!important;max-height:34px!important}
+}
+@media(max-width:480px){.top.cockpit-banner-header{min-height:62px}.top.cockpit-banner-header .brand{width:40px;height:40px;flex-basis:40px}}

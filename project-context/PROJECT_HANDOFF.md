@@ -1536,3 +1536,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Added a more-specific footer-only override in `styles.css`: 320px desktop and 280px mobile, with natural image height, full-width containment, and no max-height clamp.
 - Uses the existing canonical `assets/main_logo.webp`; no header/menu source files, backend, Worker, D1, authentication, billing, customer or prospect data changed.
 - This update is on the existing PR #244 feature branch. Browser visual QA, PR review/merge, and GitHub Pages deployment remain outstanding. The earlier screenshot reference was not available in this continuation context, so compare the resulting rendered footer against the owner's supplied reference during visual QA.
+
+
+## Homepage-only hero and cinematic client Mission Control refresh — 2026-11-17
+
+- Implemented on the existing PR #244 branch `restore/cinematic-menu-pr215-footer-refinement-2026-11-17`.
+- Public site: the full-width `/assets/image_hero.webp` cinematic cover is now retained for the homepage only. The shared header script classifies the current route; interior pages hide the hero artwork/topline and use a compact dark-blue Mission Control menu bar with the same menu destinations and utility links. Homepage detection normalizes both `/` and `/index.html`.
+- Client portal: removed the hero artwork as the dashboard's top banner background. The top identity bar is now a compact navy/glass panel with blue edge lighting. The existing dashboard layout, sidebar, client data, authentication, navigation behavior, call activity, billing, support and Worker integrations are unchanged.
+- Expanded `cockpit.css` to align the client workspace with the approved Star69AI Web 3.0 visual language: deep space navy, subtle grid and ambient glow, electric purple `#F461FE`, electric blue `#43B4FE`, neon green `#34FD78`, illuminated active navigation, glass-like panels and reduced-motion-aware subtle animation. Updated the client page browser theme color to navy.
+- No backend/Worker/D1, authentication, billing, customer or prospect data changed. No deployment performed.
+- Validation still required: inspect homepage and interior-page header rendering at desktop/mobile widths, verify hero art appears only on homepage, test client portal signed-out and authenticated views, mobile drawer and reduced-motion behavior, then review/merge PR #244 and deploy only with explicit approval.

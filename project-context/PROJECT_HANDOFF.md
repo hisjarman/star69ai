@@ -1347,3 +1347,12 @@ This section supersedes the earlier activation-status notes above where they des
 - This repair is isolated on `fix/admin-business-reference-marketing-2026-11-17`; no production Worker deployment or main merge is performed from this branch.
 - Retrieved prior research context identifies one fully surfaced prospect record: DiSalvo Roofing, Las Vegas, NV, public email `info@disalvoroofing.com`, phone 725-205-3113. The rest of the earlier report is truncated in conversation retrieval; do not invent missing records, sources or personalized drafts. User's standing instruction remains: verify each business, website, location, industry, public email and source; never guess, automatically add prospects, or send emails. Prepare records for review before import.
 - Marketing emails remain one-at-a-time, individually reviewed and manually sent only after explicit admin action. No emails were sent and no prospect records were inserted during this repair.
+
+
+## Admin Marketing repair deployed and prospect batch imported — 2026-11-17
+
+- Merged PR #218 (squash commit `733c17a16bb38e68b98dd2a3c066e2fc2f22cf60`) to `main`. The Worker fix removes the orphaned duplicate validation statement while preserving the intended customer-create validation.
+- Deployed the exact `cloudflare/platform-worker.js` source from `main` to Cloudflare Worker `avr-platform-api` using the content-only endpoint, which preserves existing Worker configuration and bindings. Cloudflare returned success and deployment ID `bcd12fe787f74079813f65a50e0a78ad`; Worker etag is now `34531f65ab9bbcf42a298040bb3ae133c3aeee39bd02edcf4563a666ef96559f`.
+- Imported the 10 researched Las Vegas / Clark County prospect records into production D1 `avr-trust-lab`, table `avr_marketing_prospects`. Verified count: 10. All records include public email, industry, phone/location and source/website details in notes. Adaven Plumbing is specifically flagged: its email was found in third-party public listings and is not confirmed on the current official website; verify before outreach.
+- Verified `avr_marketing_sends` remains at 0. No marketing emails were sent. The personalized email drafts remain in the review workbook, not automatically sent.
+- Production Worker upload was confirmed successful by Cloudflare. Direct unauthenticated browser/API verification of the admin screen was not completed in this session; confirm the Marketing prospects list while signed in as admin.

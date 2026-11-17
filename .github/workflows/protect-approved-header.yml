@@ -1,0 +1,51 @@
+name: Protect approved Star69AI cinematic header
+
+on:
+  pull_request:
+    paths:
+      - "site-header.js"
+      - "site-header.css"
+      - ".github/workflows/protect-approved-header.yml"
+      - "project-context/STAR69AI_HEADER_DESIGN_LOCK.md"
+  push:
+    branches: [main]
+    paths:
+      - "site-header.js"
+      - "site-header.css"
+      - ".github/workflows/protect-approved-header.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  approved-header-lock:
+    name: Verify approved header design is unchanged
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Enforce approved header and menu
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_js="2e5b4984936f4c0cfb84ec4dd79207ae755e65d4"
+          expected_css="5ea0add134838665ef019e63e7c59c00480bd611"
+          actual_js="$(git rev-parse HEAD:site-header.js)"
+          actual_css="$(git rev-parse HEAD:site-header.css)"
+
+          if [[ "$actual_js" != "$expected_js" ]]; then
+            echo "::error::The approved Star69AI cinematic header/menu JavaScript was changed."
+            echo "Restore the locked version or obtain explicit approval to revise the design lock."
+            exit 1
+          fi
+
+          if [[ "$actual_css" != "$expected_css" ]]; then
+            echo "::error::The approved Star69AI cinematic header/menu CSS was changed."
+            echo "Restore the locked version or obtain explicit approval to revise the design lock."
+            exit 1
+          fi
+
+          echo "Approved Star69AI cinematic header, Mission Control menu, navigation and footer styles are unchanged."

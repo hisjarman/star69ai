@@ -1425,3 +1425,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Added a marketing-only HTML email wrapper without the duplicate bottom logo/tagline block. The shared `brandEmail` wrapper remains unchanged for transactional and other non-marketing messages.
 - Preserved the Advertisement disclosure, clearly visible unsubscribe link, founder identity, contact details, unsubscribe URL, and List-Unsubscribe / one-click headers.
 - No emails sent; no prospect/customer records, unsubscribe states, sending rules or production bindings changed. Source changes are pending PR review; do not merge or deploy without separate explicit user approval.
+
+
+## Sticky navigation yin-yang identity mark — 2026-11-17
+
+- Feature branch: `branding/sticky-menu-yin-yang-mark-2026-11-17`, created from the sitewide logo/hero merge commit `07711d29e390f629f5d328d25f68544fb815eb35`.
+- Added a compact, flat vector yin-yang SVG mark beside the MISSION CONTROL label in the shared sticky/navigation menu, using the site's dark navy and off-white identity.
+- Styled the mark responsively for desktop and mobile; it is inline SVG, so it does not add another asset request or depend on an external icon service.
+- Navigation destinations, menu behavior, accessibility labels, login links, and backend behavior are unchanged.
+- Source-only change pending PR review; no merge or production deployment performed.

@@ -1,3 +1,13 @@
+
+
+## Dashboard enhancement follow-through — 2026-11-16
+
+- Extended the existing dashboard enhancement branch and PR #205; no new dashboard, duplicate API route, table, or component system was created.
+- Call details now present a factual at-a-glance panel using existing call record fields: caller number, call status, sentiment, direction, duration, disconnection reason and provider-generated call summary. Callback requests and lead urgency are not separate structured fields in the current data model; customers are directed to review the transcript rather than being shown invented lead data. Existing transcript, recording and manual email actions remain.
+- Added a minute breakdown using the existing dashboard usage response: included minutes used/remaining, Minute Vault balance/usage, billable overage used and remaining distance to the fixed 75% ceiling. Flex prepaid accounts do not display subscription-minute breakdowns. The overage-ceiling remainder is explicitly labeled as a ceiling, not payment authorization; existing backend eligibility and saved-card checks remain authoritative.
+- Expanded the existing onboarding checklist into a five-step progress view derived from the existing onboarding response. The final managed launch and call-testing step remains pending in the client view; payment completion is not misrepresented as a completed production launch.
+- Improved existing automatic call-summary email preferences with an ON/OFF and recipient-count status, immediate toggle feedback, and client-side validation aligned with the existing Worker limits (maximum ten valid addresses; at least one recipient when enabled). Existing customer-scoped Worker endpoint and D1 settings remain unchanged.
+- No Worker API, D1 schema, migration, billing, Retell, authentication or production configuration was changed for these presentation enhancements. Browser, live email, billing, Retell and production tests remain outstanding.
 ## Client dashboard enhancement — 2026-11-16
 
 - Feature branch: `feature/dashboard-enhancement`, created from current `main` after confirming the requested branch did not already exist. Current dashboard work is based on the existing static GitHub Pages client portal at `/client/` (THE COCKPIT), not a new Next.js app or replacement dashboard.

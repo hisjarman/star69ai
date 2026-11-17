@@ -5,7 +5,7 @@
 - Removed the homepage's old `s69-header` markup and its menu scripts/styles. The shared header installer now removes retired public-site header variants, prevents duplicate shared headers, and leaves nested component headers (such as the AI assistant panel) alone.
 - Replaced the old mission-control dropdown with one compact, full-width sticky header: the cinematic `image_hero.webp` banner remains visible and the only header actions are **CLIENT**, **PARTNER**, and **INITIATE CONTACT**. Removed the separate left-side header logo/mark and the legacy hamburger navigation. The three actions stay visible as part of the entire sticky header while scrolling.
 - Corrected footer theming with high-specificity dark background and readable text rules in the shared stylesheet, plus a final runtime theme guard injected after page styles. The official footer wordmark remains intact.
-- Homepage source no longer contains the old `s69-header` or `reference-topbar` menu controller.
+- Homepage source no longer contains the old `s69-header` or `reference-topbar` menu controller. Removed the unused public-header rules for `.topbar`, `.reference-topbar`, `.reference-nav`, `.menu-toggle`, `.client-login-global` and associated retired brand/menu classes from the shared public `styles.css`; the only remaining legacy-selector references are deliberate cleanup selectors in the installer so stale markup is removed from older pages.
 - No Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer or prospect data/configuration changed. Source validation and real desktop/mobile visual testing are required before merge.
 - Review through PR. Do not merge `main` without explicit user approval.
 

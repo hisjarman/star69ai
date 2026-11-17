@@ -1,3 +1,13 @@
+## Sitewide footer branding, readability and banner confirmation — 2026-11-17
+
+- Owner requested that the existing /assets/image_hero.webp remain the primary cinematic site banner, that footer presentation be corrected across pages, and that undersized/inconsistent Star69AI logos be fixed.
+- Confirmed the shared public header already uses /assets/image_hero.webp as its full-width cinematic cover. The approved header/menu source files remain byte-for-byte unchanged under the permanent design lock.
+- Added higher-specificity shared footer rules in styles.css to render the canonical assets/main_logo.webp wordmark at a readable 220px desktop / 200px mobile maximum, remove legacy text-logo remnants, and improve footer copy, link and disclaimer contrast/size.
+- Replaced the legacy AI Virtual Receptionist icon/text brand in the How It Works footer with the official Star69AI wordmark and current Communications, Evolved. tagline.
+- Replaced the text-only Trust Lab footer brand with the official wordmark and added responsive sizing and readable link treatment in trust-lab.css.
+- No Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer/prospect data, or production configuration changed.
+- Review source changes and run GitHub Pages deployment plus desktop/mobile visual checks before calling the work live. The frozen site-header.js and site-header.css files were not modified.
+
 ## Restore the approved cinematic menu and retain footer refinements — 2026-11-17
 
 - Feature branch: `restore/cinematic-menu-pr215-footer-refinement-2026-11-17`, based on current `main` after inspecting the project handoff, current shared header/footer files, and the exact merged PR #215 implementation.

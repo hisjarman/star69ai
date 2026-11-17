@@ -127,7 +127,7 @@ async function performMarketingSend(){
  const followUp=Number(selectedMarketingProspect.send_count||0)>0;
  b.disabled=true;confirmButton.disabled=true;confirmButton.textContent="Sending…";feedback.textContent="Submitting the individually approved email to Resend…";feedback.classList.remove("hidden","error");
  try{
-  const result=await api("/api/admin/marketing/prospects/"+encodeURIComponent(selectedMarketingProspect.id)+"/send",{method:"POST",body:JSON.stringify({subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});
+  const result=await api("/api/admin/marketing/send",{method:"POST",body:JSON.stringify({prospectId:selectedMarketingProspect.id,subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});
   if(!result.sent)throw Error("The email provider did not confirm acceptance. No send was recorded.");
   feedback.textContent="Resend accepted this email (reference "+(result.emailId||"received") +"). Delivery is not yet confirmed; check the recipient's inbox and spam folder.";
   noteFn("Email accepted by Resend. Delivery is not yet confirmed.");

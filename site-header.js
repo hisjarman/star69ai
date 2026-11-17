@@ -43,16 +43,16 @@
       const src = (img.getAttribute('src') || '').toLowerCase();
       const alt = (img.getAttribute('alt') || '').toLowerCase();
       const looksLikeLegacyBrandLogo =
-        /star69ai-logo-transparent|logo[ _-]*star69ai|star69ai[ _-]*logo|logo-transparent/.test(src) ||
+        /star69ai-logo-transparent|logo(?:%20|[ _-])*star69ai|star69ai(?:%20|[ _-])*logo|logo-transparent/.test(src) ||
         ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark/.test(alt));
-      if (looksLikeLegacyBrandLogo && !src.includes('Icon_main.webp')) {
+      if (looksLikeLegacyBrandLogo && !src.includes('icon_main.webp')) {
         img.src = '/assets/main_logo.webp';
         img.alt = 'Star69AI — Communications. Evolved.';
       }
     });
     const pageFooter = document.querySelector('body > footer, main + footer, footer');
     if (pageFooter) {
-      const existingFooterLogo = pageFooter.querySelector('img[alt*="Star69AI"], img[src*="logo"]');
+      const existingFooterLogo = Array.from(pageFooter.querySelectorAll('img')).find(img => /logo|star69ai/i.test((img.getAttribute('alt') || '') + ' ' + (img.getAttribute('src') || '')));
       if (existingFooterLogo) {
         existingFooterLogo.src = '/assets/main_logo.webp';
         existingFooterLogo.alt = 'Star69AI — Communications. Evolved.';

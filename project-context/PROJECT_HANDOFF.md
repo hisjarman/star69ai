@@ -1,3 +1,14 @@
+## Site-wide contrast, radio-choice guidance and AI Challenge CTA copy — 2026-11-16
+
+- Feature branch: `fix/sitewide-contrast-radio-and-challenge-copy-2026-11-16`, created from current `main`.
+- Extended the existing final-loaded `readability.css` contrast guardrails to cover legacy dark sections, dark cards, the standalone Receptionist Architect challenge, workflow/example cards, reward panels and other dark surfaces. Added light body copy, high-contrast headings and readable links while retaining explicit light-surface text colors.
+- Added a short explanation immediately before the checkout subscription-timing radio choices. The field group is now programmatically labelled and references its helper text; users are told to choose one option and what each timing choice means.
+- Added explanatory copy beside the homepage AI Challenge CTA and the challenge difficulty/start control. It explains the practical learning value (45 realistic scenarios; caller intent, useful detail capture and approved next steps) and the Starter/Pro/Expert achievement milestones associated with 5%/10%/15% monthly-plan reward levels.
+- Reward copy remains transparent: achievements are stored locally in the browser and reward redemption is not enabled. No claim was added that a discount is currently redeemable.
+- No backend, Worker, D1, billing, Stripe, PayPal, authentication, Retell, customer records or challenge scoring logic changed.
+- Source-level review performed for the touched selectors and exact radio/CTA placements. Browser visual contrast testing across every viewport/page and live GitHub Pages publication remain to be verified.
+- Review through PR; do not merge `main` without explicit user approval.
+
 ## Retro space-exploration brand refresh — 2026-11-16
 
 - Feature branch: `design/retro-exploration-brand-2026-11-16`, created from current `main`.

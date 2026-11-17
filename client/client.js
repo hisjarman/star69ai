@@ -309,7 +309,7 @@ function renderAgentRequests(items){
    if(!customer){$("#no-account").classList.remove("hidden");$("#workspace").classList.add("hidden");return}
    $("#no-account").classList.add("hidden");$("#workspace").classList.remove("hidden");
    $("#business-title").textContent=customer.businessName||"Your dashboard";
-   const greetingName=(customer.contactName||"").trim().split(/\\s+/)[0];
+   const greetingName=(customer.contactName||"").trim().split(/\s+/)[0];
    const localHour=new Date().getHours();
    const greeting=localHour>=5&&localHour<12?"Good morning":localHour>=12&&localHour<17?"Good afternoon":"Good evening";
    $("#client-greeting").textContent=greeting+(greetingName?", "+greetingName:"");

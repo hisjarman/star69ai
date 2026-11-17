@@ -93,7 +93,7 @@
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { setMenu(false); toggle.focus(); }
     });
-    const currentPath = location.pathname.replace(/index\\.html$/, '').replace(/\\/$/, '') || '/';
+    const currentPath = location.pathname.replace(/index\.html$/, '').replace(/\/$/, '') || '/';
     header.querySelectorAll('[data-nav-path]').forEach(link => {
       const target = link.getAttribute('data-nav-path').replace(/\\/$/, '') || '/';
       if (currentPath === target || (target !== '/' && currentPath.startsWith(target + '/'))) {

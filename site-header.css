@@ -63,3 +63,16 @@ html body footer .footer-main{row-gap:24px}
   html body footer .brand-footer img{width:138px!important;max-width:138px!important}
 }
 @media(prefers-reduced-motion:reduce){.site-global-header *{transition:none!important}}
+
+/* Full hero artwork belongs only to the homepage; interior pages retain the cinematic menu in a compact shell. */
+body.site-interior-page .site-global-cover{height:76px;min-height:76px;background:radial-gradient(ellipse at 12% 50%,rgba(67,180,254,.17),transparent 42%),linear-gradient(110deg,#030918,#081a35 58%,#030918);border-bottom:1px solid rgba(67,180,254,.25)}
+body.site-interior-page .site-global-cover-image,body.site-interior-page .site-global-cover-shade,body.site-interior-page .site-global-cover-topline{display:none!important}
+body.site-interior-page .site-global-toggle{top:14px;right:clamp(16px,3vw,42px)}
+body.site-interior-page .site-global-nav{top:60px}
+body.site-interior-page .site-global-utility{background:#030918}
+@media(max-width:700px){body.site-interior-page .site-global-cover{height:66px;min-height:66px}body.site-interior-page .site-global-toggle{top:10px}body.site-interior-page .site-global-nav{top:56px}}
+
+/* Give the canonical full footer wordmark enough room to read at a glance. */
+.site-global-footer-brand{width:min(320px,100%)!important;max-width:320px!important;margin:0 0 14px!important}
+.site-global-footer-brand img{width:100%!important;max-width:320px!important;max-height:none!important;height:auto!important;object-fit:contain;object-position:left center}
+@media(max-width:700px){.site-global-footer-brand{width:min(280px,100%)!important;max-width:280px!important}.site-global-footer-brand img{max-width:280px!important}}

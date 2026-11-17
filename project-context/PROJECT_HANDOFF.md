@@ -1,10 +1,12 @@
 ## Star69AI marketing email business contact footer — 2026-11-17
 
-- Feature branch: `fix/marketing-business-contact-footer-2026-11-17`.
+- Source change merged through PR #221 (merge commit `adeb152fe9fdbd3ad6a8d4555f203384f477f18f`).
 - Updated the existing marketing-send route so every marketing email footer includes Star69AI's business phone number and the configured business postal address, in both plain-text and HTML versions. The one-click unsubscribe link and List-Unsubscribe headers remain unchanged.
-- The business phone is a public business contact detail in the Worker source. The mailing address remains configuration-only and is not committed to the repository; the route continues to require `BUSINESS_POSTAL_ADDRESS`.
-- **Production configuration is not yet updated:** Cloudflare's Worker secret API explicitly creates a new Worker version when a secret is added. No secret was written and no Worker version was deployed as part of this change. Until the mailing-address secret is added to the production Worker, the existing missing-address guard will continue to block marketing sends.
-- Source-level review only. No marketing emails were sent; no customer/prospect data changed. Merge of this source change does not deploy the Cloudflare Worker.
+- The business phone is a public business contact detail in the Worker source. The mailing address is stored only as the protected Cloudflare Worker secret `BUSINESS_POSTAL_ADDRESS`; it is not committed to the repository.
+- **Production deployment completed 2026-11-17:** Cloudflare Worker `avr-platform-api`, version 76, 100% traffic, deployment `b8e57620-ec32-44a7-8790-566e7fdca51a`. Version source commit `73e6cf285c8fe66bb3b35b6a897516c689b04b52` matches merged GitHub main.
+- Version 76 preserves the existing plain-text, secret-text and D1 bindings, including Clerk, Resend, Retell, Stripe and the production D1 database. The protected mailing-address secret binding was verified present on the deployed version.
+- The deployment includes the PR #220 initial-send/follow-up safeguards, seven-day cooldown, 25-send rolling 24-hour limit, and the PR #221 contact footer.
+- No marketing emails were sent and no customer/prospect data was changed during configuration or deployment. The send flow has not yet been tested by sending a live email.
 
 ## Marketing prospect date tree and repeat-outreach safeguards — 2026-11-17
 

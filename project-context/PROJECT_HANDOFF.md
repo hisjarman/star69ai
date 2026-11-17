@@ -1,3 +1,14 @@
+## Shared Resend delivery pipeline and Marketing Outreach prospect resolution — 2026-11-17
+
+- Feature branch: `fix/shared-resend-marketing-delivery-2026-11-17`, created from current `main` after reading this handoff and inspecting the current Admin, client and Worker email paths.
+- Added one Worker-level `sendResendEmail` helper and routed both the authenticated client call-details email endpoint and the Admin Marketing send endpoint through it. Both now share the same Resend request structure, idempotency-key handling, one retry for rate-limit/server/transport failures, sanitized provider-code logging, reference IDs and normalized provider error categories.
+- Kept each message type's own authorization and content rules: client call details still require Clerk customer authentication and a call row scoped to that customer; marketing still requires Admin authorization, active prospect status, initial/follow-up validation, seven-day cooldown, 25 sends per rolling 24 hours, Advertisement disclosure, Star69AI phone and protected postal address, unsubscribe link and one-click unsubscribe headers.
+- Addressed the separate prospect-ID failure: Admin now includes the selected prospect's email as a secondary lookup key; Worker only uses that key if the ID is absent/invalid, resolves exactly one existing prospect using the normalized email fields, and still loads the record by its database ID before sending. Ambiguous or missing email matches are rejected.
+- Admin now displays the Worker-provided reference ID, provider code and HTTP status in the send feedback instead of hiding useful diagnostics. Updated the Admin script cache-bust.
+- No email was sent; no prospect/customer record, unsubscribe state or send history was changed. No secrets or production bindings were changed.
+- Source-level review confirmed both send routes use the shared helper and the marketing disclosure, footer, unsubscribe headers, cooldown and daily cap remain in place. Full JavaScript syntax/runtime tests, authenticated browser testing, Resend provider testing, merge and Worker deployment remain outstanding.
+- Review via PR. Do not merge into `main` or deploy the Worker without the user's separate explicit approval.
+
 ## Star69AI marketing email advertisement disclosure — 2026-11-17
 
 - Feature branch: `fix/marketing-advertisement-disclosure-2026-11-17`.

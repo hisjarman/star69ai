@@ -108,6 +108,7 @@ let marketingProspects=[],selectedMarketingProspect=null;const outreachTemplates
   $("#marketing-send").textContent=followUp?"Review follow-up email":"Review initial email";
   $("#marketing-send-confirm").classList.add("hidden");
   $("#marketing-send-feedback").textContent="";
+  $("#marketing-send-feedback").classList.add("hidden");
   marketingSendAwaitingConfirmation=false;
   marketingFillTemplate(selectedMarketingProspect,followUp);
   $("#marketing-compose-form").scrollIntoView({behavior:"smooth",block:"start"});
@@ -124,14 +125,14 @@ async function performMarketingSend(){
  if(!selectedMarketingProspect)return;
  const b=$("#marketing-send"),confirmButton=$("#marketing-send-confirm-button"),feedback=$("#marketing-send-feedback");
  const followUp=Number(selectedMarketingProspect.send_count||0)>0;
- b.disabled=true;confirmButton.disabled=true;confirmButton.textContent="Sending…";feedback.textContent="Submitting the individually approved email to Resend…";feedback.classList.remove("error");
+ b.disabled=true;confirmButton.disabled=true;confirmButton.textContent="Sending…";feedback.textContent="Submitting the individually approved email to Resend…";feedback.classList.remove("hidden","error");
  try{
   const result=await api("/api/admin/marketing/prospects/"+encodeURIComponent(selectedMarketingProspect.id)+"/send",{method:"POST",body:JSON.stringify({subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});
   if(!result.sent)throw Error("The email provider did not confirm acceptance. No send was recorded.");
   feedback.textContent="Resend accepted this email (reference "+(result.emailId||"received") +"). Delivery is not yet confirmed; check the recipient's inbox and spam folder.";
   noteFn("Email accepted by Resend. Delivery is not yet confirmed.");
   marketingSendAwaitingConfirmation=false;$("#marketing-send-confirm").classList.add("hidden");
-  await loadMarketing();
+  try{await loadMarketing()}catch(refreshError){feedback.textContent+=" The email was accepted, but the prospect list could not refresh: "+refreshError.message;feedback.classList.add("error")}
  }catch(e){
   feedback.textContent="Not sent: "+e.message;feedback.classList.add("error");noteFn("Email was not confirmed as sent: "+e.message,true);
   marketingSendAwaitingConfirmation=false;$("#marketing-send-confirm").classList.add("hidden");

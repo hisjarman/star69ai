@@ -1338,3 +1338,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Replaced the old headset-style favicon SVG with a matching Star69AI cosmic-star/orbit symbol and added the supplied 48px, 192px and 512px PNG favicon declarations plus Apple touch icons to primary pages and private consoles.
 - Preserved existing routes, navigation, authentication, Worker/D1 behavior, billing, customer data and production configuration. No backend changes.
 - Assets were already uploaded by the user to `main` and are reused without re-encoding. This branch is source-only; browser visual QA, Pages publication and cache refresh remain unverified. Review via PR; do not merge `main` without explicit user approval.
+
+
+## Production console error repair — 2026-11-16
+
+- Feature branch: `fix/production-console-errors-2026-11-16`, created from current `main`.
+- Removed the Tailwind Play CDN script and its runtime config from the homepage. The inspected homepage's visual design is authored in its local CSS; no Tailwind utility-class dependency was present in the inspected markup, so no generated stylesheet or build pipeline was needed.
+- Corrected the two over-escaped trailing-slash/path regular-expression literals in `site-header.js`. They previously parsed the slash as the regex terminator and caused the browser's `Invalid regular expression flags` syntax error, preventing the shared navigation script from loading.
+- Preserved the existing route matching behavior, navigation destinations, page styling, and all backend/auth/billing behavior.
+- Source review confirms the Play CDN reference is removed from the homepage and both route regexes are now valid JavaScript literals. Browser console checks and live GitHub Pages deployment remain unverified; merge requires explicit user approval.

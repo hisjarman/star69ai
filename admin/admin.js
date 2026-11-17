@@ -79,7 +79,88 @@ async function loadBilling(){const d=await api("/api/admin/billing-events");$("#
  document.querySelectorAll("[data-send-setup-invoice]").forEach(b=>b.onclick=async()=>{const id=b.dataset.sendSetupInvoice,url=document.querySelector('[data-paypal-url="'+id+'"]').value.trim();try{await api("/api/admin/setup-invoices/"+id,{method:"PATCH",body:JSON.stringify({status:"sent",paypalInvoiceUrl:url})});note("PayPal invoice marked as sent.");await loadSetupInvoices()}catch(e){note(e.message,true)}});
  document.querySelectorAll("[data-paid-setup-invoice]").forEach(b=>b.onclick=async()=>{if(!confirm("Confirm that the PayPal invoice payment has actually been received?"))return;try{await api("/api/admin/setup-invoices/"+b.dataset.paidSetupInvoice,{method:"PATCH",body:JSON.stringify({status:"paid"})});note("Setup invoice marked paid.");await loadSetupInvoices()}catch(e){note(e.message,true)}});
 }
-let marketingProspects=[],selectedMarketingProspect=null;const outreachTemplates={roofing:{subject:"A quick idea for missed calls at [Business Name]",body:"Hi [First Name],\n\nI work with service businesses that cannot always stop a job to answer the phone. Star69AI is a managed AI receptionist service: we configure, test and maintain the call experience, so your team does not have another platform to learn.\n\nIt can answer after-hours calls, capture the caller's job details and urgency, and route or notify your team using your approved workflow.\n\nWould a short, no-pressure demo be useful to see whether this fits [Business Name]?\n\nBest,\nStar69AI\nhttps://star69ai.com/"},general:{subject:"A practical way to stop missing business calls",body:"Hi [First Name],\n\nWhen your team is busy serving customers, calls can go unanswered. Star69AI provides a managed AI receptionist that we build, customize, test and maintain for your business. It can answer around the clock, capture lead details and follow your approved handoff process.\n\nThis is a done-for-you service, not another software platform your staff has to configure.\n\nWould you be open to a short demo tailored to [Business Name]?\n\nBest,\nStar69AI\nhttps://star69ai.com/"}};function marketingFillTemplate(p,followUp=false){const t=p.industry&&["roofing","plumbing","HVAC","general contractor"].includes(p.industry.toLowerCase())?outreachTemplates.roofing:outreachTemplates.general;const first=p.contact_name?.trim().split(/\\s+/)[0]||"there";$("#marketing-subject").value=(followUp?"Following up: ":"")+t.subject.replaceAll("[Business Name]",p.business_name);$("#marketing-body").value=followUp?"Hi "+first+",\\n\\nI wanted to follow up on my earlier note in case it got buried. If improving call coverage is on your radar, I would be happy to prepare a short Star69AI demo tailored to "+p.business_name+".\\n\\nWould that be useful?\\n\\nBest,\\nStar69AI\\nhttps://star69ai.com/":t.body.replaceAll("[Business Name]",p.business_name).replaceAll("[First Name]",first)}async function loadMarketing(){const d=await api("/api/admin/marketing/prospects");marketingProspects=d.prospects||[];$("#marketing-count").textContent=marketingProspects.length+" prospects · "+marketingProspects.filter(p=>Number(p.send_count||0)>0).length+" contacted";const groups=new Map();marketingProspects.forEach(p=>{const day=(p.created_at||"Unknown date").slice(0,10);if(!groups.has(day))groups.set(day,[]);groups.get(day).push(p)});const dateLabel=day=>day==="Unknown date"?day:new Date(day+"T12:00:00").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});$("#marketing-prospects").innerHTML=groups.size?Array.from(groups.entries()).map(([day,items],index)=>'<details class="marketing-date-branch" '+(index===0?"open":"")+'><summary><span><b>'+safe(dateLabel(day))+'</b><span class="small"> · '+items.length+' prospect'+(items.length===1?"":"s")+'</span></span><span class="small">Open batch ▾</span></summary><div class="table-wrap"><table><thead><tr><th>BUSINESS</th><th>EMAIL</th><th>INDUSTRY</th><th>STATUS</th><th>OUTREACH</th><th>ACTION</th></tr></thead><tbody>'+items.map(p=>{const sent=Number(p.send_count||0)>0,waiting=sent&&p.last_contacted_at&&Date.parse(p.last_contacted_at)>Date.now()-7*86400000;const state=sent?"Contacted":"Not contacted";return '<tr><td><b>'+safe(p.business_name)+'</b><br><span class="small">'+safe(p.contact_name||"")+'</span></td><td>'+safe(p.email)+'</td><td>'+safe(p.industry)+'</td><td>'+status(p.status)+'<br><span class="small">'+state+'</span></td><td>'+(sent?fmt(p.last_sent_at||p.last_contacted_at):"—")+'<br><span class="small">'+Number(p.send_count||0)+' sent</span></td><td><button class="btn secondary" data-marketing-select="'+safe(p.id)+'" '+(p.status!=="active"||waiting?"disabled":"")+'>'+(p.status!=="active"?"Suppressed":sent?(waiting?"7-day cooldown":"Prepare follow-up"):"Compose initial email")+'</button></td></tr>'}).join("")+'</tbody></table></div></details>').join(""):'<div class="empty">No prospects yet. Add one above to start.</div>';document.querySelectorAll("[data-marketing-select]").forEach(b=>b.onclick=()=>{selectedMarketingProspect=marketingProspects.find(p=>p.id===b.dataset.marketingSelect);const followUp=Number(selectedMarketingProspect.send_count||0)>0;$("#marketing-selected").textContent=selectedMarketingProspect.business_name+" · "+selectedMarketingProspect.email+(followUp?" · FOLLOW-UP":" · INITIAL OUTREACH");$("#marketing-send").disabled=false;$("#marketing-send").textContent=followUp?"Send reviewed follow-up":"Send initial outreach";marketingFillTemplate(selectedMarketingProspect,followUp)})}$("#marketing-prospect-form").onsubmit=async e=>{e.preventDefault();const p=Object.fromEntries(new FormData(e.currentTarget).entries());try{await api("/api/admin/marketing/prospects",{method:"POST",body:JSON.stringify(p)});e.currentTarget.reset();noteFn("Prospect saved. Review the business context before sending.");await loadMarketing()}catch(e){noteFn(e.message,true)}};$("#marketing-compose-form").onsubmit=async e=>{e.preventDefault();if(!selectedMarketingProspect)return;const b=$("#marketing-send"),followUp=Number(selectedMarketingProspect.send_count||0)>0;b.disabled=true;const old=b.textContent;b.textContent="Sending…";try{await api("/api/admin/marketing/prospects/"+encodeURIComponent(selectedMarketingProspect.id)+"/send",{method:"POST",body:JSON.stringify({subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});noteFn(followUp?"Follow-up accepted by Resend and recorded.":"Initial email accepted by Resend and recorded.");await loadMarketing()}catch(e){noteFn(e.message,true)}finally{b.disabled=false;b.textContent=old}};$("#refresh-marketing")?.addEventListener("click",loadMarketing);async function refresh(){await Promise.all([overview(),loadCustomers()])}async function syncInboundProtection(){if(protectionSynced)return;const d=await api("/api/admin/retell/billing-protection/sync",{method:"POST",body:"{}"});protectionSynced=true;note("Inbound hard usage protection synchronized on "+d.enabled+" of "+d.total+" assigned numbers."+(d.failed?" "+d.failed+" failed; review Retell number settings.":"") ,d.failed>0)}async function activate(){
+let marketingProspects=[],selectedMarketingProspect=null;const outreachTemplates={roofing:{subject:"A quick idea for missed calls at [Business Name]",body:"Hi [First Name],\n\nI work with service businesses that cannot always stop a job to answer the phone. Star69AI is a managed AI receptionist service: we configure, test and maintain the call experience, so your team does not have another platform to learn.\n\nIt can answer after-hours calls, capture the caller's job details and urgency, and route or notify your team using your approved workflow.\n\nWould a short, no-pressure demo be useful to see whether this fits [Business Name]?\n\nBest,\nStar69AI\nhttps://star69ai.com/"},general:{subject:"A practical way to stop missing business calls",body:"Hi [First Name],\n\nWhen your team is busy serving customers, calls can go unanswered. Star69AI provides a managed AI receptionist that we build, customize, test and maintain for your business. It can answer around the clock, capture lead details and follow your approved handoff process.\n\nThis is a done-for-you service, not another software platform your staff has to configure.\n\nWould you be open to a short demo tailored to [Business Name]?\n\nBest,\nStar69AI\nhttps://star69ai.com/"}};function marketingFillTemplate(p,followUp=false){const t=p.industry&&["roofing","plumbing","HVAC","general contractor"].includes(p.industry.toLowerCase())?outreachTemplates.roofing:outreachTemplates.general;const first=p.contact_name?.trim().split(/\\s+/)[0]||"there";$("#marketing-subject").value=(followUp?"Following up: ":"")+t.subject.replaceAll("[Business Name]",p.business_name);$("#marketing-body").value=followUp?"Hi "+first+",\\n\\nI wanted to follow up on my earlier note in case it got buried. If improving call coverage is on your radar, I would be happy to prepare a short Star69AI demo tailored to "+p.business_name+".\\n\\nWould that be useful?\\n\\nBest,\\nStar69AI\\nhttps://star69ai.com/":t.body.replaceAll("[Business Name]",p.business_name).replaceAll("[First Name]",first)}async function loadMarketing(){
+ const d=await api("/api/admin/marketing/prospects");
+ marketingProspects=d.prospects||[];
+ const recorded=p=>Number(p.send_count||0)>0;
+ $("#marketing-count").textContent=marketingProspects.length+" prospects · "+marketingProspects.filter(recorded).length+" contacted in this console";
+ const groups=new Map();
+ marketingProspects.forEach(p=>{const day=(p.created_at||"Unknown date").slice(0,10);if(!groups.has(day))groups.set(day,[]);groups.get(day).push(p)});
+ const dateLabel=day=>day==="Unknown date"?day:new Date(day+"T12:00:00").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+ const prospectRows=items=>items.map(p=>{
+  const sent=recorded(p),waiting=sent&&p.last_contacted_at&&Date.parse(p.last_contacted_at)>Date.now()-7*86400000;
+  const state=sent?"Contacted (recorded here)":"Not contacted (recorded here)";
+  return '<tr><td><b>'+safe(p.business_name)+'</b><br><span class="small">'+safe(p.contact_name||"")+'</span></td><td>'+safe(p.email)+'</td><td>'+safe(p.industry)+'</td><td>'+status(p.status)+'<br><span class="small">'+state+'</span></td><td>'+(sent?fmt(p.last_sent_at||p.last_contacted_at):"—")+'<br><span class="small">'+Number(p.send_count||0)+' recorded</span></td><td><button class="btn secondary" data-marketing-select="'+safe(p.id)+'" '+(p.status!=="active"||waiting?"disabled":"")+'>'+(p.status!=="active"?"Suppressed":sent?(waiting?"7-day cooldown":"Prepare follow-up"):"Compose initial email")+'</button></td></tr>'
+ }).join("");
+ $("#marketing-prospects").innerHTML=groups.size?Array.from(groups.entries()).map(([day,items],index)=>{
+  const contacted=items.filter(recorded),notContacted=items.filter(p=>!recorded(p));
+  return '<details class="marketing-date-branch" '+(index===0?"open":"")+'><summary><span><b>'+safe(dateLabel(day))+'</b><span class="small"> · '+items.length+' prospects</span></span><span class="small">Open date folder ▾</span></summary>'+
+   '<div class="marketing-status-folders">'+
+   '<details class="marketing-status-branch"><summary><b>Contacted</b><span class="small"> · '+contacted.length+' prospects</span></summary><div class="table-wrap"><table><thead><tr><th>BUSINESS</th><th>EMAIL</th><th>INDUSTRY</th><th>STATUS</th><th>OUTREACH</th><th>ACTION</th></tr></thead><tbody>'+(contacted.length?prospectRows(contacted):'<tr><td colspan="6" class="small">No console-recorded outreach in this date folder.</td></tr>')+'</tbody></table></div></details>'+
+   '<details class="marketing-status-branch" open><summary><b>Not contacted</b><span class="small"> · '+notContacted.length+' prospects</span></summary><div class="table-wrap"><table><thead><tr><th>BUSINESS</th><th>EMAIL</th><th>INDUSTRY</th><th>STATUS</th><th>OUTREACH</th><th>ACTION</th></tr></thead><tbody>'+(notContacted.length?prospectRows(notContacted):'<tr><td colspan="6" class="small">All prospects in this date folder have console-recorded outreach.</td></tr>')+'</tbody></table></div></details>'+
+   '</div></details>';
+ }).join(""):'<div class="empty">No prospects yet. Add one above to start.</div>';
+ document.querySelectorAll("[data-marketing-select]").forEach(b=>b.onclick=()=>{
+  selectedMarketingProspect=marketingProspects.find(p=>p.id===b.dataset.marketingSelect);
+  const followUp=recorded(selectedMarketingProspect);
+  $("#marketing-selected").textContent=selectedMarketingProspect.business_name+" · "+selectedMarketingProspect.email+(followUp?" · FOLLOW-UP":" · INITIAL OUTREACH");
+  $("#marketing-send").disabled=false;
+  $("#marketing-send").textContent=followUp?"Review follow-up email":"Review initial email";
+  $("#marketing-send-confirm").classList.add("hidden");
+  $("#marketing-send-feedback").textContent="";
+  marketingSendAwaitingConfirmation=false;
+  marketingFillTemplate(selectedMarketingProspect,followUp);
+  $("#marketing-compose-form").scrollIntoView({behavior:"smooth",block:"start"});
+  $("#marketing-subject").focus({preventScroll:true});
+ });
+}
+$("#marketing-prospect-form").onsubmit=async e=>{
+ e.preventDefault();const p=Object.fromEntries(new FormData(e.currentTarget).entries());
+ try{await api("/api/admin/marketing/prospects",{method:"POST",body:JSON.stringify(p)});e.currentTarget.reset();noteFn("Prospect saved. Review the business context before sending.");await loadMarketing()}
+ catch(e){noteFn(e.message,true)}
+};
+let marketingSendAwaitingConfirmation=false;
+async function performMarketingSend(){
+ if(!selectedMarketingProspect)return;
+ const b=$("#marketing-send"),confirmButton=$("#marketing-send-confirm-button"),feedback=$("#marketing-send-feedback");
+ const followUp=Number(selectedMarketingProspect.send_count||0)>0;
+ b.disabled=true;confirmButton.disabled=true;confirmButton.textContent="Sending…";feedback.textContent="Submitting the individually approved email to Resend…";feedback.classList.remove("error");
+ try{
+  const result=await api("/api/admin/marketing/prospects/"+encodeURIComponent(selectedMarketingProspect.id)+"/send",{method:"POST",body:JSON.stringify({subject:$("#marketing-subject").value,body:$("#marketing-body").value,followUp})});
+  if(!result.sent)throw Error("The email provider did not confirm acceptance. No send was recorded.");
+  feedback.textContent="Resend accepted this email (reference "+(result.emailId||"received") +"). Delivery is not yet confirmed; check the recipient's inbox and spam folder.";
+  noteFn("Email accepted by Resend. Delivery is not yet confirmed.");
+  marketingSendAwaitingConfirmation=false;$("#marketing-send-confirm").classList.add("hidden");
+  await loadMarketing();
+ }catch(e){
+  feedback.textContent="Not sent: "+e.message;feedback.classList.add("error");noteFn("Email was not confirmed as sent: "+e.message,true);
+  marketingSendAwaitingConfirmation=false;$("#marketing-send-confirm").classList.add("hidden");
+ }finally{
+  b.disabled=!selectedMarketingProspect||selectedMarketingProspect.status!=="active";
+  b.textContent=Number(selectedMarketingProspect?.send_count||0)>0?"Review follow-up email":"Review initial email";
+  confirmButton.disabled=false;confirmButton.textContent="Confirm and send email";
+ }
+}
+$("#marketing-compose-form").onsubmit=e=>{
+ e.preventDefault();if(!selectedMarketingProspect)return;
+ if(!$("#marketing-subject").value.trim()||!$("#marketing-body").value.trim())return;
+ if(!marketingSendAwaitingConfirmation){
+  marketingSendAwaitingConfirmation=true;
+  const followUp=Number(selectedMarketingProspect.send_count||0)>0;
+  $("#marketing-send-confirm-copy").textContent=(followUp?"Confirm follow-up":"Confirm initial outreach")+" to "+selectedMarketingProspect.business_name+" ("+selectedMarketingProspect.email+") with subject: "+$("#marketing-subject").value.trim();
+  $("#marketing-send-confirm").classList.remove("hidden");
+  $("#marketing-send").disabled=true;$("#marketing-send").textContent="Awaiting confirmation";
+  $("#marketing-send-confirm").scrollIntoView({behavior:"smooth",block:"nearest"});
+ }
+};
+$("#marketing-send-confirm-button").onclick=performMarketingSend;
+$("#marketing-send-cancel").onclick=()=>{
+ marketingSendAwaitingConfirmation=false;$("#marketing-send-confirm").classList.add("hidden");
+ $("#marketing-send").disabled=!selectedMarketingProspect||selectedMarketingProspect.status!=="active";
+ $("#marketing-send").textContent=Number(selectedMarketingProspect?.send_count||0)>0?"Review follow-up email":"Review initial email";
+ $("#marketing-send-feedback").textContent="Send cancelled. No email was submitted.";
+};
+$("#refresh-marketing")?.addEventListener("click",loadMarketing);async function refresh(){await Promise.all([overview(),loadCustomers()])}async function syncInboundProtection(){if(protectionSynced)return;const d=await api("/api/admin/retell/billing-protection/sync",{method:"POST",body:"{}"});protectionSynced=true;note("Inbound hard usage protection synchronized on "+d.enabled+" of "+d.total+" assigned numbers."+(d.failed?" "+d.failed+" failed; review Retell number settings.":"") ,d.failed>0)}async function activate(){
  if(activationInFlight){activationQueued=true;return}
  activationInFlight=true;
  try{

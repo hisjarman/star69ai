@@ -1111,7 +1111,7 @@ async function route(req,env){
     let id=String(marketingSend?.[1]||p.prospectId||p.prospect_id||p.id||p.prospect?.id||"").trim();
     if(!/^[a-f0-9-]{36}$/i.test(id)){
      const prospectEmail=String(p.prospectEmail||p.prospect_email||"").trim().toLowerCase();
-     if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(prospectEmail))throw Error("valid_marketing_prospect_id_required");
+     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(prospectEmail))throw Error("valid_marketing_prospect_id_required");
      const matches=await env.DB.prepare("SELECT id FROM avr_marketing_prospects WHERE lower(email)=? OR lower(normalized_email)=? LIMIT 2").bind(prospectEmail,prospectEmail).all();
      const rows=matches.results||[];
      if(rows.length!==1)throw Error(rows.length>1?"marketing_prospect_email_ambiguous":"marketing_prospect_not_found");

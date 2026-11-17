@@ -617,6 +617,31 @@ function resendFrom(env){
   return /^[^<>]+<[^<>]+>$/.test(configured)?configured:"Star69AI <"+configured+">";
 }
 
+async function sendResendEmail(env,{payload,idempotencyKey,eventName="resend_email"}) {
+ const referenceId=crypto.randomUUID().slice(0,8).toUpperCase();
+ let response=null,result={},providerCode="unknown";
+ for(let attempt=0;attempt<2;attempt++){
+  try{
+   response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":idempotencyKey},body:JSON.stringify(payload)});
+   result=await response.json().catch(()=>({}));
+   if(response.ok)return {ok:true,result,status:response.status,referenceId};
+   providerCode=String(result?.name||result?.code||result?.type||"unknown").replace(/[^a-zA-Z0-9_.-]/g,"").slice(0,60);
+   console.error(eventName+"_resend_rejected",{referenceId,status:response.status,providerCode,attempt:attempt+1});
+   if((response.status===429||response.status>=500)&&attempt===0){await new Promise(resolve=>setTimeout(resolve,350));continue}
+   break;
+  }catch(error){
+   const errorName=String(error?.name||"Error").replace(/[^a-zA-Z0-9_.-]/g,"").slice(0,40);
+   console.error(eventName+"_transport_error",{referenceId,errorName,attempt:attempt+1});
+   if(attempt===0){await new Promise(resolve=>setTimeout(resolve,350));continue}
+   break;
+  }
+ }
+ const status=Number(response?.status||0);
+ const error=status===401||status===403?"email_sender_not_configured_check_resend":status===429?"email_provider_rate_limited_try_again":status>=500||status===0?"email_provider_temporarily_unavailable_try_again":"email_provider_rejected_request_contact_support";
+ console.error(eventName+"_failed",{referenceId,status,providerCode});
+ return {ok:false,error,status,providerCode,referenceId};
+}
+
 async function sendDemoRequestAcknowledgement(env,{id,email,business,discoveryComplete}){
  try{
   if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)return false;
@@ -1035,34 +1060,9 @@ async function route(req,env){
    const subject="Call details — "+String(call.from_number||"Unknown caller");
    const plain=["Star69AI.com — Call details","Business: "+(c.business_name||"Your business"),"Caller: "+(call.from_number||"Unknown"),"Business line: "+(call.to_number||"Unknown"),"Date/time: "+date,"Direction: "+(call.direction||"Unknown"),"Status: "+(call.call_status||"Unknown"),"Duration: "+duration,"Sentiment: "+(call.user_sentiment||"Unknown"),"Disconnection: "+(call.disconnection_reason||"Unknown"),"","Summary:",call.call_summary||"No summary available.","","Transcript:",call.transcript||"No transcript available."].join("\n");
    const html="<div style=\"font-family:Arial,sans-serif;max-width:680px;margin:auto;color:#20343b\"><h2>Call details</h2><p><b>Business:</b> "+esc(c.business_name)+"</p><p><b>Caller:</b> "+esc(call.from_number)+"<br><b>Business line:</b> "+esc(call.to_number)+"<br><b>Date/time:</b> "+esc(date)+"<br><b>Direction:</b> "+esc(call.direction)+"<br><b>Status:</b> "+esc(call.call_status)+"<br><b>Duration:</b> "+esc(duration)+"<br><b>Sentiment:</b> "+esc(call.user_sentiment)+"</p><h3>Call summary</h3><p>"+esc(call.call_summary||"No summary available.")+"</p><h3>Transcript</h3><pre style=\"white-space:pre-wrap;font:14px/1.5 Arial,sans-serif;background:#f4f7f7;padding:16px;border-radius:8px\">"+esc(call.transcript||"No transcript available.")+"</pre><p style=\"font-size:12px;color:#68777c\">Sent securely from your Star69AI client portal.</p></div>";
-   const emailPayload=JSON.stringify({from:resendFrom(env),to:[to],subject,html:brandEmail(html),text:plain});
-   const idempotencyKey="avr-call-details/"+crypto.randomUUID();
-   const referenceId=crypto.randomUUID().slice(0,8).toUpperCase();
-   let sent=null,result={},providerCode="unknown";
-   for(let attempt=0;attempt<2;attempt++){
-    try{
-     sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":idempotencyKey},body:emailPayload});
-     result=await sent.json().catch(()=>({}));
-     if(sent.ok)break;
-     const retryable=sent.status===429||sent.status>=500;
-     providerCode=String(result?.name||result?.code||result?.type||"unknown").replace(/[^a-zA-Z0-9_.-]/g,"").slice(0,60);
-     console.error("manual_call_email_resend_rejected",{referenceId,status:sent.status,providerCode,attempt:attempt+1});
-     if(retryable&&attempt===0){await new Promise(resolve=>setTimeout(resolve,350));continue}
-     break;
-    }catch(error){
-     const errorName=String(error?.name||"Error").replace(/[^a-zA-Z0-9_.-]/g,"").slice(0,40);
-     console.error("manual_call_email_transport_error",{errorName,attempt:attempt+1});
-     if(attempt===0){await new Promise(resolve=>setTimeout(resolve,350));continue}
-     throw Error("email_provider_temporarily_unavailable_try_again");
-    }
-   }
-   if(!sent?.ok){
-    const status=Number(sent?.status||0);
-    const error=status===401||status===403?"email_sender_not_configured_check_resend":status===429?"email_provider_rate_limited_try_again":status>=500||status===0?"email_provider_temporarily_unavailable_try_again":"email_provider_rejected_request_contact_support";
-    console.error("manual_call_email_failed",{referenceId,status,providerCode});
-    return json({error,referenceId,providerStatus:status,providerCode},status>=400&&status<600?status:502,origin,env);
-   }
-   return json({sent:true,emailId:result.id||null},200,origin,env);
+   const delivery=await sendResendEmail(env,{payload:{from:resendFrom(env),to:[to],subject,html:brandEmail(html),text:plain},idempotencyKey:"avr-call-details/"+crypto.randomUUID(),eventName:"manual_call_email"});
+   if(!delivery.ok)return json({error:delivery.error,referenceId:delivery.referenceId,providerStatus:delivery.status,providerCode:delivery.providerCode},delivery.status>=400&&delivery.status<600?delivery.status:502,origin,env);
+   return json({sent:true,emailId:delivery.result.id||null},200,origin,env);
   }
   if(path==="/api/client/profile"&&req.method==="PATCH"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);const p=await body(req),name=String(p.businessName||"").trim().slice(0,160),contact=String(p.contactName||"").trim().slice(0,120),phone=String(p.phone||"").trim().slice(0,40);if(name.length<2)throw Error("business_name_required");await env.DB.prepare("UPDATE avr_customers SET business_name=?,contact_name=?,phone=?,updated_at=? WHERE id=?").bind(name,contact,phone,new Date().toISOString(),c.id).run();return json({saved:true},200,origin,env)}
   if(path==="/api/billing/checkout"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);const p=await body(req);if(String(p.promoCode||"").trim())throw Error("promotion_only_for_new_monthly_signups");return json(await createCheckout(u,c,String(p.plan||""),env,String(p.cadence||"monthly"),""),200,origin,env)}
@@ -1107,8 +1107,16 @@ async function route(req,env){
     if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)throw Error("email_sender_not_configured_check_resend");
     const postal=String(env.BUSINESS_POSTAL_ADDRESS||"").trim();
     if(postal.length<8)throw Error("business_postal_address_required_for_marketing");
-    const p=await body(req,10000),id=String(marketingSend?.[1]||p.prospectId||p.prospect_id||p.id||p.prospect?.id||"").trim();
-    if(!/^[a-f0-9-]{36}$/i.test(id))throw Error("valid_marketing_prospect_id_required");
+    const p=await body(req,10000);
+    let id=String(marketingSend?.[1]||p.prospectId||p.prospect_id||p.id||p.prospect?.id||"").trim();
+    if(!/^[a-f0-9-]{36}$/i.test(id)){
+     const prospectEmail=String(p.prospectEmail||p.prospect_email||"").trim().toLowerCase();
+     if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(prospectEmail))throw Error("valid_marketing_prospect_id_required");
+     const matches=await env.DB.prepare("SELECT id FROM avr_marketing_prospects WHERE lower(email)=? OR lower(normalized_email)=? LIMIT 2").bind(prospectEmail,prospectEmail).all();
+     const rows=matches.results||[];
+     if(rows.length!==1)throw Error(rows.length>1?"marketing_prospect_email_ambiguous":"marketing_prospect_not_found");
+     id=String(rows[0].id||"").trim();
+    }
     const subject=String(p.subject||"").trim(),message=String(p.body||"").trim();
     if(subject.length<4||subject.length>180||message.length<30||message.length>6000)throw Error("valid_subject_and_email_body_required");
     const prospect=await env.DB.prepare("SELECT * FROM avr_marketing_prospects WHERE id=?").bind(id).first();
@@ -1124,16 +1132,16 @@ async function route(req,env){
     const textBody="ADVERTISEMENT\n\n"+message+"\n\nStar69AI\nhttps://star69ai.com/\nPhone: "+businessPhone+"\n"+postal+"\n\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p style=\"font-size:12px;font-weight:700;letter-spacing:1.2px;margin:0 0 16px;color:#52616b\">ADVERTISEMENT</p><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>Phone: "+esc(businessPhone)+"<br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
-    const send=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-marketing/"+id+"/"+crypto.randomUUID()},body:JSON.stringify({from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}})});
-    const sent=await send.json().catch(()=>({}));
-    if(!send.ok){const providerDetail=String(sent?.message||sent?.error?.message||sent?.error||sent?.name||"No provider error detail returned").replace(/[\\r\\n]+/g," ").slice(0,320);throw Error("resend_rejected_email_http_"+send.status+": "+providerDetail)}
+    const delivery=await sendResendEmail(env,{payload:{from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}},idempotencyKey:"star69ai-marketing/"+id+"/"+crypto.randomUUID(),eventName:"marketing_email"});
+    if(!delivery.ok)return json({error:delivery.error,referenceId:delivery.referenceId,providerStatus:delivery.status,providerCode:delivery.providerCode},delivery.status>=400&&delivery.status<600?delivery.status:502,origin,env);
+    const sent=delivery.result;
     // Store the unsubscribe token only after Resend accepts the message. A rejected request must not leave an orphan token.
     await env.DB.prepare("INSERT INTO avr_marketing_unsubscribe_tokens(token_hash,prospect_id,created_at) VALUES(?,?,?)").bind(hash,id,new Date().toISOString()).run();
     const now=new Date().toISOString();
     await env.DB.prepare("INSERT INTO avr_marketing_sends(id,prospect_id,resend_email_id,subject,sent_at,status) VALUES(?,?,?,?,?,'sent')").bind(crypto.randomUUID(),id,sent.id||null,subject,now).run();
     await env.DB.prepare("UPDATE avr_marketing_prospects SET last_contacted_at=?,updated_at=? WHERE id=?").bind(now,now,id).run();
     await audit(env,u,"marketing_email_sent",null,{prospectId:id,resendEmailId:sent.id||null});
-    return json({sent:true,accepted:true,provider:"Resend",emailId:sent.id||null,providerStatus:send.status},200,origin,env);
+    return json({sent:true,accepted:true,provider:"Resend",emailId:sent.id||null,providerStatus:delivery.status},200,origin,env);
    }
 
 

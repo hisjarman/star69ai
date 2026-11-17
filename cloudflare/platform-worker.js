@@ -613,9 +613,8 @@ function brandEmail(content){
 
 
 function brandMarketingEmail(content){
-  return "<!doctype html><html><body style=\\"margin:0;padding:24px 12px;background:#f3f7fa;font-family:Arial,Helvetica,sans-serif;color:#20343b\\"><table role=\\"presentation\\" cellpadding=\\"0\\" cellspacing=\\"0\\" border=\\"0\\" width=\\"100%\\" style=\\"max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e2eaf0;border-radius:12px\\"><tr><td style=\\"padding:24px\\">"+content+"</td></tr></table></body></html>";
+  return "<!doctype html><html><body style=\"margin:0;padding:24px 12px;background:#f3f7fa;font-family:Arial,Helvetica,sans-serif;color:#20343b\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e2eaf0;border-radius:12px\"><tr><td style=\"padding:24px\">"+content+"</td></tr></table></body></html>";
 }
-
 function resendFrom(env){
   const configured=String(env.RESEND_FROM_EMAIL||"").trim();
   if(!configured)return "";
@@ -1158,9 +1157,9 @@ async function route(req,env){
     const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)),hash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
     const unsubscribeUrl="https://avr-platform-api.hisjarman.workers.dev/api/public/marketing/unsubscribe?token="+token;
     const businessPhone="(702) 389-1724";
-    const textBody="ADVERTISEMENT\n\n"+message+"\n\nUnsubscribe from marketing emails: "+unsubscribeUrl+"\n\nSolomon Jarman — Founder & Operator\nhttps://star69ai.com/about.html\nPhone: "+businessPhone+"\n"+postal;
+    const textBody="ADVERTISEMENT\n\n"+message+"\n\nUnsubscribe from marketing emails: "+unsubscribeUrl+"\n\nBest,\nSolomon Jarman — Founder & Operator\nhttps://star69ai.com/about.html\nPhone: "+businessPhone+"\n"+postal;
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    const htmlBody=brandMarketingEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p style=\"font-size:12px;font-weight:700;letter-spacing:1.2px;margin:0 0 16px;color:#52616b\">ADVERTISEMENT</p><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"margin:22px 0 14px;padding:12px 14px;background:#effaf2;border:1px solid #34fd78;border-radius:8px;font-size:15px;font-weight:700\"><a href=\""+unsubscribeUrl+"\" style=\"color:#087a3c;text-decoration:underline\">Unsubscribe from marketing emails</a></p><p style=\"font-size:12px;color:#52616b\"><a href=\"https://star69ai.com/about.html\" style=\"color:#52616b;text-decoration:underline\">Solomon Jarman · Founder &amp; Operator</a><br>Phone: "+esc(businessPhone)+"<br>"+esc(postal)+"</p></div>");
+    const htmlBody=brandMarketingEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p style=\"font-size:12px;font-weight:700;letter-spacing:1.2px;margin:0 0 16px;color:#52616b\">ADVERTISEMENT</p><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"margin:22px 0 14px;padding:12px 14px;background:#effaf2;border:1px solid #34fd78;border-radius:8px;font-size:15px;font-weight:700\"><a href=\""+unsubscribeUrl+"\" style=\"color:#087a3c;text-decoration:underline\">Unsubscribe from marketing emails</a></p><p style=\"font-size:12px;color:#52616b\">Best,<br><a href=\"https://star69ai.com/about.html\" style=\"color:#52616b;text-decoration:underline\">Solomon Jarman · Founder &amp; Operator</a><br>Phone: "+esc(businessPhone)+"<br>"+esc(postal)+"</p></div>");
     const delivery=await sendResendEmail(env,{payload:{from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}},idempotencyKey:"star69ai-marketing/"+id+"/"+crypto.randomUUID(),eventName:"marketing_email"});
     if(!delivery.ok)return json({error:delivery.error,referenceId:delivery.referenceId,providerStatus:delivery.status,providerCode:delivery.providerCode},delivery.status>=400&&delivery.status<600?delivery.status:502,origin,env);
     const sent=delivery.result;

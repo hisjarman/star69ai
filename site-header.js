@@ -13,7 +13,7 @@
   const markup = `
     <header class="site-global-header" data-site-global-header>
       <div class="site-global-cover">
-        <img class="site-global-cover-image" src="/assets/Logotipo%20Star69AI%20sobre%20horizonte%20espacial.webp" alt="Star69AI over a cinematic space horizon" fetchpriority="high" decoding="async">
+        <img class="site-global-cover-image" src="/assets/Logo%20Star69AI%20horizonte%20espacial.webp" alt="Star69AI logo with a cinematic space horizon" fetchpriority="high" decoding="async">
         <div class="site-global-cover-shade" aria-hidden="true"></div>
         <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span><span class="site-global-tagline">COMMUNICATIONS, EVOLVED.</span></div>
         <button class="site-global-toggle" type="button" aria-label="Open Star69AI navigation" aria-expanded="false" aria-controls="site-global-navigation">

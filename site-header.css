@@ -1,4 +1,6 @@
 /* Star69AI shared navigation — one consolidated responsive system. */
+/* Prevent legacy page headers/logos from flashing before site-header.js replaces them. */
+body > header:not(.site-global-header){visibility:hidden!important;}
 .site-global-header{
   position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:clamp(14px,1.8vw,26px);
   width:100%;min-height:72px;padding:10px max(22px,calc((100vw - 1440px)/2));

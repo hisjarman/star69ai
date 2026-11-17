@@ -826,6 +826,30 @@ async function route(req,env){
  if(path==="/webhooks/retell"&&req.method==="POST"){try{return json(await retellWebhook(req,env),200,origin,env)}catch(e){console.error("retell_webhook",e.message);return json({error:e.message},400,origin,env)}}
  try{
 
+  // Public marketing unsubscribe. GET asks for confirmation so automated link scanners
+  // cannot silently opt recipients out; POST performs the change and supports RFC 8058.
+  if(path==="/api/public/marketing/unsubscribe"&&(req.method==="GET"||req.method==="POST")){
+   let token=String(url.searchParams.get("token")||"").trim();
+   if(req.method==="POST"){
+    const form=new URLSearchParams(await req.text());
+    token=String(form.get("token")||token).trim();
+   }
+   const page=(title,message,formHtml="")=>new Response("<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>"+title+" · Star69AI</title><body style=\"margin:0;background:#07111f;color:#eef5ff;font:16px/1.6 Arial,sans-serif;display:grid;min-height:100vh;place-items:center\"><main style=\"max-width:520px;margin:24px;padding:32px;border:1px solid #26384c;border-radius:18px;background:#101d2d\"><p style=\"color:#34fd78;font-weight:700;letter-spacing:.12em\">STAR69AI</p><h1>"+title+"</h1><p>"+message+"</p>"+formHtml+"</main></body></html>",{status:200,headers:{"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff","Referrer-Policy":"no-referrer"}});
+   if(!/^[a-f0-9]{64}$/i.test(token))return page("Unsubscribe link invalid","This unsubscribe link is invalid or incomplete. You can reply to the email and request removal.");
+   const tokenHash=await sha256Hex(token);
+   const record=await env.DB.prepare("SELECT t.prospect_id,t.used_at,p.status FROM avr_marketing_unsubscribe_tokens t JOIN avr_marketing_prospects p ON p.id=t.prospect_id WHERE t.token_hash=? LIMIT 1").bind(tokenHash).first();
+   if(!record)return page("Unsubscribe link unavailable","This link may be expired or unrecognized. You can reply to the email and request removal.");
+   if(req.method==="GET"){
+    if(record.status==="unsubscribed"||record.used_at)return page("Already unsubscribed","This email address is already opted out of Star69AI marketing messages.");
+    const action="/api/public/marketing/unsubscribe?token="+encodeURIComponent(token);
+    return page("Confirm unsubscribe","Select the button below to stop future Star69AI marketing emails.",'<form method="post" action="'+action+'"><button type="submit" style="border:0;border-radius:9px;padding:13px 20px;background:#34fd78;color:#07111f;font-weight:700;cursor:pointer">Unsubscribe me</button></form>');
+   }
+   const now=new Date().toISOString();
+   await env.DB.prepare("UPDATE avr_marketing_prospects SET status='unsubscribed',updated_at=? WHERE id=?").bind(now,record.prospect_id).run();
+   await env.DB.prepare("UPDATE avr_marketing_unsubscribe_tokens SET used_at=COALESCE(used_at,?) WHERE token_hash=?").bind(now,tokenHash).run();
+   return page("You are unsubscribed","This email address has been removed from Star69AI marketing outreach. No further marketing emails will be sent to this address.");
+  }
+
   if(path==="/api/public/checkout/start"&&req.method==="POST")return json(await startPublicCheckout(req,env,origin),201,origin,env);
   if(path==="/api/public/checkout/capture"&&req.method==="POST")return json(await capturePublicSetup(req,env,origin),200,origin,env);
   if(path==="/api/public/checkout/resume"&&req.method==="POST")return json(await resumePublicCheckout(req,env,origin),200,origin,env);

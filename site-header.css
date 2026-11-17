@@ -1,84 +1,38 @@
-/* Star69AI shared navigation — one consolidated responsive system. */
-.site-global-header{
-  position:sticky;top:0;z-index:1000;display:flex;align-items:center;gap:clamp(14px,1.8vw,26px);
-  width:100%;min-height:72px;padding:10px max(22px,calc((100vw - 1440px)/2));
-  color:#f4f8fc;background:rgba(5,12,27,.94);border-bottom:1px solid rgba(67,180,254,.2);
-  box-shadow:0 8px 28px rgba(0,0,0,.2);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
-}
-.site-global-brand{display:flex;align-items:center;flex:0 0 auto;min-width:0}
-.site-global-brand img{display:block;width:clamp(160px,16vw,214px);max-width:100%;max-height:56px;height:auto;object-fit:contain}
-.site-global-nav{display:flex;align-items:center;justify-content:center;gap:clamp(13px,1.55vw,22px);margin-left:auto;min-width:0}
-.site-global-nav>a,.site-global-more>summary{
-  color:#d9e6f3;font:700 12px/1.4 'Manrope',Arial,sans-serif;white-space:nowrap;text-decoration:none;cursor:pointer;transition:color .18s ease
-}
-.site-global-nav>a:hover,.site-global-nav>a[aria-current=page],.site-global-more>summary:hover,.site-global-more[open]>summary{color:#43b4fe}
-.site-global-more{position:relative}
-.site-global-more>summary{list-style:none}
-.site-global-more>summary::-webkit-details-marker{display:none}
-.site-global-more>summary span{margin-left:3px;color:#34fd78}
-.site-global-more-panel{
-  position:absolute;top:calc(100% + 18px);right:0;display:grid;grid-template-columns:1fr 1fr;gap:3px;
-  min-width:360px;padding:10px;border:1px solid #294665;border-radius:12px;background:#09172a;
-  box-shadow:0 18px 44px rgba(0,0,0,.42)
-}
-.site-global-more-panel a{padding:10px 11px;border-radius:7px;color:#dce8f4;font:600 12px/1.4 'Manrope',Arial,sans-serif;text-decoration:none}
-.site-global-more-panel a:hover,.site-global-more-panel a[aria-current=page]{background:#102943;color:#75ceff}
-.site-global-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
-.site-global-actions a{
-  display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:9px 12px;
-  border-radius:8px;font:800 10px/1.2 'Manrope',Arial,sans-serif;letter-spacing:.015em;white-space:nowrap;text-decoration:none;
-  transition:transform .18s ease,border-color .18s ease,background .18s ease
-}
-.site-global-actions a:hover{transform:translateY(-1px)}
-.site-global-partner{border:1px solid rgba(196,115,255,.55);background:rgba(89,43,119,.2);color:#e9d4ff}
-.site-global-partner:hover{border-color:#c77cff;background:rgba(89,43,119,.36)}
-.site-global-login{border:1px solid rgba(67,180,254,.48);background:rgba(17,51,81,.38);color:#e5f4ff}
-.site-global-login:hover{border-color:#43b4fe;background:rgba(17,51,81,.65)}
-.site-global-start{border:1px solid #34fd78;background:#34fd78;color:#061a12}
-.site-global-start:hover{background:#62ff93}
-.site-global-mobile-start,.site-global-partner-mobile,.site-global-toggle{display:none}
-.site-global-toggle{
-  width:42px;height:42px;flex:0 0 42px;align-items:center;justify-content:center;flex-direction:column;gap:5px;
-  border:1px solid #35516a;border-radius:9px;background:#10233a;color:#fff;cursor:pointer
-}
-.site-global-toggle span{display:block;width:18px;height:2px;border-radius:3px;background:#eaf5ff;transition:transform .2s ease,opacity .2s ease}
-.site-global-toggle[aria-expanded=true] span:first-child{transform:translateY(7px) rotate(45deg)}
-.site-global-toggle[aria-expanded=true] span:nth-child(2){opacity:0}
-.site-global-toggle[aria-expanded=true] span:last-child{transform:translateY(-7px) rotate(-45deg)}
-@media(max-width:1120px){
-  .site-global-header{gap:12px;padding-inline:18px}
-  .site-global-brand img{width:168px;max-height:52px}
-  .site-global-nav{gap:12px}
-  .site-global-nav>a,.site-global-more>summary{font-size:11px}
-  .site-global-actions{gap:6px}
-  .site-global-actions a{padding-inline:9px;font-size:9px}
-}
-@media(max-width:980px){
-  .site-global-header{min-height:68px;padding:9px 16px;gap:10px}
-  .site-global-brand img{width:clamp(146px,35vw,174px);max-height:48px}
-  .site-global-toggle{display:flex;margin-left:auto}
-  .site-global-nav{
-    display:none;position:absolute;top:100%;left:0;right:0;max-height:calc(100svh - 68px);overflow-y:auto;
-    align-items:stretch;justify-content:flex-start;flex-direction:column;gap:0;margin:0;padding:12px 18px 20px;
-    border-bottom:1px solid #244363;background:#071326;box-shadow:0 18px 30px rgba(0,0,0,.35)
-  }
-  .site-global-nav.is-open{display:flex}
-  .site-global-nav>a,.site-global-more>summary{display:block;padding:12px 8px;font-size:14px}
-  .site-global-more-panel{position:static;grid-template-columns:1fr 1fr;min-width:0;margin:4px 0 8px;border-radius:9px;box-shadow:none}
-  .site-global-more-panel a{padding:11px}
-  .site-global-actions{margin-left:auto}
-  .site-global-actions .site-global-partner,.site-global-actions .site-global-start{display:none}
-  .site-global-partner-mobile,.site-global-mobile-start{display:block!important;padding:13px 8px!important;font-size:14px!important;font-weight:800!important}
-  .site-global-partner-mobile{color:#dfb5ff!important}
-  .site-global-mobile-start{color:#54ff8a!important}
-  .site-global-login{min-height:38px!important;padding:8px 11px!important;font-size:10px!important}
-}
-@media(max-width:390px){
-  .site-global-header{padding-inline:10px;gap:7px}
-  .site-global-brand img{width:140px;max-height:44px}
-  .site-global-login{padding:8px 9px!important;font-size:9px!important}
-  .site-global-toggle{width:38px;height:38px;flex-basis:38px}
-}
-@media(prefers-reduced-motion:reduce){
-  .site-global-header *{transition:none!important}
-}
+/* Star69AI cinematic full-width cover header and mission-control navigation */
+.site-global-header{position:relative;z-index:1000;width:100%;color:#f5faff;background:#030918;isolation:isolate}
+.site-global-cover{position:relative;width:100%;height:clamp(210px,27vw,360px);min-height:210px;overflow:visible;background:#030918}
+.site-global-cover-image{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 48%;z-index:-2}
+.site-global-cover-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(1,6,20,.28),transparent 28%,rgba(1,6,20,.12) 55%,rgba(1,6,20,.88) 100%),linear-gradient(90deg,rgba(1,6,20,.16),transparent 35%,rgba(1,6,20,.16))}
+.site-global-cover-topline{position:absolute;top:18px;left:clamp(16px,3vw,42px);right:clamp(16px,3vw,42px);display:flex;justify-content:space-between;align-items:center;gap:14px;pointer-events:none;font:700 10px/1.3 'IBM Plex Mono',monospace;letter-spacing:1.8px;color:#d9edff;text-shadow:0 2px 8px #000}
+.site-global-status,.site-global-nav-live{display:flex;align-items:center;gap:8px}.site-global-status i,.site-global-nav-live i,.site-global-nav-footer i{width:7px;height:7px;border-radius:50%;background:#34fd78;box-shadow:0 0 12px #34fd78;display:inline-block;animation:star69Pulse 1.8s ease-in-out infinite}
+.site-global-tagline{color:#bdeaff}
+.site-global-toggle{position:absolute;right:clamp(16px,3vw,42px);top:58px;z-index:5;display:flex;align-items:center;gap:13px;padding:12px 16px;border:1px solid rgba(67,180,254,.8);border-radius:8px;background:linear-gradient(135deg,rgba(4,18,43,.94),rgba(8,34,57,.88));color:#f4fbff;box-shadow:0 0 22px rgba(67,180,254,.2),inset 0 0 18px rgba(67,180,254,.08);font:800 11px/1 'IBM Plex Mono',monospace;letter-spacing:2px;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s}
+.site-global-toggle:hover{transform:translateY(-2px);border-color:#34fd78;box-shadow:0 0 28px rgba(52,253,120,.28)}
+.site-global-toggle-icon{display:grid;gap:4px}.site-global-toggle-icon i{width:17px;height:2px;background:#43b4fe;box-shadow:0 0 7px #43b4fe;transition:transform .2s,opacity .2s}
+.site-global-toggle[aria-expanded=true] .site-global-toggle-icon i:first-child{transform:translateY(6px) rotate(45deg)}
+.site-global-toggle[aria-expanded=true] .site-global-toggle-icon i:nth-child(2){opacity:0}
+.site-global-toggle[aria-expanded=true] .site-global-toggle-icon i:last-child{transform:translateY(-6px) rotate(-45deg)}
+.site-global-nav{position:absolute;z-index:4;left:clamp(12px,2vw,28px);right:clamp(12px,2vw,28px);top:104px;max-height:min(68vh,580px);overflow:auto;padding:18px 20px 14px;border:1px solid rgba(67,180,254,.55);border-radius:14px;background:linear-gradient(145deg,rgba(3,12,31,.97),rgba(5,25,45,.96));box-shadow:0 22px 60px rgba(0,0,0,.65),inset 0 0 35px rgba(67,180,254,.07);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;visibility:hidden;transform:translateY(-9px) scale(.985);transform-origin:top right;transition:opacity .22s,visibility .22s,transform .22s}
+.site-global-header.menu-open .site-global-nav{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+.site-global-nav-head,.site-global-nav-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;color:#dff5ff;font:800 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:1.5px}
+.site-global-nav-head small{color:#779ab8;font-size:9px;font-weight:500}.site-global-nav-live{color:#8dffc0;font-size:9px;letter-spacing:1px}
+.site-global-nav-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:16px 0}
+.site-global-nav-button{--tone:#43b4fe;position:relative;display:flex;align-items:center;gap:9px;min-width:0;min-height:48px;padding:9px 10px;border:1px solid color-mix(in srgb,var(--tone) 52%,transparent);border-radius:7px;background:linear-gradient(135deg,color-mix(in srgb,var(--tone) 13%,#061327),rgba(3,10,25,.92));color:#eaf6ff;text-decoration:none;font:700 11px/1.25 'Manrope',Arial,sans-serif;transition:transform .18s,border-color .18s,background .18s,box-shadow .18s;overflow:hidden}
+.site-global-nav-button:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,color-mix(in srgb,var(--tone) 13%,transparent) 50%,transparent 80%);transform:translateX(-120%);transition:transform .5s}
+.site-global-nav-button:hover,.site-global-nav-button:focus-visible,.site-global-nav-button.is-current{outline:none;transform:translateY(-2px);border-color:var(--tone);background:color-mix(in srgb,var(--tone) 17%,#07152b);box-shadow:0 0 18px color-mix(in srgb,var(--tone) 25%,transparent),inset 0 0 12px color-mix(in srgb,var(--tone) 9%,transparent)}
+.site-global-nav-button:hover:before{transform:translateX(120%)}
+.site-global-nav-symbol{position:relative;z-index:1;display:grid;place-items:center;width:26px;height:26px;flex:0 0 26px;border:1px solid color-mix(in srgb,var(--tone) 65%,transparent);border-radius:6px;color:var(--tone);font-size:17px;text-shadow:0 0 9px var(--tone)}
+.site-global-nav-button>span:nth-child(2),.site-global-nav-button>b{position:relative;z-index:1}.site-global-nav-button>b{margin-left:auto;color:var(--tone);font-size:13px;opacity:.75}
+.tone-cyan{--tone:#43dfff}.tone-blue{--tone:#43b4fe}.tone-green{--tone:#34fd78}.tone-purple{--tone:#c17cff}.tone-gold{--tone:#ffd66b}
+.site-global-nav-button[aria-current=page]{box-shadow:inset 3px 0 var(--tone),0 0 15px color-mix(in srgb,var(--tone) 18%,transparent)}
+.site-global-nav-footer{padding-top:11px;border-top:1px solid rgba(67,180,254,.18);color:#7895b3;font-size:9px}
+.site-global-nav-footer span:last-child{display:flex;align-items:center;gap:8px;color:#91eeb7}
+.site-global-utility{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:9px clamp(14px,3vw,42px);background:linear-gradient(90deg,#030918,#07152b 50%,#030918);border-top:1px solid rgba(67,180,254,.22);border-bottom:1px solid rgba(67,180,254,.18)}
+.site-global-utility a{display:inline-flex;align-items:center;gap:12px;min-height:35px;padding:8px 13px;border:1px solid #34516e;border-radius:5px;color:#dcefff;text-decoration:none;font:800 9px/1 'IBM Plex Mono',monospace;letter-spacing:1px;transition:.2s}
+.site-global-utility a span{font-size:13px}.site-global-partner{border-color:#a66be2!important;color:#e5c7ff!important}.site-global-login{border-color:#43b4fe!important}.site-global-start{border-color:#34fd78!important;background:rgba(52,253,120,.1);color:#8dffb5!important}
+.site-global-utility a:hover{transform:translateY(-2px);box-shadow:0 0 17px rgba(67,180,254,.22);background:#102642}
+@keyframes star69Pulse{50%{opacity:.48;box-shadow:0 0 4px #34fd78}}
+@media(max-width:1100px){.site-global-nav-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:700px){.site-global-cover{height:clamp(190px,48vw,270px);min-height:190px}.site-global-cover-image{object-position:center center}.site-global-cover-topline{top:12px;font-size:8px;letter-spacing:1px}.site-global-toggle{top:48px;padding:11px 13px}.site-global-nav{top:91px;left:9px;right:9px;padding:14px 12px 12px;max-height:calc(100svh - 125px)}.site-global-nav-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0}.site-global-nav-button{min-height:45px;padding:8px;font-size:10px}.site-global-nav-symbol{width:23px;height:23px;flex-basis:23px}.site-global-nav-head,.site-global-nav-footer{font-size:8px}.site-global-nav-head small{display:block;margin-top:3px}.site-global-nav-live{font-size:7px}.site-global-utility{justify-content:center;flex-wrap:wrap;padding:8px 9px;gap:6px}.site-global-utility a{min-height:33px;padding:8px 9px;font-size:8px;letter-spacing:.6px}}
+@media(max-width:360px){.site-global-cover{height:185px}.site-global-nav-button{font-size:9px;gap:6px}.site-global-nav-symbol{width:20px;height:20px;flex-basis:20px}}
+@media(prefers-reduced-motion:reduce){.site-global-header *{animation:none!important;transition:none!important}}

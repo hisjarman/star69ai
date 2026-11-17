@@ -1550,3 +1550,14 @@ This section supersedes the earlier activation-status notes above where they des
 - The lock protects the shared header/menu and footer stylesheet. It does not block unrelated page, content, backend or portal work, but other CSS must not override the frozen presentation.
 - No existing site header, CSS, Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer or prospect data was changed in this protection branch.
 - Review and merge this protection as a pull request. Until merged, the guard is not active on `main`.
+
+
+## Homepage-only hero, Web 3.0 client Mission Control and footer logo scale — 2026-11-17
+
+- Feature branch: `design/homepage-hero-client-web3-mission-control-2026-11-17`, created from current `main` after PR #244 and PR #245 were merged.
+- Public header: the full-width `/assets/image_hero.webp` cover is now displayed only on `/` and `/index.html`. Other public pages retain the 18-link cinematic Mission Control menu and utility links inside a compact 76px desktop / 66px mobile dark-blue header, without the hero image or cover tagline strip.
+- Client dashboard: removed the homepage hero artwork from its top identity header. The client workspace now uses a compact navy glass-effect identity bar, deep-space ambient glow and subtle grid, electric purple `#F461FE`, electric blue `#43B4FE`, neon green `#34FD78`, illuminated navigation states, glass-like cards, and restrained reduced-motion-aware effects. Updated browser theme color.
+- Footer: increased the canonical footer wordmark container/image to 320px desktop and 280px mobile while retaining natural image proportions and the dark footer.
+- Updated `project-context/STAR69AI_HEADER_DESIGN_LOCK.md` and `.github/workflows/protect-approved-header.yml` because the explicit owner request intentionally revises the previously frozen header design. New protected Git blob IDs are recorded in both the lock and workflow.
+- No authentication, Worker, D1, billing, call data, customer/prospect records or email behavior changed. No merge or deployment performed.
+- Validation performed: confirmed the branch is based on current main; confirmed homepage route detection, interior hero-art hiding, dashboard navy header override, all three approved accent colors, footer sizing overrides, and synchronized design-lock/workflow blob IDs. Automated browser visual QA, responsive screenshot review, GitHub Actions check, PR review/merge and Pages deployment remain outstanding.

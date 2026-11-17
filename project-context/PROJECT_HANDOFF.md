@@ -1,3 +1,12 @@
+## Brand asset roles, visible banner repair and client greeting — 2026-11-17
+
+- Canonical brand assets are distinct: `assets/main_logo.webp` is the full Star69AI wordmark; `assets/icon_main.webp` is the standalone yin-yang mark; `assets/image_hero.webp` is the cinematic banner artwork. Never use the yin-yang icon as a replacement for the full logo in full-brand contexts.
+- The shared mission-control menu now uses the real `icon_main.webp` asset instead of a hand-drawn inline SVG. The public-site banner image layer was behind the cover's opaque background due to its negative stacking order; the CSS now places the image above the background and below its shade/text/navigation layers.
+- Shared header installation replaces recognizable legacy Star69AI logo images with `main_logo.webp`, while preserving the standalone icon asset. Footer logo normalization remains in place.
+- The client console top bar is now a compact `image_hero.webp` banner with the `icon_main.webp` mark and account controls. The sidebar uses only the yin-yang icon; the oversized wordmark is removed.
+- The client workspace greeting uses the browser's local time and the customer's contact first name when available: morning 05:00–11:59, afternoon 12:00–16:59, evening 17:00–04:59. The business name remains the workspace title. No customer data is sent to a new service and no Worker, D1, authentication or billing behavior changes.
+- Source changes only on `branding/client-header-greeting-logo-cleanup-2026-11-17`. Verify icon/banner assets on GitHub Pages, desktop/mobile layouts, the client greeting with authenticated customer data, and legacy logos on public pages after deployment. Do not merge `main` without explicit approval.
+
 ## Official Star69AI logo and cinematic hero banner — 2026-11-17
 
 - Feature branch: `branding/main-logo-and-hero-banner-2026-11-17`, created from current `main`.

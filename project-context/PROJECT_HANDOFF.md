@@ -1,3 +1,15 @@
+## Official Star69AI logo and cinematic hero banner — 2026-11-17
+
+- Feature branch: `branding/main-logo-and-hero-banner-2026-11-17`, created from current `main`.
+- Confirmed both supplied assets already exist in the repository: `assets/main_logo.webp` (transparent horizontal Star69AI logo with yin-yang emblem) and `assets/image_hero.webp` (wide 16:9 cinematic space-horizon banner).
+- Updated the shared public-site header to use `image_hero.webp` as its primary banner and `main_logo.webp` as the official brand mark in the utility/navigation bar.
+- Updated the shared header installer to replace legacy Star69AI logo images in existing page footers with `main_logo.webp`, or insert the official logo where a page footer has no logo.
+- Updated homepage Open Graph/Twitter share artwork and image preload to use `image_hero.webp`; homepage footer uses `main_logo.webp`.
+- Updated the client portal, agency admin console and partner portal header logos to `main_logo.webp`; replaced the client sidebar's text-only brand mark with the official logo.
+- Preserved existing navigation, hero content, portal authentication, dashboard functions, and backend integrations. No Worker, D1, billing, Retell, Stripe, PayPal, Clerk, customer, prospect or email behavior changed.
+- Source-level checks confirm both asset paths exist on `main`, the shared header points to the new hero/logo assets, homepage social artwork and preload point to the hero image, all three standalone portals point to the official logo, and appended CSS has balanced braces.
+- Browser visual QA at desktop/mobile widths and live GitHub Pages deployment remain outstanding. Review via PR; do not merge `main` without explicit user approval.
+
 ## Shared Resend delivery pipeline and Marketing Outreach prospect resolution — 2026-11-17
 
 - Feature branch: `fix/shared-resend-marketing-delivery-2026-11-17`, created from current `main` after reading this handoff and inspecting the current Admin, client and Worker email paths.

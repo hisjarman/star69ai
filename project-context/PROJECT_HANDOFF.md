@@ -1338,3 +1338,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Replaced the old headset-style favicon SVG with a matching Star69AI cosmic-star/orbit symbol and added the supplied 48px, 192px and 512px PNG favicon declarations plus Apple touch icons to primary pages and private consoles.
 - Preserved existing routes, navigation, authentication, Worker/D1 behavior, billing, customer data and production configuration. No backend changes.
 - Assets were already uploaded by the user to `main` and are reused without re-encoding. This branch is source-only; browser visual QA, Pages publication and cache refresh remain unverified. Review via PR; do not merge `main` without explicit user approval.
+
+
+## Admin Marketing console — runtime error and missing research import — 2026-11-17
+
+- Production D1 database `avr-trust-lab` contains the three Marketing tables (`avr_marketing_prospects`, `avr_marketing_sends`, `avr_marketing_unsubscribe_tokens`); a read-only production query confirmed `avr_marketing_prospects` has **0 rows**. The November 16 research batch was never imported, so the Admin UI cannot display it. The existing prospects GET endpoint correctly reads only that D1 table.
+- Root cause of the Worker `business is not defined` runtime error: an orphaned duplicate validation statement referencing block-scoped `business` and `email` variables was left immediately after the `GET /api/admin/customers` route. It executes for otherwise-unmatched admin paths and throws a ReferenceError. The variables belong only to the POST customer-creation handler. Remove the orphan statement; keep validation in its owning handler.
+- This repair is isolated on `fix/admin-business-reference-marketing-2026-11-17`; no production Worker deployment or main merge is performed from this branch.
+- Retrieved prior research context identifies one fully surfaced prospect record: DiSalvo Roofing, Las Vegas, NV, public email `info@disalvoroofing.com`, phone 725-205-3113. The rest of the earlier report is truncated in conversation retrieval; do not invent missing records, sources or personalized drafts. User's standing instruction remains: verify each business, website, location, industry, public email and source; never guess, automatically add prospects, or send emails. Prepare records for review before import.
+- Marketing emails remain one-at-a-time, individually reviewed and manually sent only after explicit admin action. No emails were sent and no prospect records were inserted during this repair.

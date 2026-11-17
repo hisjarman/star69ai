@@ -132,11 +132,6 @@
 
 /* Mobile navigation reliability and touch target */
 @media(max-width:650px){
-  .topbar{position:sticky;z-index:100;overflow:visible}
-  .menu-toggle{position:relative;z-index:102;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;padding:0;margin-left:2px;border:1px solid rgba(255,255,255,.22);border-radius:7px;background:#111d27;color:#fff;font-size:23px;line-height:1;cursor:pointer;touch-action:manipulation}
-  .menu-toggle:focus-visible{outline:2px solid #70e1cb;outline-offset:3px}
-  .nav{z-index:101;top:100%;max-height:calc(100vh - 66px);overflow-y:auto;overscroll-behavior:contain;box-shadow:0 18px 30px rgba(0,0,0,.35)}
-  .nav.open{display:flex}
 }
 
 /* Premium dark treatment for the managed-service section */

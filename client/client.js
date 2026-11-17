@@ -42,6 +42,10 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
   approve.hidden=true;subscribe.hidden=true;setup.hidden=true;
   if(!onboarding){root.hidden=true;return}root.hidden=false;
   const ready=!!onboarding.agent_id&&onboarding.status==="provisioned",approved=!!onboarding.demoApproved,paid=onboarding.plan_payment_status==="paid",setupPaid=onboarding.setup_status==="paid"||onboarding.setup_status==="not_required";
+  const steps=[["Demo receptionist prepared",ready],["Demo approved",approved],["Plan payment confirmed",paid],["Setup payment confirmed",setupPaid],["Managed live setup and call testing",false]];
+  const currentStep=steps.findIndex(step=>!step[1]);
+  const stepRoot=$("#onboarding-steps");
+  if(stepRoot)stepRoot.innerHTML=steps.map((step,index)=>"<li class=\"launch-step "+(step[1]?"complete":index===currentStep?"current":"upcoming")+"\" data-state=\""+(step[1]?"complete":index===currentStep?"current":"upcoming")+"\"><span class=\"launch-step-marker\">"+(step[1]?"✓":String(index+1))+"</span><span>"+safe(step[0])+"</span><small>"+(step[1]?"Complete":index===currentStep?"Next step":"Up next")+"</small></li>").join("");
   if(!ready){stage.textContent="Demo in preparation";message.textContent="We are building your personalized demo receptionist and preparing your client account. Refresh this page shortly.";return}
   if(!approved){stage.textContent="Demo ready for review";message.textContent="Your personalized demo receptionist is ready. Review it in the Receptionist section. When you are satisfied, approve the demo to continue. No setup fee has been charged.";approve.hidden=false;return}
   if(!paid){stage.textContent="Demo approved";message.textContent="Your demo is approved. Start your "+(onboarding.billing_cadence==="monthly"?"monthly Stripe subscription":"prepaid plan payment")+". The setup fee is not due until your plan payment is confirmed.";subscribe.hidden=false;return}
@@ -85,6 +89,14 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
  function renderUsage(usage,included,plan){
   const used=Math.max(0,Number(usage.minutes||0)),allowance=Math.max(0,Number(included||0)),over=Math.max(0,Number(usage.billableOverageMinutes??(used-allowance))),vault=Math.max(0,Number(usage.vaultMinutes||0)),vaultUsed=Math.max(0,Number(usage.vaultUsedThisMonth||0)),pct=allowance?Math.min(100,used/allowance*100):0;
   const overageLimit=Math.max(0,Number(usage.overageLimitMinutes||0)),overageStopAt=Math.max(0,Number(usage.overageStopAtMinutes||0));
+  const breakdown=$("#usage-breakdown");if(breakdown)breakdown.hidden=String(plan||"").toLowerCase()==="flex";
+  const setMetric=(id,value)=>{const node=$(id);if(node)node.textContent=value};
+  setMetric("#usage-included-used",used.toLocaleString()+" min");
+  setMetric("#usage-included-remaining",Math.max(0,allowance-used).toLocaleString()+" min");
+  setMetric("#usage-vault-available",vault.toLocaleString()+" min");
+  setMetric("#usage-vault-used",vaultUsed.toLocaleString()+" min");
+  setMetric("#usage-overage-used",over.toLocaleString()+" min");
+  setMetric("#usage-overage-remaining",Math.max(0,overageLimit-over).toLocaleString()+" min");
   $("#usage-percent").textContent=Math.round(pct)+"%";
   const fill=$("#usage-fill"),track=$(".usage-track");
   fill.style.width=pct+"%";

@@ -1528,3 +1528,11 @@ This section supersedes the earlier activation-status notes above where they des
 - Updated the existing demo/discovery acknowledgement email copy in `cloudflare/platform-worker.js` to refer to **our Crew** and use the official **Communications, Evolved.** sign-off. This is a source change only; the Cloudflare Worker has not been deployed. Existing transactional email remains transactional and does not gain an Advertisement disclosure.
 - Updated the three active Star69AI content automations—**Research 25 Star69AI sales prospects**, **Publish Star69AI blog articles**, and **Create the weekly Saved by the AI Receptionist episode**—with the official brand-language rules. Their schedules, publication permissions, research/import behavior, and email-send restrictions were preserved. No marketing emails were sent and no articles/episodes were published by this terminology update.
 - Documentation changes only in this branch. No merge or deployment performed. Review via PR; do not merge `main` without explicit user approval.
+
+
+## Footer wordmark visibility correction — 2026-11-17
+
+- Follow-up to PR #244: the official full Star69AI footer wordmark was still being constrained by higher-specificity rules in the shared header stylesheet, which capped the image at 150px desktop / 138px mobile despite the wider footer sizing declared in the page stylesheet.
+- Added a more-specific footer-only override in `styles.css`: 320px desktop and 280px mobile, with natural image height, full-width containment, and no max-height clamp.
+- Uses the existing canonical `assets/main_logo.webp`; no header/menu source files, backend, Worker, D1, authentication, billing, customer or prospect data changed.
+- This update is on the existing PR #244 feature branch. Browser visual QA, PR review/merge, and GitHub Pages deployment remain outstanding. The earlier screenshot reference was not available in this continuation context, so compare the resulting rendered footer against the owner's supplied reference during visual QA.

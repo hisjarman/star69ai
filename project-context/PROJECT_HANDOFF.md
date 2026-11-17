@@ -1377,3 +1377,11 @@ This section supersedes the earlier activation-status notes above where they des
 - This repair is isolated on `fix/admin-business-reference-marketing-2026-11-17`; no production Worker deployment or main merge is performed from this branch.
 - Retrieved prior research context identifies one fully surfaced prospect record: DiSalvo Roofing, Las Vegas, NV, public email `info@disalvoroofing.com`, phone 725-205-3113. The rest of the earlier report is truncated in conversation retrieval; do not invent missing records, sources or personalized drafts. User's standing instruction remains: verify each business, website, location, industry, public email and source; never guess, automatically add prospects, or send emails. Prepare records for review before import.
 - Marketing emails remain one-at-a-time, individually reviewed and manually sent only after explicit admin action. No emails were sent and no prospect records were inserted during this repair.
+
+
+## Admin marketing send confirmation popup removal — 2026-11-17
+
+- Feature branch: `fix/admin-marketing-send-no-confirmation-2026-11-17`, created from current `main`.
+- Removed the blocking `window.confirm()` prompt from the Admin Marketing compose form. Clicking the reviewed Send button now proceeds directly to the existing authenticated Worker send request.
+- Preserved the in-flight disabled button state, `Sending…` feedback, success/error notices, individual prospect selection, explicit follow-up flag, unsubscribe handling, seven-day cooldown, 25-send rolling 24-hour cap, and server-side send eligibility checks.
+- No email was sent during this source change. No production deployment or merge was performed; review through PR before merging and deploying.

@@ -1318,3 +1318,14 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserved all existing navigation URLs and the existing single shared header architecture. No page content, Worker, D1, billing, authentication, Retell, customer data or production configuration changed.
 - Static checks: JavaScript syntax, CSS brace balance, required primary/login/CTA destinations and retained secondary destinations. Real browser visual QA at desktop/mobile widths and GitHub Pages publication remain to be verified.
 - Review through PR; do not merge `main` without explicit user approval.
+
+
+## Founder portrait and career timeline — 2026-11-16
+
+- Feature branch: `content/founder-photo-and-career-timeline-2026-11-16`, created from current `main`.
+- Updated the existing About the Founder page portrait to use the requested existing asset `assets/founder-logo-full.webp.webp`.
+- Added a factual career timeline based on Solomon Jarman's supplied résumé: U.S. Air Force communications/systems work (2001–2005), Unisys/DFAS workstation deployment (300 workstations in two weeks), URS/U.S. Army project support (approximately 800 users, 500 desktops and 30 servers in a 24/7 environment), Air Force Reserve air transportation service (2008–2011), Bureau of Land Management systems administration (2011–2012), and education/continued IT studies through 2020.
+- Added a responsive, page-scoped timeline stylesheet. The timeline uses the approved dark Star69AI surface, readable light text and neon-green/blue accents. The shared `readability.css` remains last in the page stylesheet order.
+- No backend, Worker, D1, billing, authentication, customer data or integrations changed.
+- Source review confirms the requested portrait asset exists in the repository and the existing founder page is reused. Browser visual QA at 360px, 768px and 1280px and GitHub Pages publication remain unverified.
+- Review through a PR; do not merge `main` without the user's explicit approval.

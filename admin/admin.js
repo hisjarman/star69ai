@@ -79,7 +79,31 @@ async function loadBilling(){const d=await api("/api/admin/billing-events");$("#
  document.querySelectorAll("[data-send-setup-invoice]").forEach(b=>b.onclick=async()=>{const id=b.dataset.sendSetupInvoice,url=document.querySelector('[data-paypal-url="'+id+'"]').value.trim();try{await api("/api/admin/setup-invoices/"+id,{method:"PATCH",body:JSON.stringify({status:"sent",paypalInvoiceUrl:url})});note("PayPal invoice marked as sent.");await loadSetupInvoices()}catch(e){note(e.message,true)}});
  document.querySelectorAll("[data-paid-setup-invoice]").forEach(b=>b.onclick=async()=>{if(!confirm("Confirm that the PayPal invoice payment has actually been received?"))return;try{await api("/api/admin/setup-invoices/"+b.dataset.paidSetupInvoice,{method:"PATCH",body:JSON.stringify({status:"paid"})});note("Setup invoice marked paid.");await loadSetupInvoices()}catch(e){note(e.message,true)}});
 }
-let marketingProspects=[],selectedMarketingProspect=null,selectedMarketingProspectId="";const outreachTemplates={roofing:{subject:"A quick idea for missed calls at [Business Name]",body:"Hi [First Name],\n\nI work with service businesses that cannot always stop a job to answer the phone. Star69AI is a managed AI receptionist service: we configure, test and maintain the call experience, so your team does not have another platform to learn.\n\nIt can answer after-hours calls, capture the caller's job details and urgency, and route or notify your team using your approved workflow.\n\nWould a short, no-pressure demo be useful to see whether this fits [Business Name]?\n\n"},general:{subject:"A practical way to stop missing business calls",body:"Hi [First Name],\n\nWhen your team is busy serving customers, calls can go unanswered. Star69AI provides a managed AI receptionist that we build, customize, test and maintain for your business. It can answer around the clock, capture lead details and follow your approved handoff process.\n\nThis is a done-for-you service, not another software platform your staff has to configure.\n\nWould you be open to a short demo tailored to [Business Name]?\n\n"}};function marketingFillTemplate(p,followUp=false){const t=p.industry&&["roofing","plumbing","HVAC","general contractor"].includes(p.industry.toLowerCase())?outreachTemplates.roofing:outreachTemplates.general;const first=p.contact_name?.trim().split(/\\s+/)[0]||"there";$("#marketing-subject").value=(followUp?"Following up: ":"")+t.subject.replaceAll("[Business Name]",p.business_name);$("#marketing-body").value=followUp?"Hi "+first+",\\n\\nI wanted to follow up on my earlier note in case it got buried. If improving call coverage is on your radar, I would be happy to prepare a short Star69AI demo tailored to "+p.business_name+".\\n\\nWould that be useful?":t.body.replaceAll("[Business Name]",p.business_name).replaceAll("[First Name]",first)}async function loadMarketing(){
+let marketingProspects=[],selectedMarketingProspect=null,selectedMarketingProspectId="";
+function marketingResearchData(p){
+ try{const value=JSON.parse(String(p?.notes||""));return value&&value.schemaVersion==="star69ai-prospect-v1"?value:null}catch{return null}
+}
+function marketingFillTemplate(p,followUp=false){
+ const research=marketingResearchData(p);
+ const subject=$("#marketing-subject"),message=$("#marketing-body"),preview=$("#marketing-research-preview");
+ if(!followUp&&research?.draftSubject&&research?.draftBody){
+  subject.value=String(research.draftSubject).slice(0,180);
+  message.value=String(research.draftBody).slice(0,6000);
+ }else{
+  subject.value="";
+  message.value="";
+ }
+ if(preview){
+  if(research){
+   const sources=(Array.isArray(research.sourceUrls)?research.sourceUrls:[]).map(raw=>String(raw||"").trim()).filter(url=>/^https?:\\/\\//i.test(url)).slice(0,8);
+   const website=/^https?:\\/\\//i.test(String(research.website||""))?String(research.website):"";
+   preview.innerHTML='<b>'+(followUp?"Follow-up needs a fresh review":"Saved prospect research")+'</b><p>'+safe(research.researchObservation||"No research observation recorded.")+'</p><p class="small">Industry: '+safe(research.industry||p.industry||"Not recorded")+' · Location: '+safe(research.location||"Not recorded")+(website?' · <a href="'+safe(website)+'" target="_blank" rel="noopener">Business website</a>':'')+'</p><p class="small">'+(sources.length?sources.map((url,i)=>'<a href="'+safe(url)+'" target="_blank" rel="noopener">Source '+(i+1)+'</a>').join(' · '):"No source links recorded")+'</p><p class="small">'+(followUp?"The initial email is not reused as a follow-up. Write a new message that responds to the prior outreach.":"Saved individualized draft loaded. Review every factual detail and edit before sending.")+'</p>';
+  }else{
+   preview.innerHTML='<b>No structured research draft found</b><p class="small">This prospect does not have a saved Star69AI research record. No generic template has been inserted. Add verified business context and write a genuinely relevant message before sending.</p>';
+  }
+ }
+}
+async function loadMarketing(){
  const d=await api("/api/admin/marketing/prospects");
  marketingProspects=d.prospects||[];
  const recorded=p=>Number(p.send_count||0)>0;

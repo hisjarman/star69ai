@@ -483,3 +483,49 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 /* The persistent cockpit navigation keeps its text identity but no logo graphic. */
 .cockpit-sidebar-brand .cockpit-brand-mark{display:none!important}
 .cockpit-sidebar-brand{gap:0!important}
+
+
+/* STAR69AI WEB 3.0 MISSION CONTROL — dashboard visual language aligned with the cinematic homepage menu. */
+:root{--cockpit-purple:#F461FE;--cockpit-blue:#43B4FE;--cockpit-green:#34FD78;--cockpit-border:rgba(99,183,255,.19);--cockpit-card:rgba(10,24,52,.88);--cockpit-sidebar:rgba(5,15,38,.97);--cockpit-input:#0b1b39;--cockpit-muted:#9bb0cc}
+html,body{background-color:#030918!important}
+body{background-image:radial-gradient(ellipse at 82% 0%,rgba(67,180,254,.13),transparent 36%),radial-gradient(ellipse at 12% 28%,rgba(244,97,254,.08),transparent 34%),linear-gradient(rgba(104,166,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(104,166,255,.035) 1px,transparent 1px)!important;background-size:auto,auto,28px 28px,28px 28px!important}
+.top.cockpit-banner-header{position:relative;min-height:74px;padding:10px 16px;border:1px solid rgba(67,180,254,.34);border-radius:14px;overflow:hidden;background:linear-gradient(110deg,rgba(8,22,51,.98),rgba(8,27,57,.92) 58%,rgba(18,13,48,.96))!important;box-shadow:0 12px 34px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.05)}
+.top.cockpit-banner-header:after{content:"";position:absolute;right:8%;top:-65px;width:220px;height:190px;border:1px solid rgba(67,180,254,.12);border-radius:50%;box-shadow:0 0 0 18px rgba(67,180,254,.025),0 0 0 38px rgba(244,97,254,.025);pointer-events:none}
+.top.cockpit-banner-header .brand{position:relative;z-index:1;border-color:rgba(67,180,254,.45);background:linear-gradient(145deg,rgba(67,180,254,.13),rgba(244,97,254,.11));box-shadow:0 0 22px rgba(67,180,254,.15)}
+.top.cockpit-banner-header .brand img{filter:drop-shadow(0 0 8px rgba(67,180,254,.28))}
+.client-workspace-layout{gap:18px;margin-top:18px}
+.client-sidebar{border-color:rgba(67,180,254,.2);background:linear-gradient(180deg,rgba(7,19,47,.98),rgba(5,13,34,.98));box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035)}
+.cockpit-sidebar-brand{border-bottom-color:rgba(67,180,254,.18)}
+.cockpit-sidebar-brand .cockpit-brand-mark{filter:drop-shadow(0 0 10px rgba(67,180,254,.4))}
+.sidebar-caption,.client-workspace-header .eyebrow,.client-page-heading .eyebrow{color:var(--cockpit-blue)!important}
+.client-nav-item{border-color:transparent;background:rgba(255,255,255,.018);transition:all .2s ease}
+.client-nav-item:hover{border-color:rgba(67,180,254,.28);background:linear-gradient(100deg,rgba(67,180,254,.11),rgba(244,97,254,.07));box-shadow:inset 2px 0 var(--cockpit-blue);transform:translateX(2px)}
+.client-nav-item.active{border-color:rgba(67,180,254,.42);background:linear-gradient(105deg,rgba(67,180,254,.2),rgba(244,97,254,.13));color:#fff;box-shadow:inset 3px 0 var(--cockpit-green),0 0 22px rgba(67,180,254,.09)}
+.client-nav-item.active .nav-icon{border-color:rgba(67,180,254,.35);background:rgba(67,180,254,.12);color:var(--cockpit-green)}
+.nav-icon{border-color:rgba(67,180,254,.2);background:rgba(67,180,254,.055);color:var(--cockpit-blue)}
+.cockpit-managed-card,.sidebar-help{border-color:rgba(67,180,254,.2);background:linear-gradient(145deg,rgba(14,31,67,.9),rgba(14,19,52,.9));box-shadow:inset 0 1px rgba(255,255,255,.035)}
+.cockpit-managed-kicker{color:var(--cockpit-purple)}
+.cockpit-managed-dot,.sidebar-status-dot{background:var(--cockpit-green);box-shadow:0 0 12px rgba(52,253,120,.75)}
+.sidebar-help-icon{color:var(--cockpit-purple);background:rgba(244,97,254,.12)}
+.sidebar-help button{color:var(--cockpit-blue)}
+.client-workspace-header{border-color:rgba(67,180,254,.23);background:linear-gradient(110deg,rgba(8,23,52,.96),rgba(10,25,53,.9) 68%,rgba(31,17,57,.84));box-shadow:0 14px 38px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.04)}
+.client-workspace-header h1{ text-shadow:0 0 24px rgba(67,180,254,.12)}
+.client-page-heading{border-bottom:1px solid rgba(67,180,254,.14);margin-bottom:17px}
+.client-page-heading h2{color:#f4f8ff;text-shadow:0 0 20px rgba(67,180,254,.1)}
+.client-page-label{border-color:rgba(244,97,254,.28);background:rgba(244,97,254,.08);color:#f7a4ff}
+.card,.panel,.client-page .panel{border-color:rgba(67,180,254,.18)!important;background:linear-gradient(145deg,rgba(13,29,61,.94),rgba(8,20,46,.96))!important;box-shadow:0 12px 30px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.035)!important}
+.metric strong,.performance-kpi strong{ text-shadow:0 0 22px rgba(67,180,254,.12)}
+.metric em,.usage-percent,.usage-fill{color:var(--cockpit-green)}
+.usage-fill{background:linear-gradient(90deg,var(--cockpit-blue),var(--cockpit-green));box-shadow:0 0 16px rgba(67,180,254,.35)}
+.btn,.button{border-color:var(--cockpit-green)!important;background:linear-gradient(105deg,var(--cockpit-green),#8cffb0)!important;color:#031323!important;box-shadow:0 0 18px rgba(52,253,120,.12)}
+.btn.secondary{border-color:rgba(67,180,254,.55)!important;background:rgba(67,180,254,.07)!important;color:#dff3ff!important}
+.btn.secondary:hover{border-color:var(--cockpit-purple)!important;background:rgba(244,97,254,.09)!important}
+.pill,.status{border-color:rgba(67,180,254,.28);background:rgba(67,180,254,.09);color:#8bd5ff}
+.status.active{border-color:rgba(52,253,120,.3);background:rgba(52,253,120,.1);color:var(--cockpit-green)}
+.field input,.field select,.field textarea,input,select,textarea{border-color:rgba(67,180,254,.2)!important;background:#081832!important}
+.field input:focus,.field select:focus,.field textarea:focus,input:focus,select:focus,textarea:focus{border-color:var(--cockpit-blue)!important;box-shadow:0 0 0 2px rgba(67,180,254,.12)!important}
+.performance-period{border-color:rgba(244,97,254,.28);background:rgba(244,97,254,.08);color:#f5a2ff}
+.performance-bar{background:linear-gradient(180deg,var(--cockpit-blue),var(--cockpit-purple));box-shadow:0 0 14px rgba(67,180,254,.22)}
+#sentiment-positive-bar{background:var(--cockpit-green)}#sentiment-neutral-bar{background:var(--cockpit-blue)}#sentiment-negative-bar{background:var(--cockpit-purple)}
+@media(prefers-reduced-motion:no-preference){.card,.panel,.client-nav-item,.client-workspace-header{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}.client-page.active{animation:cockpitEnter .28s ease both}.client-nav-item.active{animation:cockpitGlow 3s ease-in-out infinite alternate}@keyframes cockpitGlow{from{box-shadow:inset 3px 0 var(--cockpit-green),0 0 10px rgba(67,180,254,.05)}to{box-shadow:inset 3px 0 var(--cockpit-green),0 0 22px rgba(67,180,254,.14)}}}
+@media(max-width:700px){.top.cockpit-banner-header{min-height:64px;padding:7px 10px}.client-workspace-header{padding:15px 14px}.client-workspace-layout{margin-top:12px;gap:12px}}

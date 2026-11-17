@@ -236,3 +236,6 @@ input::placeholder,textarea::placeholder{color:#786a7d!important;opacity:1}
 
 /* Admin marketing workspace */
 .marketing-grid{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(320px,1.15fr);gap:18px;align-items:start}.marketing-grid>form{padding:16px;border:1px solid #38535c;border-radius:14px;background:#172a32}.marketing-grid h3{margin:0 0 4px;color:#eaf1f2}.marketing-grid .field{min-width:0}.marketing-grid textarea{width:100%;box-sizing:border-box}.marketing-select{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.marketing-optout{color:#ffcf9f}@media(max-width:760px){.marketing-grid{grid-template-columns:1fr}}
+
+/* Date-grouped prospect tree in the agency marketing console */
+.marketing-date-branch{border:1px solid #38535c;border-radius:12px;background:#172a32;margin:10px 0;overflow:hidden}.marketing-date-branch>summary{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;list-style:none;padding:15px 16px;color:#eaf1f2;background:#1d3540}.marketing-date-branch>summary::-webkit-details-marker{display:none}.marketing-date-branch>summary:after{content:"";}.marketing-date-branch[open]>summary{border-bottom:1px solid #38535c}.marketing-date-branch .table-wrap{padding:0 12px 10px}.marketing-date-branch table{margin:0}.marketing-date-branch .small{color:#b6c3c7}

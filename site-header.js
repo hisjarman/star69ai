@@ -1,61 +1,50 @@
 (() => {
-  const links = [
-    ["Home","/","home","cyan"],["How it works","/how-it-works.html","workflow","blue"],
-    ["Industry Hub","/hub/","layers","green"],["Pricing","/pricing.html","credit-card","gold"],
-    ["Demos","/demos.html","play-circle","purple"],["Learning Center","/learning-center/","graduation-cap","blue"],
-    ["Stories","/blog/","book-open","gold"],["About Star69AI","/about.html","orbit","cyan"],
-    ["Managed service","/managed-service.html","sliders","green"],["Provider directory","/directory/","globe","purple"],
-    ["Managed AI research","/research/managed-ai-receptionists.html","microscope","blue"],["Industry overview","/industries.html","briefcase","green"],
-    ["FAQ","/faq.html","circle-help","gold"],["AI Challenge","/challenge/","gamepad-2","purple"],
-    ["AI Trust Lab","/trust-lab.html","shield-check","cyan"],["Partner program","/partners/","users","green"],
-    ["Privacy","/privacy.html","lock","blue"],["Terms","/terms.html","file-text","gold"]
-  ];
-  const markup = `
+  const headerMarkup = `
     <header class="site-global-header" data-site-global-header>
-      <div class="site-global-cover">
-        <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI communications evolved — cinematic space banner" fetchpriority="high" decoding="async">
+      <div class="site-global-cover" aria-label="Star69AI">
+        <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI — communications evolved" fetchpriority="high" decoding="async">
         <div class="site-global-cover-shade" aria-hidden="true"></div>
         <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span><span class="site-global-tagline">COMMUNICATIONS, EVOLVED.</span></div>
-        <button class="site-global-toggle" type="button" aria-label="Open Star69AI navigation" aria-expanded="false" aria-controls="site-global-navigation">
-          <span class="site-global-toggle-label">MENU</span><span class="site-global-toggle-icon"><i></i><i></i><i></i></span>
-        </button>
-        <nav class="site-global-nav" id="site-global-navigation" aria-label="Star69AI main navigation" inert>
-          <div class="site-global-nav-head"><span class="site-global-nav-identity"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
-          <div class="site-global-nav-grid">
-            ${links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${({home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤"})[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}
-          </div>
-          <div class="site-global-nav-footer"><span>STAR69AI // NAVIGATION ARRAY</span><span>SECURE CONNECTION <i></i></span></div>
-        </nav>
       </div>
-      <div class="site-global-utility">
-        <a class="site-global-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI — Communications. Evolved."></a>
-        <a class="site-global-partner" href="/partner-portal/">PARTNER LOGIN <span>↗</span></a>
-        <a class="site-global-login" href="/client/">CLIENT CONSOLE <span>↗</span></a>
-        <a class="site-global-start" href="/get-started.html">INITIATE CONTACT <span>↗</span></a>
-      </div>
+      <nav class="site-global-utility" aria-label="Client, partner and contact">
+        <a class="site-global-login" href="/client/">CLIENT <span aria-hidden="true">↗</span></a>
+        <a class="site-global-partner" href="/partner-portal/">PARTNER <span aria-hidden="true">↗</span></a>
+        <a class="site-global-start" href="/get-started.html">INITIATE CONTACT <span aria-hidden="true">↗</span></a>
+      </nav>
     </header>`;
+
+  const isBrandLogo = img => {
+    const src = (img.getAttribute('src') || '').toLowerCase();
+    const alt = (img.getAttribute('alt') || '').toLowerCase();
+    return /main_logo\.(?:webp|png|svg)|icon_main\.(?:webp|png|svg)|star69ai-logo|logo(?:%20|[ _-])*star69ai|star69ai(?:%20|[ _-])*logo|logo-transparent/.test(src) ||
+      ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark|mark/.test(alt));
+  };
+
   const install = () => {
-    if (!document.body || document.querySelector('[data-site-global-header]')) return;
-    const legacyHeader = document.querySelector('body > header.topbar, body > header.reference-topbar, body > header.site-header') || document.querySelector('body > header');
-    if (legacyHeader) legacyHeader.remove();
-    document.body.insertAdjacentHTML('afterbegin', markup);
+    if (!document.body) return;
+    // Remove retired public-site headers wherever a page nested or duplicated them.
+    document.querySelectorAll('.reference-topbar,.s69-header,header.topbar,header.site-header,[data-legacy-site-header]').forEach(node => node.remove());
+    document.querySelectorAll('body > header:not([data-site-global-header])').forEach(node => node.remove());
+
+    let header = document.querySelector('[data-site-global-header]');
+    if (!header) {
+      document.body.insertAdjacentHTML('afterbegin', headerMarkup);
+      header = document.querySelector('[data-site-global-header]');
+    }
+    // Keep exactly one shared header if a page contains a stale duplicate.
+    document.querySelectorAll('[data-site-global-header]').forEach((node,index) => { if(index>0) node.remove(); });
+
     document.querySelectorAll('img').forEach(img => {
       const src = (img.getAttribute('src') || '').toLowerCase();
       const alt = (img.getAttribute('alt') || '').toLowerCase();
-      const looksLikeLegacyBrandLogo =
-        /star69ai-logo-transparent|logo(?:%20|[ _-])*star69ai|star69ai(?:%20|[ _-])*logo|logo-transparent/.test(src) ||
+      const legacyBrand = /star69ai-logo-transparent|logo(?:%20|[ _-])*star69ai|star69ai(?:%20|[ _-])*logo|logo-transparent/.test(src) ||
         ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark/.test(alt));
-      if (looksLikeLegacyBrandLogo && !src.includes('icon_main.webp')) {
+      if (legacyBrand && !src.includes('icon_main.webp')) {
         img.src = '/assets/main_logo.webp';
         img.alt = 'Star69AI — Communications. Evolved.';
       }
     });
-    const isBrandLogo = img => {
-      const src = (img.getAttribute('src') || '').toLowerCase();
-      const alt = (img.getAttribute('alt') || '').toLowerCase();
-      return /main_logo\.(?:webp|png|svg)|icon_main\.(?:webp|png|svg)|star69ai-logo|logo(?:%20|[ _-])*star69ai|star69ai(?:%20|[ _-])*logo|logo-transparent/.test(src) ||
-        ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark|mark/.test(alt));
-    };
+
     document.querySelectorAll('footer').forEach(pageFooter => {
       const brandImages = Array.from(pageFooter.querySelectorAll('img')).filter(isBrandLogo);
       const keeper = brandImages.find(img => !/icon_main\./i.test(img.getAttribute('src') || '')) || brandImages[0];
@@ -77,32 +66,28 @@
         pageFooter.insertBefore(footerBrand, pageFooter.firstChild);
       }
     });
-    const header = document.querySelector('[data-site-global-header]');
-    const toggle = header.querySelector('.site-global-toggle');
-    const nav = header.querySelector('.site-global-nav');
-    const setMenu = open => {
-      header.classList.toggle('menu-open', open);
-      document.body.classList.toggle('site-global-menu-open', open);
-      toggle.setAttribute('aria-expanded', String(open));
-      toggle.setAttribute('aria-label', open ? 'Close Star69AI navigation' : 'Open Star69AI navigation');
-      toggle.querySelector('.site-global-toggle-label').textContent = open ? 'CLOSE' : 'MENU';
-      nav.inert = !open;
-    };
-    toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
-    nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
-    document.addEventListener('click', event => { if (!header.contains(event.target)) setMenu(false); });
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { setMenu(false); toggle.focus(); }
-    });
-    const currentPath = location.pathname.replace(/index\.html$/, '').replace(/\/$/, '') || '/';
-    header.querySelectorAll('[data-nav-path]').forEach(link => {
-      const target = link.getAttribute('data-nav-path').replace(/\/$/, '') || '/';
-      if (currentPath === target || (target !== '/' && currentPath.startsWith(target + '/'))) {
-        link.setAttribute('aria-current','page');
-        link.classList.add('is-current');
-      }
-    });
+
+    // Inject a final, high-specificity footer guard after page styles have loaded.
+    if (!document.getElementById('star69ai-footer-theme-guard')) {
+      const style = document.createElement('style');
+      style.id = 'star69ai-footer-theme-guard';
+      style.textContent = `
+        html body footer,html body footer.footer,html body footer.site-footer,html body footer.footer.site-footer{
+          background-color:#030918!important;background-image:linear-gradient(135deg,#030918 0%,#061326 55%,#030918 100%)!important;
+          color:#eaf3ff!important;border-color:rgba(67,180,254,.24)!important;color-scheme:dark!important;
+        }
+        html body footer :where(.footer-main,.footer-bottom,.footer-disclaimer,.footer-brand-column,.footer-column,.footer-contact){
+          background:transparent!important;color:#eaf3ff!important;
+        }
+        html body footer :where(h1,h2,h3,h4,strong,b){color:#f4f8ff!important}
+        html body footer :where(p,span,small,li,label){color:#c4d5e8!important}
+        html body footer a{color:#9edcff!important}
+        html body footer img{background:transparent!important}
+      `;
+      document.head.appendChild(style);
+    }
   };
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
   else install();
 })();

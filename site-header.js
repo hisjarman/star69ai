@@ -20,7 +20,7 @@
           <span class="site-global-toggle-label">MENU</span><span class="site-global-toggle-icon"><i></i><i></i><i></i></span>
         </button>
         <nav class="site-global-nav" id="site-global-navigation" aria-label="Star69AI main navigation" inert>
-          <div class="site-global-nav-head"><span class="site-global-nav-identity"><img class="site-global-yinyang-mark" src="/assets/icon_main.webp" alt="Star69AI yin-yang symbol" width="30" height="30" decoding="async"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
+          <div class="site-global-nav-head"><span class="site-global-nav-identity"><img class="site-global-yinyang-mark" src="/assets/Icon_main.webp" alt="Star69AI yin-yang symbol" width="30" height="30" decoding="async"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
           <div class="site-global-nav-grid">
             ${links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${({home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤"})[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}
           </div>
@@ -45,7 +45,7 @@
       const looksLikeLegacyBrandLogo =
         /star69ai-logo-transparent|logo[ _-]*star69ai|star69ai[ _-]*logo|logo-transparent/.test(src) ||
         ((alt.includes('star69ai') || alt.includes('star 69 ai')) && /logo|brand|wordmark/.test(alt));
-      if (looksLikeLegacyBrandLogo && !src.includes('icon_main.webp')) {
+      if (looksLikeLegacyBrandLogo && !src.includes('Icon_main.webp')) {
         img.src = '/assets/main_logo.webp';
         img.alt = 'Star69AI — Communications. Evolved.';
       }

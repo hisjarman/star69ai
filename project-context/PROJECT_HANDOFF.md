@@ -1404,3 +1404,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Replaces the footer's standalone `Star69AI` identity with **Solomon Jarman · Founder & Operator**, linked to the existing canonical page `https://star69ai.com/about.html`, in both HTML and plain-text marketing emails.
 - Keeps the Advertisement disclosure, prominent unsubscribe link, phone number, protected postal address, website/brand context in the destination URL, and List-Unsubscribe / one-click headers. No unsubscribe logic, sending rules, prospect records or email delivery behavior changed.
 - Source-only change. No emails sent. Review through PR; do not merge `main` or deploy the Worker without the user's separate explicit approval.
+
+
+## Marketing email duplicate signature cleanup — 2026-11-17
+
+- Feature branch: `fix/marketing-founder-signoff-cleanup-2026-11-17`.
+- Removed the generic `Best, Star69AI` and standalone website sign-off from both initial and follow-up outreach templates. The marketing send footer already supplies Solomon Jarman · Founder & Operator linked to the About page, plus phone and postal contact details.
+- Added a marketing-only HTML email wrapper without the duplicate bottom logo/tagline block. The shared `brandEmail` wrapper remains unchanged for transactional and other non-marketing messages.
+- Preserved the Advertisement disclosure, clearly visible unsubscribe link, founder identity, contact details, unsubscribe URL, and List-Unsubscribe / one-click headers.
+- No emails sent; no prospect/customer records, unsubscribe states, sending rules or production bindings changed. Source changes are pending PR review; do not merge or deploy without separate explicit user approval.

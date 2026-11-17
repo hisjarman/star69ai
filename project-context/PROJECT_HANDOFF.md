@@ -1,3 +1,12 @@
+## Retro space-exploration brand refresh — 2026-11-16
+
+- Feature branch: `design/retro-exploration-brand-2026-11-16`, created from current `main`.
+- Refined the existing homepage (no parallel theme or duplicate landing page) with original space-exploration copy: “Ready to Explore?”, “It’s our business to bring you more business”, “It’s not science fiction anymore”, “See how far your business can go”, and “Are you ready to come aboard? The future is waiting.”
+- Added a restrained mission-briefing label, subtle starfield drift, original geometric display typography (Michroma), and IBM Plex Mono technical labels, using the existing dark Earth-at-night hero and neon palette.
+- Preserved the existing hero artwork, primary custom-demo CTA, demo form and Formspree destination, November offer, navigation/client login, pricing, managed-service disclosures, industry sections and assistant behavior. No backend, Worker, D1, billing, auth, Retell or customer data changed.
+- This is a visual/copy homage to classic space exploration, not a Star Trek replica: no protected dialogue, logos, characters, uniforms, or official-affiliation claims were added.
+- Static HTML/source and responsive CSS review remain required; live desktop/mobile browser QA and GitHub Pages publication are not yet verified. Review via PR; do not merge `main` without explicit user approval.
+
 ## Business Intelligence & Receptionist Performance Center — 2026-11-17
 
 - Feature branch: `feature/business-intelligence-performance-center`. Enhances the existing authenticated THE COCKPIT Overview; no duplicate dashboard, navigation, API route or database table.

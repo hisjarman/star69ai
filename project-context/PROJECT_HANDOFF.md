@@ -1528,3 +1528,15 @@ This section supersedes the earlier activation-status notes above where they des
 - Updated the existing demo/discovery acknowledgement email copy in `cloudflare/platform-worker.js` to refer to **our Crew** and use the official **Communications, Evolved.** sign-off. This is a source change only; the Cloudflare Worker has not been deployed. Existing transactional email remains transactional and does not gain an Advertisement disclosure.
 - Updated the three active Star69AI content automations—**Research 25 Star69AI sales prospects**, **Publish Star69AI blog articles**, and **Create the weekly Saved by the AI Receptionist episode**—with the official brand-language rules. Their schedules, publication permissions, research/import behavior, and email-send restrictions were preserved. No marketing emails were sent and no articles/episodes were published by this terminology update.
 - Documentation changes only in this branch. No merge or deployment performed. Review via PR; do not merge `main` without explicit user approval.
+
+
+## Permanent lock for the approved cinematic public header — 2026-11-17
+
+- Owner explicitly requested that the approved cinematic header/navigation design never change as part of future work.
+- The frozen baseline is the PR #244 restoration of the design approved in PR #215, with PR #243 compact footer refinements retained.
+- Added `project-context/STAR69AI_HEADER_DESIGN_LOCK.md` documenting the frozen visual/functional contract, protected elements, and the requirement for a separate explicit owner request before any future redesign.
+- Added `.github/workflows/protect-approved-header.yml`. It checks the exact Git blob IDs of `site-header.js` and `site-header.css` on pull requests and pushes to `main`; any source change fails the check until the owner explicitly authorizes a design revision and the lock is deliberately updated.
+- Pinned baseline: `site-header.js` blob `2e5b4984936f4c0cfb84ec4dd79207ae755e65d4`; `site-header.css` blob `5ea0add134838665ef019e63e7c59c00480bd611`.
+- The lock protects the shared header/menu and footer stylesheet. It does not block unrelated page, content, backend or portal work, but other CSS must not override the frozen presentation.
+- No existing site header, CSS, Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer or prospect data was changed in this protection branch.
+- Review and merge this protection as a pull request. Until merged, the guard is not active on `main`.

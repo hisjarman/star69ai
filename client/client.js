@@ -17,7 +17,7 @@
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   document.querySelectorAll(".cockpit-top-tab").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
-  $("#workspace")?.classList.remove("cockpit-drawer-open");$("#cockpit-menu-toggle")?.setAttribute("aria-expanded","false");
+  $("#workspace")?.classList.remove("cockpit-drawer-open");document.body.classList.remove("cockpit-drawer-active");$("#cockpit-menu-toggle")?.setAttribute("aria-expanded","false");
   const label=labels[page]||labels.overview;$("#client-page-title").textContent=label[0];$("#client-page-description").textContent=label[1];
   try{history.replaceState(null,"",page==="overview"?"#overview":"#"+page)}catch{}
   if(page==="knowledge")initKnowledgeSearch();
@@ -362,8 +362,19 @@ function renderAgentRequests(items){
  }
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
  const cockpitMenu=$("#cockpit-menu-toggle"),cockpitBackdrop=$("#cockpit-drawer-backdrop");
- cockpitMenu?.addEventListener("click",()=>{const open=$("#workspace").classList.toggle("cockpit-drawer-open");cockpitMenu.setAttribute("aria-expanded",String(open))});
- cockpitBackdrop?.addEventListener("click",()=>{ $("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false") });
+ const setCockpitDrawer=open=>{
+  const workspace=$("#workspace");if(!workspace)return;
+  workspace.classList.toggle("cockpit-drawer-open",open);
+  document.body.classList.toggle("cockpit-drawer-active",open);
+  cockpitMenu?.setAttribute("aria-expanded",String(open));
+ };
+ cockpitMenu?.addEventListener("click",()=>setCockpitDrawer(!$("#workspace")?.classList.contains("cockpit-drawer-open")));
+ cockpitBackdrop?.addEventListener("click",()=>setCockpitDrawer(false));
+ document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&$("#workspace")?.classList.contains("cockpit-drawer-open")){
+   setCockpitDrawer(false);cockpitMenu?.focus();
+  }
+ });
  const eliWidget=$("#eli-widget"),eliPanel=$("#eli-panel"),eliLauncher=$("#eli-launcher"),eliClose=$("#eli-close"),eliFrame=$("#eli-frame");
  function setEliOpen(open){
   if(!eliWidget||!eliPanel||!eliLauncher)return;

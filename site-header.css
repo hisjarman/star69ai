@@ -36,3 +36,11 @@
 @media(max-width:700px){.site-global-cover{height:clamp(190px,48vw,270px);min-height:190px}.site-global-cover-image{object-position:center center}.site-global-cover-topline{top:12px;font-size:8px;letter-spacing:1px}.site-global-toggle{top:48px;padding:11px 13px}.site-global-nav{top:91px;left:9px;right:9px;padding:14px 12px 12px;max-height:calc(100svh - 125px)}.site-global-nav-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:12px 0}.site-global-nav-button{min-height:45px;padding:8px;font-size:10px}.site-global-nav-symbol{width:23px;height:23px;flex-basis:23px}.site-global-nav-head,.site-global-nav-footer{font-size:8px}.site-global-nav-head small{display:block;margin-top:3px}.site-global-nav-live{font-size:7px}.site-global-utility{justify-content:center;flex-wrap:wrap;padding:8px 9px;gap:6px}.site-global-utility a{min-height:33px;padding:8px 9px;font-size:8px;letter-spacing:.6px}}
 @media(max-width:360px){.site-global-cover{height:185px}.site-global-nav-button{font-size:9px;gap:6px}.site-global-nav-symbol{width:20px;height:20px;flex-basis:20px}}
 @media(prefers-reduced-motion:reduce){.site-global-header *{animation:none!important;transition:none!important}}
+
+/* Official Star69AI identity: main_logo.webp paired with the image_hero.webp cover. */
+.site-global-utility{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:clamp(10px,2vw,24px);min-height:66px;padding:8px clamp(16px,3vw,42px);background:#030918}
+.site-global-brand{display:flex;align-items:center;margin-right:auto;min-width:0;max-width:min(330px,38vw)}
+.site-global-brand img{display:block;width:100%;max-height:54px;object-fit:contain;object-position:left center}
+.site-global-footer-brand{display:flex;align-items:center;justify-content:center;width:min(280px,75%);margin:0 auto 22px;padding:12px 0}
+.site-global-footer-brand img{display:block;width:100%;max-height:72px;object-fit:contain}
+@media(max-width:640px){.site-global-utility{flex-wrap:wrap;justify-content:center;gap:9px;padding:10px 12px}.site-global-brand{width:100%;max-width:240px;justify-content:center;margin:0 auto 4px}.site-global-brand img{max-height:48px;object-position:center}.site-global-footer-brand{margin-bottom:16px}}

@@ -1329,3 +1329,12 @@ This section supersedes the earlier activation-status notes above where they des
 - No backend, Worker, D1, billing, authentication, customer data or integrations changed.
 - Source review confirms the requested portrait asset exists in the repository and the existing founder page is reused. Browser visual QA at 360px, 768px and 1280px and GitHub Pages publication remain unverified.
 - Review through a PR; do not merge `main` without the user's explicit approval.
+
+
+## Sitewide Star69AI logo and favicon integration — 2026-11-16
+
+- Feature branch: `branding/sitewide-logo-favicon-2026-11-16`, created from the current uploaded-asset commit on `main` (74ef5ea9e21dd122a195efad7de89c5511bec275).
+- Promoted the user-uploaded transparent `assets/star69ai-logo-transparent.webp` to the canonical full wordmark in the shared public header, home/about/pricing footers, client portal, agency admin, partner center, partner admin and Trust Lab/newsletter admin headers.
+- Replaced the old headset-style favicon SVG with a matching Star69AI cosmic-star/orbit symbol and added the supplied 48px, 192px and 512px PNG favicon declarations plus Apple touch icons to primary pages and private consoles.
+- Preserved existing routes, navigation, authentication, Worker/D1 behavior, billing, customer data and production configuration. No backend changes.
+- Assets were already uploaded by the user to `main` and are reused without re-encoding. This branch is source-only; browser visual QA, Pages publication and cache refresh remain unverified. Review via PR; do not merge `main` without explicit user approval.

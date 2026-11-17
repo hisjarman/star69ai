@@ -1,3 +1,14 @@
+## Mobile navigation overlay, compact cockpit banner and dark footers — 2026-11-17
+
+- Feature branch: `fix/mobile-navigation-footer-banner-2026-11-17`, created from current `main`.
+- Corrected the mobile mission-control menu so it opens as a full-viewport overlay above persistent page navigation and content, with a fixed close control, independent scrolling, and background scroll lock. The open state is reflected on the body and cleared on close.
+- Corrected the authenticated client cockpit drawer to sit above all page layers, lock background scrolling while open, and close with Escape, the backdrop, or a navigation selection.
+- Removed the Star69AI logo graphic from both the shared mission-control menu identity and the persistent client cockpit sidebar; the navigation labels remain.
+- Reduced the client cockpit cinematic banner from 112px to 98px on desktop and to 68px/64px on mobile breakpoints while preserving the hero artwork and icon.
+- Applied a consistent deep-dark background and light readable text to site footers so the official wordmark remains legible across themes.
+- No Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer or prospect data/configuration changed.
+- Source validation and live mobile visual testing remain pending. Review via PR; do not merge `main` without explicit approval.
+
 ## Sitewide header/footer cleanup and Navigator AI Assistant Eli — 2026-11-17
 
 - Feature branch: `fix/sitewide-brand-cockpit-eli-2026-11-17`, created from current `main` commit `c4cbbd0608f6efbca3b3b8b7e2dd01c858155f90`.

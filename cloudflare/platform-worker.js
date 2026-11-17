@@ -613,7 +613,8 @@ function brandEmail(content){
 
 
 function brandMarketingEmail(content){
-  return "<!doctype html><html><body style=\"margin:0;padding:24px 12px;background:#f3f7fa;font-family:Arial,Helvetica,sans-serif;color:#20343b\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e2eaf0;border-radius:12px\"><tr><td style=\"padding:24px\">"+content+"</td></tr></table></body></html>";
+  const hero="https://star69ai.com/assets/image_hero.webp";
+  return "<!doctype html><html><body style=\"margin:0;padding:24px 12px;background:#07111f;font-family:Arial,Helvetica,sans-serif;color:#20343b\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #20384c;border-radius:12px;overflow:hidden\"><tr><td style=\"padding:0;line-height:0\"><a href=\"https://star69ai.com/\" target=\"_blank\" rel=\"noopener\" style=\"display:block;text-decoration:none\"><img src=\""+hero+"\" width=\"680\" alt=\"Star69AI — managed AI receptionist service. Smarter Calls. Bigger Opportunity.\" border=\"0\" style=\"display:block;width:100%;max-width:680px;height:auto;border:0;outline:none;text-decoration:none\"></a></td></tr><tr><td style=\"padding:26px 28px 24px\">"+content+"</td></tr><tr><td style=\"padding:0 28px 22px;font-size:12px;line-height:1.5;color:#687987;text-align:center\"><a href=\"https://star69ai.com/\" style=\"color:#1689a8;text-decoration:underline\">star69ai.com</a></td></tr></table></body></html>";
 }
 function resendFrom(env){
   const configured=String(env.RESEND_FROM_EMAIL||"").trim();
@@ -1120,7 +1121,7 @@ async function route(req,env){
     return json({prospects:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
-    const p=await body(req,5000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,1000);
+    const p=await body(req,16000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,12000);
     if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
     const existing=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE normalized_email=?").bind(email).first();
     if(existing){if(existing.status==="unsubscribed")throw Error("prospect_has_unsubscribed_do_not_contact");return json({created:false,alreadyExists:true,id:existing.id},200,origin,env)}

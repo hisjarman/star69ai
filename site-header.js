@@ -13,7 +13,7 @@
   const markup = `
     <header class="site-global-header" data-site-global-header>
       <div class="site-global-cover">
-        <img class="site-global-cover-image" src="/assets/Logo%20Star69AI%20horizonte%20espacial.webp" alt="Star69AI logo with a cinematic space horizon" fetchpriority="high" decoding="async">
+        <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI communications evolved — cinematic space banner" fetchpriority="high" decoding="async">
         <div class="site-global-cover-shade" aria-hidden="true"></div>
         <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span><span class="site-global-tagline">COMMUNICATIONS, EVOLVED.</span></div>
         <button class="site-global-toggle" type="button" aria-label="Open Star69AI navigation" aria-expanded="false" aria-controls="site-global-navigation">
@@ -28,6 +28,7 @@
         </nav>
       </div>
       <div class="site-global-utility">
+        <a class="site-global-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI — Communications. Evolved."></a>
         <a class="site-global-partner" href="/partner-portal/">PARTNER LOGIN <span>↗</span></a>
         <a class="site-global-login" href="/client/">CLIENT CONSOLE <span>↗</span></a>
         <a class="site-global-start" href="/get-started.html">INITIATE CONTACT <span>↗</span></a>
@@ -38,6 +39,16 @@
     const legacyHeader = document.querySelector('body > header.topbar, body > header.reference-topbar, body > header.site-header') || document.querySelector('body > header');
     if (legacyHeader) legacyHeader.remove();
     document.body.insertAdjacentHTML('afterbegin', markup);
+    const pageFooter = document.querySelector('body > footer, main + footer, footer');
+    if (pageFooter && !pageFooter.querySelector('[data-star69ai-footer-brand]')) {
+      const footerBrand = document.createElement('a');
+      footerBrand.className = 'site-global-footer-brand';
+      footerBrand.dataset.star69aiFooterBrand = 'true';
+      footerBrand.href = '/';
+      footerBrand.setAttribute('aria-label', 'Star69AI home');
+      footerBrand.innerHTML = '<img src="/assets/main_logo.webp" alt="Star69AI — Communications. Evolved.">';
+      pageFooter.insertBefore(footerBrand, pageFooter.firstChild);
+    }
     const header = document.querySelector('[data-site-global-header]');
     const toggle = header.querySelector('.site-global-toggle');
     const nav = header.querySelector('.site-global-nav');

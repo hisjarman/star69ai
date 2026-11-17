@@ -1,3 +1,13 @@
+## Restore full public navigation and compact readable footer — 2026-11-17
+
+- Feature branch: `fix/restore-navigation-compact-readable-footer-2026-11-17`, created from current `main` after inspecting the simplified shared header, homepage markup, prior navigation implementation and footer styles.
+- Root cause: the simplified shared header replaced the full navigation with a cinematic sticky banner and three buttons; its installer also removed the legacy homepage navigation, including the hamburger menu. This removed the primary site destinations and the hamburger interaction instead of resolving the overlapping/persistent navigation.
+- Restored a full Star69AI public navigation using the canonical `assets/main_logo.webp` wordmark, Home, Features, Pricing, How it works, Industries, Explore dropdown, 55+ Languages dropdown, Partner, Client Login and Get Started. The menu collapses to an accessible hamburger navigation on smaller screens, with Escape/outside-click/link-close behavior and current-page highlighting.
+- Removed the persistent/sticky positioning and oversized hero-banner header from the public navigation. The header now occupies normal document flow and cannot remain fixed over the hamburger menu or page content.
+- Reworked footer styles for high-contrast light text and links on the dark background. Reduced the footer wordmark from 240px to 150px, removed excess logo padding/margins, and tightened the brand column so the navigation links and contact details use the available space.
+- Kept the existing canonical footer logo normalization and all footer destinations/content. No client/admin portal navigation, Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer or prospect data/configuration changed.
+- Source-level syntax and selector checks are required; real desktop/mobile browser visual QA and GitHub Pages deployment remain unverified. Review via PR; do not merge `main` without explicit user approval.
+
 ## Simplified sticky header, legacy header removal and enforced dark footer — 2026-11-17
 
 - Feature branch: `fix/simplify-sticky-header-dark-footer-2026-11-17`, created from current `main` after reading this handoff and inspecting the shared header/footer implementation and homepage.

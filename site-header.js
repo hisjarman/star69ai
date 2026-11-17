@@ -39,15 +39,25 @@
     const legacyHeader = document.querySelector('body > header.topbar, body > header.reference-topbar, body > header.site-header') || document.querySelector('body > header');
     if (legacyHeader) legacyHeader.remove();
     document.body.insertAdjacentHTML('afterbegin', markup);
+    document.querySelectorAll('img[src*="star69ai-logo-transparent"], img[src*="Logo%20Star69AI"]').forEach(img => {
+      img.src = '/assets/main_logo.webp';
+      img.alt = 'Star69AI — Communications. Evolved.';
+    });
     const pageFooter = document.querySelector('body > footer, main + footer, footer');
-    if (pageFooter && !pageFooter.querySelector('[data-star69ai-footer-brand]')) {
-      const footerBrand = document.createElement('a');
-      footerBrand.className = 'site-global-footer-brand';
-      footerBrand.dataset.star69aiFooterBrand = 'true';
-      footerBrand.href = '/';
-      footerBrand.setAttribute('aria-label', 'Star69AI home');
-      footerBrand.innerHTML = '<img src="/assets/main_logo.webp" alt="Star69AI — Communications. Evolved.">';
-      pageFooter.insertBefore(footerBrand, pageFooter.firstChild);
+    if (pageFooter) {
+      const existingFooterLogo = pageFooter.querySelector('img[alt*="Star69AI"], img[src*="logo"]');
+      if (existingFooterLogo) {
+        existingFooterLogo.src = '/assets/main_logo.webp';
+        existingFooterLogo.alt = 'Star69AI — Communications. Evolved.';
+      } else if (!pageFooter.querySelector('[data-star69ai-footer-brand]')) {
+        const footerBrand = document.createElement('a');
+        footerBrand.className = 'site-global-footer-brand';
+        footerBrand.dataset.star69aiFooterBrand = 'true';
+        footerBrand.href = '/';
+        footerBrand.setAttribute('aria-label', 'Star69AI home');
+        footerBrand.innerHTML = '<img src="/assets/main_logo.webp" alt="Star69AI — Communications. Evolved.">';
+        pageFooter.insertBefore(footerBrand, pageFooter.firstChild);
+      }
     }
     const header = document.querySelector('[data-site-global-header]');
     const toggle = header.querySelector('.site-global-toggle');

@@ -1306,3 +1306,15 @@ This section supersedes the earlier activation-status notes above where they des
 - Added a clearly labelled “Take the AI Challenge” button directly inside the existing Receptionist Architect / Challenge Rewards section on `pricing.html`, linking to the existing `./challenge/` page.
 - Added one short explanatory sentence describing the practical value of trying the challenge. Preserved the existing reward percentages, eligibility/stacking terms and explicit disclosure that secure account-based reward redemption is not yet enabled.
 - No challenge logic, scoring, reward redemption, checkout, billing, Worker, D1 or customer data changed. Review via PR; do not merge `main` without explicit user approval.
+
+
+## Industry Hub and shared navigation refinement — 2026-11-16
+
+- Feature branch: `design/industry-hub-clean-global-header-2026-11-16`, created from current `main`.
+- Refined the existing shared header used across public pages rather than adding a Hub-only header. Reduced the visible desktop navigation to Home, How it works, Industry Hub and Pricing, with a consolidated Explore menu for the existing secondary destinations.
+- Kept Partner Login, Client Login and Get Started available. On mobile, Client Login remains in the compact header while Partner Login and Get Started are inside the expandable navigation; all existing destinations remain reachable.
+- Replaced the accumulated/duplicated header CSS append blocks with one consolidated responsive stylesheet. Updated spacing, logo sizing, typography, glass-dark surface, subtle blue divider, consistent button hierarchy, dropdown layout, focus/keyboard behavior and reduced-motion handling.
+- Simplified the existing header installer without changing its shared injection approach. Improved current-page highlighting, including opening Explore when the active page is one of its destinations; Escape closes the mobile menu and returns focus to its toggle.
+- Preserved all existing navigation URLs and the existing single shared header architecture. No page content, Worker, D1, billing, authentication, Retell, customer data or production configuration changed.
+- Static checks: JavaScript syntax, CSS brace balance, required primary/login/CTA destinations and retained secondary destinations. Real browser visual QA at desktop/mobile widths and GitHub Pages publication remain to be verified.
+- Review through PR; do not merge `main` without explicit user approval.

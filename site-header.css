@@ -63,3 +63,30 @@
 .site-global-nav-identity{display:flex;align-items:center;gap:11px}
 .site-global-yinyang-mark{display:block;width:30px;height:30px;flex:0 0 30px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(67,180,254,.5))}
 @media(max-width:700px){.site-global-yinyang-mark{width:26px;height:26px;flex-basis:26px}}
+
+
+/* Mobile mission-control menu: full-screen overlay above every persistent page layer. */
+@media(max-width:700px){
+  body.site-global-menu-open{overflow:hidden!important;touch-action:none}
+  .site-global-header.menu-open{position:relative;z-index:100000}
+  .site-global-header.menu-open .site-global-nav{
+    position:fixed;inset:0;z-index:100001;width:100%;max-height:100dvh;
+    overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+    padding:calc(env(safe-area-inset-top) + 76px) 12px calc(env(safe-area-inset-bottom) + 20px);
+    border:0;border-radius:0;transform:none;background:linear-gradient(155deg,#030b1d 0%,#061a32 58%,#030918 100%);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  .site-global-header.menu-open .site-global-toggle{
+    position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:100002;
+  }
+  .site-global-header.menu-open .site-global-nav-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* Keep every site footer consistently dark so the official light wordmark stays legible. */
+body footer{
+  background:#030918!important;color:#eaf3ff!important;color-scheme:dark;
+  border-color:rgba(67,180,254,.2)!important;
+}
+body footer :is(p,span,small,li,h1,h2,h3,h4,label,strong,b,em){color:inherit}
+body footer a:not([class*="button"]){color:#9edcff}
+body footer img{background:transparent!important}

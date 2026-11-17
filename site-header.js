@@ -20,7 +20,7 @@
           <span class="site-global-toggle-label">MENU</span><span class="site-global-toggle-icon"><i></i><i></i><i></i></span>
         </button>
         <nav class="site-global-nav" id="site-global-navigation" aria-label="Star69AI main navigation" inert>
-          <div class="site-global-nav-head"><span class="site-global-nav-identity"><img class="site-global-yinyang-mark" src="/assets/Icon_main.webp" alt="Star69AI yin-yang symbol" width="30" height="30" decoding="async"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
+          <div class="site-global-nav-head"><span class="site-global-nav-identity"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
           <div class="site-global-nav-grid">
             ${links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${({home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤"})[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}
           </div>
@@ -82,6 +82,7 @@
     const nav = header.querySelector('.site-global-nav');
     const setMenu = open => {
       header.classList.toggle('menu-open', open);
+      document.body.classList.toggle('site-global-menu-open', open);
       toggle.setAttribute('aria-expanded', String(open));
       toggle.setAttribute('aria-label', open ? 'Close Star69AI navigation' : 'Open Star69AI navigation');
       toggle.querySelector('.site-global-toggle-label').textContent = open ? 'CLOSE' : 'MENU';

@@ -463,3 +463,23 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 @media(max-width:1100px){.eli-widget{left:14px}}
 @media(max-width:700px){.eli-widget{left:12px;bottom:max(12px,env(safe-area-inset-bottom));gap:8px}.eli-launcher{min-height:48px;padding-right:13px}.eli-panel{width:min(350px,calc(100vw - 24px));height:min(470px,calc(100dvh - 92px))}}
 @media(prefers-reduced-motion:reduce){.eli-launcher,.eli-panel{scroll-behavior:auto;transition:none}}
+
+
+/* Compact the cockpit's cinematic identity banner without losing the artwork. */
+.top.cockpit-banner-header{min-height:98px;padding:10px 16px;background-position:center 54%}
+@media(max-width:700px){
+  .top.cockpit-banner-header{min-height:68px;padding:6px 10px}
+  .top.cockpit-banner-header .brand{width:40px;height:40px;flex-basis:40px}
+  .top.cockpit-banner-header .brand img{width:32px!important;height:32px!important;max-width:32px!important;max-height:32px!important}
+}
+@media(max-width:480px){.top.cockpit-banner-header{min-height:64px}}
+
+/* Mobile drawer takes the top interaction layer and locks the page behind it. */
+@media(max-width:700px){
+  body.cockpit-drawer-active{overflow:hidden!important;touch-action:none}
+  #workspace.cockpit-drawer-open .cockpit-drawer-backdrop{z-index:10019!important}
+  #workspace.cockpit-drawer-open .client-sidebar{z-index:10020!important}
+}
+/* The persistent cockpit navigation keeps its text identity but no logo graphic. */
+.cockpit-sidebar-brand .cockpit-brand-mark{display:none!important}
+.cockpit-sidebar-brand{gap:0!important}

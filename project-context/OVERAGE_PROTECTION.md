@@ -1,26 +1,39 @@
-# Subscription overage protection
+# Subscription minute usage and overage protection
 
-## Commercial rule
-- Subscription customers consume the current month's included minutes first, then their Minute Vault balance (FIFO), then billable overage.
-- Each customer has an administrator-approved overage_limit_minutes value. New and existing accounts default to 0 until an administrator explicitly authorizes overage.
-- At 50% of the approved overage allowance, Star69AI emails the customer and configured administrators.
-- At 75% of the approved allowance, Star69AI stops accepting new AI calls for that billing period. The unused final 25% is a safety margin, not additional customer entitlement.
-- A limit of 0 means no overage is authorized: new calls stop when included minutes and the Minute Vault are exhausted.
-- The admin workspace allows an integer allowance from 0 to 2,000 minutes. Admin approval is required to increase it.
+**Current source of truth: November 16, 2026.** This document supersedes older notes about administrator-entered overage allowances. The production design uses a fixed cap derived from each subscription plan.
 
-## Enforcement
-- Retell's phone-number inbound_webhook_url points to https://avr-platform-api.hisjarman.workers.dev/webhooks/retell/inbound.
-- The Worker verifies the Retell signature, resolves the dialed number to its Star69AI customer, checks subscription status, recomputes included/vault/overage usage, and returns the assigned agent only when the customer is eligible.
-- A blocked call receives an empty inbound response, so Retell does not connect the AI agent.
-- The normal Retell call webhook continues to record call duration and sends threshold notifications after call completion.
-- New assignments automatically receive the inbound webhook. The Agency Admin has an explicit action to attach it to existing assigned numbers.
-- PAYG/Flex numbers remain fail-closed unless PAYG_INGRESS_GATE_ENABLED=true and a funded positive wallet exists. Do not enable that flag as part of this subscription-overage release.
+## Commercial rules
 
-## Important limits and launch checklist
-- This guard blocks new inbound calls. It does not terminate calls that are already connected. A call already in progress can push actual usage beyond the 75% threshold; concurrent calls can increase that overrun. Test concurrency and decide whether a per-call duration override is needed before promising a mathematically exact ceiling.
-- Usage is based on completed Retell call records. The call webhook may arrive after the call ends; inbound checks always recompute from the latest stored call usage.
-- This implementation does not itself create Stripe metered usage items or charge overage invoices. The portal must continue to label overage as an estimate until Stripe metered billing, reconciliation, retries and end-to-end payment tests are completed.
-- Apply cloudflare/migrations/20261115_overage_protection.sql before deploying the Worker.
-- Deploy the Worker, then use Agency Admin → Agents & numbers → Enable call protection on assigned numbers. Verify the Retell API accepted inbound_webhook_url on every assigned number.
-- Test: zero overage authorization, 50% warning, 75% block, new-client default, prepaid-term eligibility, suspended/past-due accounts, duplicate webhooks, Resend failures and concurrent calls.
-- No production migration, Worker deployment, Retell number update or payment setting change was performed by this branch.
+- Subscription usage is applied in this order: current billing-period included minutes, available Minute Vault minutes (oldest saved minutes first), then authorized billable overage.
+- The maximum billable overage is fixed at **75% of the plan's included minutes**. It is not an administrator-editable allowance:
+  - Starter: 300 included + maximum 225 overage minutes.
+  - Growth: 600 included + maximum 450 overage minutes.
+  - Pro: 1,200 included + maximum 900 overage minutes.
+- Minute Vault minutes are separate from the overage cap. The vault carries forward 50% of unused included minutes while the subscription remains active and paid. Vault minutes are consumed FIFO after the current month's included minutes, have no cash value, and are forfeited on cancellation.
+- Overage capacity is available only after the customer explicitly authorizes off-session payment and a valid payment method is saved. Without that authorization, the customer can use included and available vaulted minutes, but no additional overage capacity is reserved.
+- Published overage rates are Starter $0.55/minute, Growth $0.45/minute and Pro $0.36/minute.
+- Monthly subscription overage is added to the next Stripe subscription invoice. Prepaid six-/twelve-month plan overage is billed through a separate Stripe invoice. The dashboard's estimate is not an invoice or proof of payment.
+
+## Backend enforcement
+
+- Retell inbound numbers use the pre-answer webhook at `/webhooks/retell/inbound`.
+- The Worker verifies the Retell signature, resolves the called number to its assigned customer and agent, and checks that the customer is active and billing-eligible.
+- For subscription accounts, the Worker recalculates current included, vault and authorized overage capacity, accounts for active call reservations, and sets Retell's per-call maximum duration from the remaining capacity.
+- If there is insufficient capacity to reserve at least one minute, the Worker returns Retell's explicit `call_inbound.reject=true` response. It must never return an empty successful response for a blocked call, because Retell may otherwise fall back to a number's default inbound agent.
+- D1 call reservations protect against overlapping inbound calls consuming the same remaining allowance. The reservation is released when the Retell `call_ended` event is processed; a 24-hour expiry is the safety fallback for missing/delayed events.
+- The regular `/webhooks/retell` endpoint records call events and usage, refreshes the Minute Vault, and initiates eligible overage billing.
+- Flex pay-as-you-go accounts use their separate prepaid wallet and ingress gate. Flex does not receive subscription minutes or a Minute Vault.
+
+## Dashboard display rules
+
+- Show included monthly minutes, consumed minutes, remaining included minutes, Minute Vault balance, vault usage and billable overage as distinct values.
+- Visual usage warnings at 50%, 75% and 90% of included minutes are informational UI thresholds. They do not change the backend's fixed 75%-of-included overage ceiling.
+- The Worker currently sends its overage-protection email warning at 50% of the fixed overage allowance and sends a stop notice at the full allowance. Do not describe these as 50/75/90% included-minute email alerts.
+- The 75% cap is enforced server-side. A progress bar or browser-side calculation is never a security or billing control.
+
+## Verification status and remaining tests
+
+- The Worker/D1 implementation and production deployment are recorded in `PROJECT_HANDOFF.md`; the November 16 dashboard enhancement branch corrects the no-capacity inbound response to explicitly reject the call.
+- Do not claim the entire payment lifecycle is end-to-end verified until controlled test-customer checks cover monthly and prepaid billing, saved-card authorization, invoice creation, payment failure/retry, duplicate Retell events, simultaneous inbound calls, and the exact cap boundary.
+- Verify the inbound webhook is attached to every assigned production number and test that exhausted capacity produces a rejected inbound call, not a fallback route.
+- No production Worker deployment, D1 migration, Retell number update, Stripe setting change, or customer payment was performed by the dashboard enhancement branch.

@@ -343,3 +343,50 @@ html.cockpit-desktop-mode #workspace.cockpit-drawer-open .cockpit-drawer-backdro
 #workspace.cockpit-drawer-open .client-nav-item{
  min-height:48px;
 }
+
+
+/* Dashboard enhancement: clearer readiness, usage thresholds and call-history filters. */
+.cockpit-receptionist-state{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.cockpit-receptionist-state::before{content:"";display:inline-block;width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#94A3B8}
+.cockpit-receptionist-state[data-state="live"]{border-color:rgba(62,255,122,.4);background:rgba(62,255,122,.1);color:var(--cockpit-green)}
+.cockpit-receptionist-state[data-state="live"]::before{background:var(--cockpit-green);box-shadow:0 0 10px rgba(62,255,122,.7)}
+.cockpit-receptionist-state[data-state="demo"]{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.1);color:#93C5FD}
+.cockpit-receptionist-state[data-state="demo"]::before{background:#93C5FD}
+.cockpit-receptionist-state[data-state="setup"]{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.1);color:#FACC15}
+.cockpit-receptionist-state[data-state="setup"]::before{background:#FACC15}
+.usage-threshold-notice{margin:10px 0 0;line-height:1.5}
+.usage-threshold-notice.warning{color:#FACC15}
+.usage-threshold-notice.critical{color:#FCA5A5}
+.usage-fill.usage-warn-50{background:#FACC15;box-shadow:0 0 12px rgba(250,204,21,.28)}
+.usage-fill.usage-warn-75{background:#FB923C;box-shadow:0 0 12px rgba(251,146,60,.3)}
+.usage-fill.usage-warn-90{background:#F87171;box-shadow:0 0 12px rgba(248,113,113,.3)}
+.call-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(170px,1fr);gap:14px;align-items:end;margin:4px 0 16px}
+.call-filters label{display:grid;gap:7px;color:var(--cockpit-muted);font-size:11px;font-weight:700;letter-spacing:.04em}
+.call-filters input,.call-filters select{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--cockpit-border);border-radius:11px;background:var(--cockpit-input);color:#fff}
+.call-filters input:focus,.call-filters select:focus{border-color:var(--cockpit-green);outline:2px solid rgba(62,255,122,.12)}
+@media(max-width:700px){.client-workspace-header .row{gap:6px}.cockpit-receptionist-state{font-size:9px}.call-filters{grid-template-columns:1fr;gap:10px}}
+
+/* Dashboard follow-through: minute breakdown, launch progress and call insights. */
+.usage-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.usage-breakdown>div{display:grid;gap:6px;min-width:0;padding:13px;border:1px solid var(--cockpit-border);border-radius:12px;background:rgba(255,255,255,.025)}
+.usage-breakdown small,.call-insight-grid small{color:var(--cockpit-muted);font-size:10px;line-height:1.4}
+.usage-breakdown b{color:#fff;font-size:17px;overflow-wrap:anywhere}
+.launch-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;padding:0;margin:18px 0;list-style:none}
+.launch-step{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:8px;padding:11px;border:1px solid var(--cockpit-border);border-radius:12px;background:rgba(255,255,255,.02);min-width:0}
+.launch-step-marker{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:rgba(255,255,255,.08);color:#cbd5e1;font-size:12px;font-weight:800}
+.launch-step>span:nth-child(2){color:#fff;font-size:11px;font-weight:700;line-height:1.35}
+.launch-step small{grid-column:2;color:var(--cockpit-muted);font-size:10px}
+.launch-step.complete{border-color:rgba(62,255,122,.3);background:rgba(62,255,122,.055)}
+.launch-step.complete .launch-step-marker{background:rgba(62,255,122,.16);color:var(--cockpit-green)}
+.launch-step.current{border-color:rgba(250,204,21,.35);background:rgba(250,204,21,.055)}
+.launch-step.current .launch-step-marker{background:rgba(250,204,21,.15);color:#FACC15}
+.call-insight-panel{padding:15px;margin-bottom:14px;border:1px solid var(--cockpit-border);border-radius:13px;background:rgba(255,255,255,.025)}
+.call-insight-panel h4{margin:15px 0 6px;color:#fff;font-size:13px}
+.call-insight-panel>p{line-height:1.55}
+.call-insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:12px}
+.call-insight-grid>div{display:grid;gap:5px;min-width:0}
+.call-insight-grid b{color:#fff;font-size:12px;overflow-wrap:anywhere}
+.call-email-preference-summary{padding:11px 13px;border:1px solid var(--cockpit-border);border-radius:11px;background:rgba(255,255,255,.025);color:var(--cockpit-muted);font-size:12px}
+.call-email-preference-summary[data-state="enabled"]{border-color:rgba(62,255,122,.3);background:rgba(62,255,122,.06);color:var(--cockpit-green)}
+@media(max-width:900px){.launch-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.usage-breakdown{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.call-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.launch-steps{grid-template-columns:1fr}.usage-breakdown{grid-template-columns:1fr}}

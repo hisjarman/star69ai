@@ -84,14 +84,14 @@ function marketingResearchData(p){
  const raw=String(p?.notes||"").trim();
  if(!raw)return null;
  try{const value=JSON.parse(raw);if(value&&value.schemaVersion==="star69ai-prospect-v1")return value}catch{}
- const subject=raw.match(/(?:^|\\n)Subject:\\s*(.+)/i);
- const body=raw.match(/(?:^|\\n)Body:\\s*([\\s\\S]*)$/i);
+ const subject=raw.match(/(?:^|\n)Subject:\s*(.+)/i);
+ const body=raw.match(/(?:^|\n)Body:\s*([\s\S]*)$/i);
  if(!subject||!body||!body[1].trim())return null;
- const sourceUrls=Array.from(raw.matchAll(/(?:^|\\n)Source:\\s*(https?:\\/\\/[^\\s]+)/gi),m=>m[1]);
- const observation=raw.match(/(?:^|\\n)Why:\\s*(.+)/i);
- const location=raw.match(/(?:^|\\n)Area:\\s*(.+)/i);
+ const sourceUrls=Array.from(raw.matchAll(/(?:^|\n)Source:\s*(https?:\/\/[^\s]+)/gi),m=>m[1]);
+ const observation=raw.match(/(?:^|\n)Why:\s*(.+)/i);
+ const location=raw.match(/(?:^|\n)Area:\s*(.+)/i);
  const website=sourceUrls[0]||"";
- return {schemaVersion:"star69ai-prospect-legacy",batchDate:(raw.match(/(?:^|\\n)Batch:\\s*(.+)/i)||[])[1]||"",website,location:location?.[1]||"",industry:p.industry||"",sourceUrls,researchObservation:observation?.[1]||"",draftSubject:subject[1].trim(),draftBody:body[1].trim(),draftStatus:"needs_review"};
+ return {schemaVersion:"star69ai-prospect-legacy",batchDate:(raw.match(/(?:^|\n)Batch:\s*(.+)/i)||[])[1]||"",website,location:location?.[1]||"",industry:p.industry||"",sourceUrls,researchObservation:observation?.[1]||"",draftSubject:subject[1].trim(),draftBody:body[1].trim(),draftStatus:"needs_review"};
 }
 function marketingFillTemplate(p,followUp=false){
  const research=marketingResearchData(p);

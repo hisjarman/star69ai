@@ -1118,9 +1118,10 @@ async function route(req,env){
     const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)),hash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
     await env.DB.prepare("INSERT INTO avr_marketing_unsubscribe_tokens(token_hash,prospect_id,created_at) VALUES(?,?,?)").bind(hash,id,new Date().toISOString()).run();
     const unsubscribeUrl="https://avr-platform-api.hisjarman.workers.dev/api/public/marketing/unsubscribe?token="+token;
-    const textBody=message+"\n\nStar69AI\nhttps://star69ai.com/\n"+postal+"\n\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
+    const businessPhone="(702) 389-1724";
+    const textBody=message+"\n\nStar69AI\nhttps://star69ai.com/\nPhone: "+businessPhone+"\n"+postal+"\n\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
     const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-    const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
+    const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>Phone: "+esc(businessPhone)+"<br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
     const send=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-marketing/"+id+"/"+crypto.randomUUID()},body:JSON.stringify({from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}})});
     const sent=await send.json().catch(()=>({}));
     if(!send.ok)throw Error(send.status===429?"email_provider_rate_limited_try_again":"email_provider_rejected_request_contact_support");

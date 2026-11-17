@@ -1107,7 +1107,7 @@ async function route(req,env){
     if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)throw Error("email_sender_not_configured_check_resend");
     const postal=String(env.BUSINESS_POSTAL_ADDRESS||"").trim();
     if(postal.length<8)throw Error("business_postal_address_required_for_marketing");
-    const p=await body(req,10000),id=marketingSend?.[1]||String(p.prospectId||"").trim();
+    const p=await body(req,10000),id=String(marketingSend?.[1]||p.prospectId||p.prospect_id||p.id||p.prospect?.id||"").trim();
     if(!/^[a-f0-9-]{36}$/i.test(id))throw Error("valid_marketing_prospect_id_required");
     const subject=String(p.subject||"").trim(),message=String(p.body||"").trim();
     if(subject.length<4||subject.length>180||message.length<30||message.length>6000)throw Error("valid_subject_and_email_body_required");

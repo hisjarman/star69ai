@@ -397,3 +397,8 @@ html body footer.footer.site-footer .footer-column h2,html body footer.footer.si
 html body footer.footer.site-footer .footer-column a,html body footer.footer.site-footer .footer-contact a,html body footer.footer.site-footer .footer-bottom,html body footer.footer.site-footer .footer-disclaimer{color:#c6d8eb!important;opacity:1!important}
 html body footer.footer.site-footer .footer-column a{font-size:12px!important;line-height:1.65!important}html body footer.footer.site-footer .footer-disclaimer{font-size:10px!important;line-height:1.7!important}
 @media(max-width:760px){html body footer.footer.site-footer .footer-brand-column a.brand-footer,html body footer.site-footer .footer-brand-column a.site-global-footer-brand{width:min(200px,100%)!important;max-width:200px!important}html body footer.footer.site-footer .footer-brand-column a.brand-footer img,html body footer.site-footer .footer-brand-column a.site-global-footer-brand img{width:200px!important;max-height:54px!important}}
+
+/* Runtime-inserted footer wordmark when a legacy footer has no recognizable logo. */
+html body footer.site-footer>a.site-global-footer-brand{display:flex!important;width:min(220px,100%)!important;max-width:220px!important;margin:0 0 12px!important;padding:0!important}
+html body footer.site-footer>a.site-global-footer-brand img{display:block!important;width:220px!important;max-width:100%!important;max-height:58px!important;height:auto!important;object-fit:contain!important;object-position:left center!important}
+@media(max-width:760px){html body footer.site-footer>a.site-global-footer-brand{width:min(200px,100%)!important;max-width:200px!important}html body footer.site-footer>a.site-global-footer-brand img{width:200px!important;max-height:54px!important}}

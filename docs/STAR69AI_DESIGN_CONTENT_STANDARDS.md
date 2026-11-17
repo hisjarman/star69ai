@@ -167,3 +167,8 @@ Do not mark a check as passed when it was not actually performed. Record browser
 - Palette role: green is the primary action/status accent, blue supports links and interaction, and purple is selective emphasis. Do not use all three at equal visual weight in one component.
 - This token addition is a migration foundation, not proof that every legacy page has been visually converted. Existing page-specific styles must be migrated in focused, regression-tested batches; do not append broad overrides to force a superficial recolor.
 - The homepage Earth-at-night/glass treatment remains a deliberate visual treatment. Keep text contrast and the approved palette consistent with the rest of the experience.
+
+
+## 11. Official brand language
+
+All new copy and material revisions must follow [Star69AI Official Brand Language Guide](STAR69AI_BRAND_LANGUAGE_GUIDE.md). The guide defines the approved Crew, Mission Control, Command Center, Navigator, Open Channel, Mission Briefing and Alliance vocabulary, including where plain-language terms must remain for clarity, safety, billing and legal accuracy.

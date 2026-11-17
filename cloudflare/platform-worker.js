@@ -1116,7 +1116,6 @@ async function route(req,env){
     if(Number(recent?.n||0)>=25)throw Error("daily_marketing_send_limit_reached");
     const token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,"0")).join("");
     const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token)),hash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
-    await env.DB.prepare("INSERT INTO avr_marketing_unsubscribe_tokens(token_hash,prospect_id,created_at) VALUES(?,?,?)").bind(hash,id,new Date().toISOString()).run();
     const unsubscribeUrl="https://avr-platform-api.hisjarman.workers.dev/api/public/marketing/unsubscribe?token="+token;
     const businessPhone="(702) 389-1724";
     const textBody="ADVERTISEMENT\n\n"+message+"\n\nStar69AI\nhttps://star69ai.com/\nPhone: "+businessPhone+"\n"+postal+"\n\nTo stop receiving marketing emails from Star69AI, unsubscribe here: "+unsubscribeUrl;
@@ -1124,12 +1123,14 @@ async function route(req,env){
     const htmlBody=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.65\"><p style=\"font-size:12px;font-weight:700;letter-spacing:1.2px;margin:0 0 16px;color:#52616b\">ADVERTISEMENT</p><p>"+esc(message).replace(/\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\">star69ai.com</a><br>Phone: "+esc(businessPhone)+"<br>"+esc(postal)+"<br><a href=\""+unsubscribeUrl+"\">Unsubscribe from marketing emails</a></p></div>");
     const send=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-marketing/"+id+"/"+crypto.randomUUID()},body:JSON.stringify({from:resendFrom(env),to:[prospect.email],subject,text:textBody,html:htmlBody,headers:{"List-Unsubscribe":"<"+unsubscribeUrl+">","List-Unsubscribe-Post":"List-Unsubscribe=One-Click"}})});
     const sent=await send.json().catch(()=>({}));
-    if(!send.ok)throw Error(send.status===429?"email_provider_rate_limited_try_again":"email_provider_rejected_request_contact_support");
+    if(!send.ok){const providerDetail=String(sent?.message||sent?.error?.message||sent?.error||sent?.name||"No provider error detail returned").replace(/[\\r\\n]+/g," ").slice(0,320);throw Error("resend_rejected_email_http_"+send.status+": "+providerDetail)}
+    // Store the unsubscribe token only after Resend accepts the message. A rejected request must not leave an orphan token.
+    await env.DB.prepare("INSERT INTO avr_marketing_unsubscribe_tokens(token_hash,prospect_id,created_at) VALUES(?,?,?)").bind(hash,id,new Date().toISOString()).run();
     const now=new Date().toISOString();
     await env.DB.prepare("INSERT INTO avr_marketing_sends(id,prospect_id,resend_email_id,subject,sent_at,status) VALUES(?,?,?,?,?,'sent')").bind(crypto.randomUUID(),id,sent.id||null,subject,now).run();
     await env.DB.prepare("UPDATE avr_marketing_prospects SET last_contacted_at=?,updated_at=? WHERE id=?").bind(now,now,id).run();
     await audit(env,u,"marketing_email_sent",null,{prospectId:id,resendEmailId:sent.id||null});
-    return json({sent:true,emailId:sent.id||null},200,origin,env);
+    return json({sent:true,accepted:true,provider:"Resend",emailId:sent.id||null,providerStatus:send.status},200,origin,env);
    }
 
 

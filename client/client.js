@@ -310,9 +310,8 @@ function renderAgentRequests(items){
    $("#no-account").classList.add("hidden");$("#workspace").classList.remove("hidden");
    $("#business-title").textContent=customer.businessName||"Your dashboard";
    const greetingName=(customer.contactName||"").trim().split(/\s+/)[0];
-   const localHour=new Date().getHours();
-   const greeting=localHour>=5&&localHour<12?"Good morning":localHour>=12&&localHour<17?"Good afternoon":"Good evening";
-   $("#client-greeting").textContent=greeting+(greetingName?", "+greetingName:"");
+   $("#client-greeting").textContent="Welcome back"+(greetingName?", "+greetingName:"");
+   $("#eli-widget")?.removeAttribute("hidden");
    renderOnboarding(d.onboarding);
    $("#account-status").textContent=customer.status||"Pending";$("#account-status").className="status "+(customer.status||"pending");
    const plans={starter:"Starter",growth:"Growth",pro:"Pro",flex:"Flex"};
@@ -365,6 +364,17 @@ function renderAgentRequests(items){
  const cockpitMenu=$("#cockpit-menu-toggle"),cockpitBackdrop=$("#cockpit-drawer-backdrop");
  cockpitMenu?.addEventListener("click",()=>{const open=$("#workspace").classList.toggle("cockpit-drawer-open");cockpitMenu.setAttribute("aria-expanded",String(open))});
  cockpitBackdrop?.addEventListener("click",()=>{ $("#workspace").classList.remove("cockpit-drawer-open");cockpitMenu?.setAttribute("aria-expanded","false") });
+ const eliWidget=$("#eli-widget"),eliPanel=$("#eli-panel"),eliLauncher=$("#eli-launcher"),eliClose=$("#eli-close"),eliFrame=$("#eli-frame");
+ function setEliOpen(open){
+  if(!eliWidget||!eliPanel||!eliLauncher)return;
+  eliPanel.hidden=!open;eliPanel.setAttribute("aria-hidden",String(!open));
+  eliLauncher.setAttribute("aria-expanded",String(open));
+  eliLauncher.classList.toggle("is-open",open);
+  if(open&&eliFrame&&!eliFrame.hasAttribute("src"))eliFrame.src=eliFrame.dataset.src||"https://star69ai-concierge.hisjarman.workers.dev/";
+  if(!open)eliLauncher.focus();
+ }
+ eliLauncher?.addEventListener("click",()=>setEliOpen(eliPanel?.hidden!==false));
+ eliClose?.addEventListener("click",()=>setEliOpen(false));
  const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support","knowledge"].includes(initialPage)?initialPage:"overview");
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();

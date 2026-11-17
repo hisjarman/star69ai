@@ -1,3 +1,11 @@
+## Star69AI marketing email business contact footer — 2026-11-17
+
+- Feature branch: `fix/marketing-business-contact-footer-2026-11-17`.
+- Updated the existing marketing-send route so every marketing email footer includes Star69AI's business phone number and the configured business postal address, in both plain-text and HTML versions. The one-click unsubscribe link and List-Unsubscribe headers remain unchanged.
+- The business phone is a public business contact detail in the Worker source. The mailing address remains configuration-only and is not committed to the repository; the route continues to require `BUSINESS_POSTAL_ADDRESS`.
+- **Production configuration is not yet updated:** Cloudflare's Worker secret API explicitly creates a new Worker version when a secret is added. No secret was written and no Worker version was deployed as part of this change. Until the mailing-address secret is added to the production Worker, the existing missing-address guard will continue to block marketing sends.
+- Source-level review only. No marketing emails were sent; no customer/prospect data changed. Merge of this source change does not deploy the Cloudflare Worker.
+
 ## Marketing prospect date tree and repeat-outreach safeguards — 2026-11-17
 
 - Feature branch: `feature/marketing-date-tree-send-guard-2026-11-17`.

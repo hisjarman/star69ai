@@ -1,3 +1,15 @@
+## Marketing prospect date tree and repeat-outreach safeguards — 2026-11-17
+
+- Feature branch: `feature/marketing-date-tree-send-guard-2026-11-17`.
+- Updated the existing Agency Admin Marketing Outreach tab rather than creating a second marketing console.
+- Prospects are grouped into expandable date branches by their `created_at` date. Each branch shows its prospect count; the newest date opens by default. Prospect rows show contact status, number of recorded sends and most recent send date.
+- The admin prospects API now returns each prospect's recorded send count and latest send timestamp from `avr_marketing_sends`.
+- Worker send protection now allows only one initial outreach per prospect. A later message must explicitly carry the follow-up action, and the existing seven-day cooldown and 25-per-rolling-24-hour cap remain enforced server-side. Unsubscribed/non-active records remain blocked.
+- The compose UI labels the first message as initial outreach and subsequent messages as follow-ups. Follow-up copy is prefilled separately and still requires individual review and confirmation.
+- Source syntax checks passed for the updated Worker and admin JavaScript; CSS brace balance is zero. No production Worker deployment or live browser/email test was performed. Review through PR; do not merge `main` or deploy the Worker without the user's explicit approval.
+- **Historical-send limitation:** production `avr_marketing_sends` contained zero records at implementation time. The safeguard reliably blocks messages recorded by this console, but it cannot infer emails sent manually or through another provider before tracking began. Those prospects must be marked/recorded as previously contacted before any first send through this console; do not assume the current empty history proves no one was emailed elsewhere.
+- No marketing emails were sent as part of this work.
+
 
 ## Learning Center dark-text contrast repair — 2026-11-16
 

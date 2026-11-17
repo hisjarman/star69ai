@@ -1088,7 +1088,7 @@ async function route(req,env){
     return json({requests:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
-    const rows=await env.DB.prepare("SELECT id,business_name,contact_name,email,industry,notes,status,created_at,last_contacted_at FROM avr_marketing_prospects ORDER BY created_at DESC LIMIT 500").all();
+    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.industry,p.notes,p.status,p.created_at,p.last_contacted_at,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p ORDER BY p.created_at DESC LIMIT 500").all();
     return json({prospects:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
@@ -1111,7 +1111,7 @@ async function route(req,env){
     const prospect=await env.DB.prepare("SELECT * FROM avr_marketing_prospects WHERE id=?").bind(id).first();
     if(!prospect)throw Error("marketing_prospect_not_found");
     if(prospect.status!=="active")throw Error("prospect_has_unsubscribed_do_not_contact");
-    if(prospect.last_contacted_at&&Date.parse(prospect.last_contacted_at)>Date.now()-7*86400000)throw Error("prospect_contacted_within_last_7_days");
+    const priorSends=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_sends WHERE prospect_id=?").bind(id).first();const hasPriorSend=Number(priorSends?.n||0)>0;if(hasPriorSend&&p.followUp!==true)throw Error("prospect_already_contacted_follow_up_required");if(!hasPriorSend&&p.followUp===true)throw Error("no_previous_outreach_to_follow_up");if(hasPriorSend&&prospect.last_contacted_at&&Date.parse(prospect.last_contacted_at)>Date.now()-7*86400000)throw Error("prospect_contacted_within_last_7_days");
     const recent=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_sends WHERE sent_at>=?").bind(new Date(Date.now()-86400000).toISOString()).first();
     if(Number(recent?.n||0)>=25)throw Error("daily_marketing_send_limit_reached");
     const token=Array.from(crypto.getRandomValues(new Uint8Array(32))).map(x=>x.toString(16).padStart(2,"0")).join("");

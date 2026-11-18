@@ -969,8 +969,9 @@ async function hubspotCallback(req,env){
  if(Number(consumed.meta?.changes||0)!==1||record.redirect_uri!==HUBSPOT_REDIRECT_URI)return finish("authorization_expired");
  try{
   const token=await hubspotTokenRequest(env,{grant_type:"authorization_code",code,redirect_uri:HUBSPOT_REDIRECT_URI});
-  const scopes=(Array.isArray(token.scopes)?token.scopes:[]).filter(x=>HUBSPOT_SCOPES.includes(x));
-  if(!scopes.includes("crm.objects.contacts.read")||!token.hub_id)throw Error("hubspot_required_scope_or_account_missing");
+  const grantedScopes=Array.isArray(token.scopes)?token.scopes:[];
+  if(!grantedScopes.includes("crm.objects.contacts.read")||grantedScopes.some(scope=>!HUBSPOT_SCOPES.includes(scope))||!token.hub_id)throw Error("hubspot_required_scope_or_account_missing");
+  const scopes=grantedScopes;
   const access=await encryptIntegrationSecret(env,token.access_token),refresh=await encryptIntegrationSecret(env,token.refresh_token),now=new Date().toISOString();
   await env.DB.prepare("INSERT INTO avr_provider_connections(id,customer_id,provider,provider_account_id,provider_account_name,scopes_json,access_token_ciphertext,refresh_token_ciphertext,access_token_expires_at,status,connected_at,updated_at) VALUES(?,?, 'hubspot',?,?,?,?,?,?, 'connected',?,?) ON CONFLICT(customer_id,provider) DO UPDATE SET provider_account_id=excluded.provider_account_id,provider_account_name=excluded.provider_account_name,scopes_json=excluded.scopes_json,access_token_ciphertext=excluded.access_token_ciphertext,refresh_token_ciphertext=excluded.refresh_token_ciphertext,access_token_expires_at=excluded.access_token_expires_at,status='connected',connected_at=excluded.connected_at,updated_at=excluded.updated_at").bind(crypto.randomUUID(),record.customer_id,String(token.hub_id),"HubSpot account "+String(token.hub_id),JSON.stringify(scopes),access,refresh,Date.now()+Math.max(60,Number(token.expires_in||1800))*1000,now,now).run();
   return finish("connected");

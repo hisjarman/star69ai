@@ -1798,3 +1798,16 @@ This section supersedes the earlier activation-status notes above where they des
 - Updated `STAR69AI_HEADER_DESIGN_LOCK.md` and the protection workflow's pinned Git blob IDs because the owner explicitly requested a navigation organization change. New approved source blobs: JS `6664131e13969a38938c84657db4ec4b9a4df636`, CSS `34a920b0f858198d33efc8a2174f21008cd2abc9`.
 - Source checks: 5 groups; 19 destinations; no routes removed; CSS braces balanced; responsive group breakpoints present. Browser screenshot/interaction QA at desktop, tablet and mobile remains outstanding.
 - No Worker, D1, Retell, billing, authentication, customer/prospect records or production configuration changed. Source-only PR; no merge until explicit owner approval.
+
+
+## Homepage conversion focus and optional expansion — 2026-11-18 — REVIEW REQUIRED
+
+- Working branch: `conversion/homepage-focus-expand-newsletter-last-2026-11-18`, based on current `main`.
+- Kept the homepage hero, capability showcase, interactive call-rescue simulator, Call Shield / Receptionist Intelligence selling points, and industry proof visible by default.
+- Grouped the remaining lower-priority homepage material (AI Challenge, how it works, managed-service explanation, demo/discovery content, comparison and safeguards, industry example, dashboard/language previews, and exploration links) inside a native accessible `<details>` disclosure. Visitors can choose **Show more** or **Show less**; the content remains in the HTML rather than being deleted.
+- Added a homepage-only visual treatment for the disclosure. No other public page uses this collapsed layout.
+- Moved the weekly story newsletter subscription section to the final content position immediately before the homepage footer.
+- Added hash-navigation handling so a direct link to a section inside the collapsed region opens the disclosure before navigation.
+- Preserved existing newsletter form fields and `data-story-subscribe` hook, existing forms, CTA destinations, scripts, and backend behavior. No Worker, D1, Retell, billing, authentication, customer/prospect data or production configuration changed.
+- Static verification required: ensure exactly one newsletter subscription section remains and is last before the footer; verify the disclosure begins after the initial selling-point sections and closes before newsletter; check stylesheet link and hash-reveal script; run HTML/JS/CSS syntax and link/ID checks. Browser visual QA at desktop/tablet/mobile and GitHub Pages publication remain outstanding.
+- Source-only PR review required. Do not merge to `main` without explicit founder approval.

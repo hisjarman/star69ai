@@ -7,7 +7,7 @@
   --legal-surface-raised: #192d37;
   --legal-text: #f1f6f4;
   --legal-muted: #c3d0d2;
-  --legal-accent: #14D251;
+  --legal-accent: #34FD78;
   --legal-link: #91dcff;
   --legal-border: #38515b;
 }
@@ -17,7 +17,7 @@ body {
   min-width: 320px;
   background: var(--legal-bg) !important;
   color: var(--legal-text) !important;
-  font-family: "DM Sans", Arial, sans-serif;
+  font-family: "Manrope", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
@@ -102,7 +102,7 @@ body {
   display: inline-block;
   margin: 0 0 8px;
   color: #b5c9c9 !important;
-  font-family: "DM Mono", monospace;
+  font-family: "IBM Plex Mono", monospace;
   font-size: 12px !important;
   font-weight: 600;
   letter-spacing: .07em;

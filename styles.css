@@ -402,3 +402,40 @@ html body footer.footer.site-footer .footer-column a{font-size:12px!important;li
 html body footer.site-footer>a.site-global-footer-brand{display:flex!important;width:min(220px,100%)!important;max-width:220px!important;margin:0 0 12px!important;padding:0!important}
 html body footer.site-footer>a.site-global-footer-brand img{display:block!important;width:220px!important;max-width:100%!important;max-height:58px!important;height:auto!important;object-fit:contain!important;object-position:left center!important}
 @media(max-width:760px){html body footer.site-footer>a.site-global-footer-brand{width:min(200px,100%)!important;max-width:200px!important}html body footer.site-footer>a.site-global-footer-brand img{width:200px!important;max-height:54px!important}}
+
+
+/* Final high-specificity footer wordmark sizing — override legacy 150px/220px caps. */
+html body footer.footer.site-footer .footer-brand-column a.brand-footer img,
+html body footer.site-footer .footer-brand-column a.site-global-footer-brand img,
+html body footer.site-footer>a.site-global-footer-brand img{
+  display:block!important;
+  width:320px!important;
+  max-width:min(320px,100%)!important;
+  max-height:none!important;
+  height:auto!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+html body footer.footer.site-footer .footer-brand-column a.brand-footer,
+html body footer.site-footer .footer-brand-column a.site-global-footer-brand,
+html body footer.site-footer>a.site-global-footer-brand{
+  width:min(320px,100%)!important;
+  max-width:320px!important;
+  min-height:0!important;
+  margin:0 0 14px!important;
+  padding:0!important;
+}
+@media(max-width:700px){
+  html body footer.footer.site-footer .footer-brand-column a.brand-footer img,
+  html body footer.site-footer .footer-brand-column a.site-global-footer-brand img,
+  html body footer.site-footer>a.site-global-footer-brand img{
+    width:280px!important;
+    max-width:min(280px,100%)!important;
+  }
+  html body footer.footer.site-footer .footer-brand-column a.brand-footer,
+  html body footer.site-footer .footer-brand-column a.site-global-footer-brand,
+  html body footer.site-footer>a.site-global-footer-brand{
+    width:min(280px,100%)!important;
+    max-width:280px!important;
+  }
+}

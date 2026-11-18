@@ -38,3 +38,24 @@ body#top .s69-intelligence-hero .s69-hero-caption{left:50%;bottom:0;transform:tr
 @media(max-width:900px){body#top .s69-intelligence-hero{width:100%;height:auto;max-height:none;min-height:0;margin:14px auto 8px;padding:0 0 42px}body#top .s69-intelligence-panel{width:min(100%,650px)}body#top .s69-intelligence-hero .s69-hero-caption{bottom:0}}
 @media(max-width:620px){body#top .s69-intelligence-hero{width:100%;left:auto;max-height:none;min-height:0;height:auto;margin:12px auto 4px;padding:0 0 39px}body#top .s69-intelligence-panel{padding:16px 14px;border-radius:17px}body#top .s69-intel-heading{padding:16px 0 13px}body#top .s69-intel-call{gap:9px;padding:10px}body#top .s69-intel-call strong{font-size:10px}body#top .s69-intel-call span{font-size:8px}body#top .s69-intel-status{font-size:6px}body#top .s69-intel-insights article{padding:10px}body#top .s69-intel-insights article strong{font-size:10px}body#top .s69-intel-insights article span{font-size:8px}body#top .s69-intel-loop{font-size:7px;letter-spacing:0;padding:10px 7px}body#top .s69-intelligence-hero .s69-hero-caption{font-size:6px;letter-spacing:.06em}}
 @media(prefers-reduced-motion:reduce){body#top .s69-intelligence-panel{scroll-behavior:auto}}
+
+
+/* Homepage capability showcase aligned with the public Capabilities page. */
+body#top .s69-home-capabilities{position:relative;z-index:2;min-width:0;width:100%;padding:18px;border:1px solid rgba(67,180,254,.3);border-radius:16px;background:linear-gradient(145deg,rgba(13,31,58,.96),rgba(5,14,32,.98));box-shadow:0 22px 70px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.035)}
+body#top .s69-home-cap-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 2px 15px;padding-bottom:13px;border-bottom:1px solid rgba(67,180,254,.18);font:600 9px 'IBM Plex Mono',monospace;letter-spacing:1px}
+body#top .s69-home-cap-head span{color:#34fd78}
+body#top .s69-home-cap-head b{color:#829dbb;font-weight:500;text-align:right}
+body#top .s69-home-cap-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+body#top .s69-home-cap-tile{display:flex;min-height:99px;min-width:0;flex-direction:column;align-items:flex-start;gap:7px;padding:11px 10px;border:1px solid rgba(67,180,254,.17);border-radius:9px;background:linear-gradient(145deg,rgba(22,43,72,.84),rgba(9,22,43,.9));text-decoration:none;transition:transform .2s,border-color .2s,background .2s}
+body#top .s69-home-cap-tile:hover{transform:translateY(-3px);border-color:rgba(52,253,120,.5);background:linear-gradient(145deg,rgba(26,55,78,.95),rgba(10,27,47,.96))}
+body#top .s69-home-cap-tile:focus-visible{outline:2px solid #43b4fe;outline-offset:3px}
+body#top .s69-home-cap-tile>span{display:grid;place-items:center;width:26px;height:26px;border:1px solid rgba(52,253,120,.34);border-radius:7px;background:rgba(52,253,120,.08);color:#34fd78;font-size:15px;line-height:1}
+body#top .s69-home-cap-tile>b{color:#f0f6ff;font:700 10px/1.3 Manrope,sans-serif}
+body#top .s69-home-cap-tile>small{color:#93abc4;font:400 9px/1.35 Manrope,sans-serif}
+body#top .s69-home-cap-note{margin:13px 2px 0;color:#8fa8c4;font:400 9px/1.5 'IBM Plex Mono',monospace}
+body#top .s69-home-cap-link{display:inline-flex;align-items:center;gap:8px;margin:10px 2px 0;color:#a9dcff;font:800 10px Manrope,sans-serif;text-decoration:none}
+body#top .s69-home-cap-link span{color:#34fd78;font-size:15px}
+@media(max-width:1050px){body#top .s69-home-capabilities{padding:13px}body#top .s69-home-cap-grid{gap:7px}body#top .s69-home-cap-tile{min-height:94px;padding:10px 8px}}
+@media(max-width:900px){body#top .s69-home-capabilities{width:min(100%,700px);margin:12px auto 0}body#top .s69-home-cap-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){body#top .s69-home-capabilities{padding:12px;border-radius:14px}body#top .s69-home-cap-head{align-items:flex-start;flex-direction:column;gap:5px}body#top .s69-home-cap-head b{text-align:left}body#top .s69-home-cap-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}body#top .s69-home-cap-tile{min-height:90px;padding:10px 9px}body#top .s69-home-cap-tile>b{font-size:10px}body#top .s69-home-cap-tile>small{font-size:9px}}
+@media(prefers-reduced-motion:reduce){body#top .s69-home-cap-tile{transition:none}}

@@ -1,0 +1,40 @@
+/* Homepage intelligence-first hero: replace decorative AI portrait with a useful call-insight story. */
+body#top .s69-intelligence-hero{height:auto;min-height:0;max-height:none;align-self:center;display:flex;align-items:center;justify-content:center;padding:12px 0 38px;overflow:visible}
+body#top .s69-intelligence-hero .s69-hero-earth-rethought{inset:0 -8%;opacity:.58}
+body#top .s69-intelligence-hero .s69-hero-glow-rethought{inset:10% 2%;background:radial-gradient(ellipse,rgba(67,180,254,.2),rgba(244,97,254,.12) 48%,transparent 73%)}
+body#top .s69-intelligence-panel{position:relative;width:min(100%,590px);padding:clamp(18px,2.4vw,28px);border:1px solid rgba(99,177,237,.38);border-radius:23px;background:linear-gradient(148deg,rgba(10,28,54,.97),rgba(4,11,28,.98) 70%);box-shadow:0 28px 85px rgba(0,0,0,.52),0 0 48px rgba(67,180,254,.13),inset 0 1px rgba(255,255,255,.07);backdrop-filter:blur(18px);color:#f4f8ff}
+body#top .s69-intel-topline,.s69-intel-section-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 8px "IBM Plex Mono",monospace;letter-spacing:.11em}
+body#top .s69-intel-topline{padding-bottom:17px;border-bottom:1px solid rgba(150,186,222,.16);color:#a9c7e5}
+body#top .s69-intel-topline>span{display:flex;align-items:center;gap:9px}
+body#top .s69-intel-topline i{width:7px;height:7px;border-radius:50%;background:#34FD78;box-shadow:0 0 12px #34FD78;display:inline-block}
+body#top .s69-intel-topline>b{color:#9db0c8;font-size:7px}
+body#top .s69-intel-heading{display:flex;align-items:center;justify-content:space-between;padding:21px 0 17px}
+body#top .s69-intel-heading small,.s69-intel-call small,.s69-intel-insights small{display:block;color:#7fc9ef;font:800 8px "IBM Plex Mono",monospace;letter-spacing:.12em}
+body#top .s69-intel-heading h2{margin:7px 0 0;font:700 clamp(20px,2.4vw,27px)/1.15 Manrope,sans-serif;letter-spacing:-.04em;color:#fff}
+body#top .s69-intel-spark{color:#34FD78;font-size:28px;text-shadow:0 0 18px #34FD7877}
+body#top .s69-intel-call{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid rgba(107,169,218,.2);border-radius:13px;background:rgba(20,47,76,.55)}
+body#top .s69-intel-call-icon{width:35px;height:35px;flex:none;display:grid;place-items:center;border-radius:10px;background:rgba(52,253,120,.1);color:#34FD78;font-size:20px}
+body#top .s69-intel-call>div:nth-child(2){min-width:0;display:grid;gap:4px}
+body#top .s69-intel-call strong{font-size:12px;color:#f7fbff}
+body#top .s69-intel-call span{font-size:9px;color:#a9bfd8}
+body#top .s69-intel-status{margin-left:auto;color:#aef9c4;font:800 7px "IBM Plex Mono",monospace;letter-spacing:.08em;white-space:nowrap}
+body#top .s69-intel-insights{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}
+body#top .s69-intel-insights article{display:grid;gap:6px;min-width:0;padding:13px;border:1px solid rgba(118,164,205,.16);border-radius:12px;background:rgba(6,19,39,.68)}
+body#top .s69-intel-insights article strong{font-size:11px;color:#f4f8ff;line-height:1.35}
+body#top .s69-intel-insights article span{font-size:9px;color:#9fb4cc}
+body#top .s69-intel-pattern{margin-top:11px;padding:13px 14px;border-left:2px solid #43B4FE;background:linear-gradient(90deg,rgba(67,180,254,.1),rgba(67,180,254,.015))}
+body#top .s69-intel-section-label{color:#8ecdf1;font-size:7px}
+body#top .s69-intel-section-label b{color:#a9bfd8;font-size:7px}
+body#top .s69-intel-pattern p{margin:7px 0 0;color:#dce9f7;font-size:11px;line-height:1.5}
+body#top .s69-intel-proposal{margin-top:10px;padding:14px;border:1px solid rgba(52,253,120,.27);border-radius:12px;background:linear-gradient(120deg,rgba(52,253,120,.075),rgba(10,29,48,.5))}
+body#top .s69-intel-proposal .s69-intel-section-label{color:#8ef4b0}
+body#top .s69-intel-proposal .s69-intel-section-label b{color:#ffe49b}
+body#top .s69-intel-proposal>strong{display:block;margin-top:8px;color:#f6fff8;font-size:12px}
+body#top .s69-intel-proposal>p{margin:5px 0 0;color:#adc6d9;font-size:10px;line-height:1.5}
+body#top .s69-intel-loop{display:flex;align-items:center;justify-content:space-between;gap:5px;margin:16px 0 0;padding:11px 10px;border-radius:9px;background:rgba(2,9,22,.75);color:#c8d8e9;font:800 8px "IBM Plex Mono",monospace;letter-spacing:.07em}
+body#top .s69-intel-loop i{color:#34FD78;font-style:normal;font-size:13px}
+body#top .s69-intel-footnote{margin-top:11px;text-align:center;color:#8ea5bf;font-size:9px;line-height:1.45}
+body#top .s69-intelligence-hero .s69-hero-caption{left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap}
+@media(max-width:900px){body#top .s69-intelligence-hero{width:100%;height:auto;max-height:none;min-height:0;margin:14px auto 8px;padding:0 0 42px}body#top .s69-intelligence-panel{width:min(100%,650px)}body#top .s69-intelligence-hero .s69-hero-caption{bottom:0}}
+@media(max-width:620px){body#top .s69-intelligence-hero{width:100%;left:auto;max-height:none;min-height:0;height:auto;margin:12px auto 4px;padding:0 0 39px}body#top .s69-intelligence-panel{padding:16px 14px;border-radius:17px}body#top .s69-intel-heading{padding:16px 0 13px}body#top .s69-intel-call{gap:9px;padding:10px}body#top .s69-intel-call strong{font-size:10px}body#top .s69-intel-call span{font-size:8px}body#top .s69-intel-status{font-size:6px}body#top .s69-intel-insights article{padding:10px}body#top .s69-intel-insights article strong{font-size:10px}body#top .s69-intel-insights article span{font-size:8px}body#top .s69-intel-loop{font-size:7px;letter-spacing:0;padding:10px 7px}body#top .s69-intelligence-hero .s69-hero-caption{font-size:6px;letter-spacing:.06em}}
+@media(prefers-reduced-motion:reduce){body#top .s69-intelligence-panel{scroll-behavior:auto}}

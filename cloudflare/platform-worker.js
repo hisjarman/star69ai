@@ -797,7 +797,8 @@ async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,call
   const callerHash=await callShieldCallerHash(env.RETELL_API_KEY,String(customerId)+"|"+dialed+"|"+caller);
   const prior=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
   if(prior)return {blocked:prior.decision==="rejected",duplicate:true,reason:prior.reason||"duplicate_event"};
-  const settings=await getCallShieldSettings(env,customerId);\n  const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-settings.windowMinutes*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+settings.cooldownMinutes*60*1000).toISOString();
+  const settings=await getCallShieldSettings(env,customerId);
+  const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-settings.windowMinutes*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+settings.cooldownMinutes*60*1000).toISOString();
   const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_call_shield_events(call_id,customer_id,dialed_number,caller_hash,decision,reason,created_at) VALUES(?,?,?,?,'pending','screening',?)").bind(id,customerId,dialed,callerHash,nowIso).run();
   if(!inserted.meta?.changes){
    const duplicate=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();

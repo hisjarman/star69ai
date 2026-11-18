@@ -68,7 +68,7 @@
 .contact-section .contact-email-card>span{
   display:block;
   color:#52677a!important;
-  font:700 10px 'DM Mono',monospace;
+  font:700 10px 'IBM Plex Mono',monospace;
   letter-spacing:.14em;
 }
 .contact-section .contact-email-card a{

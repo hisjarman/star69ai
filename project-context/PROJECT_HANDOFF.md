@@ -1,11 +1,12 @@
-## Receptionist Intelligence Engine — Cloudflare Workers AI migration — 2026-11-18
+## Knowledge base and production status correction — 2026-11-18
 
-- Updated PR #256 branch `feature/receptionist-intelligence-engine-2026-11-18` to remove the OpenAI API dependency and use Cloudflare Workers AI via `env.AI.run()`.
-- Default model is `@cf/zai-org/glm-4.7-flash`; optional Worker variable `INTELLIGENCE_MODEL` can override it. No OpenAI API key is required.
-- Updated the privacy notice and deployment guide to describe Cloudflare Workers AI.
-- This repository has no Wrangler configuration file for this Worker; production binding must be added in the Cloudflare Dashboard: Workers & Pages → avr-platform-api → Settings → Bindings → Add → Workers AI, variable name `AI`, then redeploy.
-- PR #256 remains open and unmerged. Production D1 migration, AI binding, Worker deployment, GitHub Pages publication and live Retell webhook verification are still required.
-- This implementation analyzes calls and recommends improvements; it does not yet publish changed prompts to live Retell agents. Prompt changes must remain subject to admin approval, scenario tests, version history and rollback.
+- Added the Star69AI Knowledge Base for the founder/operator, AI development assistants, Crew and clients. Start at `docs/knowledge-base/README.md`.
+- The prior note below was stale: **PR #256 was merged on 2026-11-18** (merge commit `8ab19d3d59670f962bd4fc980af0c405fa0f8619`). Do not describe it as open or unmerged.
+- A fresh production inspection found `avr-platform-api` has a Workers AI binding named `AI`, its deployed version receives 100% of traffic, and the production D1 database contains the Intelligence tables. The default source model is `@cf/zai-org/glm-4.7-flash`, overridable by `INTELLIGENCE_MODEL`.
+- The main source contains call-analysis and prompt-optimization workbench logic. This is **not proof** that the complete real-call → report → proposal → scenario test → approval → Retell publication workflow has passed end to end. No completed Intelligence report/proposal was present in the inspected production database at audit time.
+- Found and corrected on the knowledge branch: the Intelligence API configuration response and client status message still referenced `OPENAI_API_KEY` and an obsolete OpenAI model. They now report the Cloudflare Workers AI binding and model. This frontend/Worker source correction is not deployed until the branch is reviewed, merged and the Worker redeployed.
+- Remaining verification: real Retell `call_analyzed` webhook, exactly-once processing, recoverable AI failure/retry, customer tenant isolation, large-prompt truncation safety, scenario test results, approval audit trail and rollback.
+- Never add or expose provider secrets in repository files. Confirm bindings and secret names in the provider dashboard without copying secret values into GitHub.
 
 ## Cinematic homepage, astronaut spaceship cursor and client Mission Control refinement — 2026-11-18
 

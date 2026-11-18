@@ -54,3 +54,35 @@
 .checkout-page footer{margin-top:0}
 @media(max-width:760px){.checkout-hero{grid-template-columns:1fr;min-height:auto;padding:34px 22px 26px}.checkout-hero-orbit{position:absolute;right:-54px;top:16px;width:170px;height:170px;opacity:.45}.checkout-hero-copy{position:relative;z-index:1}.checkout-hero-copy>p{max-width:560px;font-size:15px}.checkout-hero h1{max-width:560px;padding-right:22px}.checkout-hero-points{gap:9px 14px;font-size:9px}.s69-nov-promo>div{align-items:flex-start;flex-direction:column}.s69-nov-promo a{margin-left:0}.checkout-shell{padding:0 14px 36px}.checkout-card{padding:22px 17px}}
 @media(prefers-reduced-motion:reduce){.checkout-button,.checkout-field input,.checkout-field select,.checkout-field textarea{transition:none}}
+
+/* Form layout: two clear columns on wide screens, one comfortable column on phones. */
+.checkout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.checkout-field{display:grid;align-content:start;min-width:0}
+.checkout-field.full{grid-column:1/-1}
+.checkout-field input,.checkout-field select,.checkout-field textarea{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;padding:12px 13px;font:inherit;font-size:16px;line-height:1.45}
+.checkout-field textarea{min-height:112px;resize:vertical}
+.checkout-check{display:flex;align-items:flex-start;gap:11px;margin:12px 0}
+.checkout-check input{flex:0 0 19px;width:19px;height:19px;min-height:19px;margin:2px 0 0;accent-color:#34fd78}
+#checkout-submit{display:block;width:100%;max-width:100%;box-sizing:border-box}
+.checkout-summary{padding:17px 18px;margin:18px 0}
+.checkout-summary p{line-height:1.65}
+.checkout-note{font-size:12px;line-height:1.65}
+@media(max-width:760px){
+  .checkout-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+  .checkout-field.full{grid-column:1}
+  .checkout-field{margin:7px 0}
+  .checkout-field label{font-size:14px;line-height:1.45}
+  .checkout-field input,.checkout-field select{min-height:50px}
+  .checkout-field textarea{min-height:120px}
+  .checkout-check{gap:10px;margin:14px 0;font-size:13px}
+  .checkout-summary{padding:15px;margin:18px 0}
+  .checkout-summary strong{overflow-wrap:anywhere}
+  .checkout-note{font-size:12px}
+  #checkout-submit{min-height:56px;padding:14px 18px}
+}
+@media(max-width:380px){
+  .checkout-shell{padding-right:11px;padding-left:11px}
+  .checkout-card{padding:20px 14px}
+  .checkout-hero{padding-right:17px;padding-left:17px}
+  .s69-nov-promo{padding-right:12px;padding-left:12px}
+}

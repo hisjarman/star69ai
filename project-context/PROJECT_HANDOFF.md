@@ -1,3 +1,11 @@
+## Client Mission Control visual correction — 2026-11-18
+
+- Follow-up to the initial cinematic client dashboard pass: the dashboard still read too much like the previous interface, the atmosphere was too faint, and default green buttons were not approved.
+- Added a stronger layered deep-space/nebula background with brighter blue and purple atmospheric light, richer star points, and improved depth behind the authenticated workspace.
+- Replaced default primary green buttons with a blue-to-purple command gradient; secondary buttons remain dark outlined blue/purple. Green is reserved for semantic positive/live indicators. Active navigation now uses blue/purple rather than green.
+- Increased visual separation and depth for the workspace header, sidebar, page heading and content panels. Mobile overrides preserve the same palette and hierarchy.
+- Presentation-only CSS change in `client/mission-control-cinematic.css`. No client data, auth, billing, APIs, Worker, D1, Retell, Stripe, PayPal, or customer records changed. Static source checks only; browser visual QA and Pages deployment remain to be verified.
+
 ## Single discovery intake and corrected prepaid pricing — 2026-11-18
 
 - Consolidated homepage demo lead capture into the existing three-step `get-started.html` discovery form. Removed the separate homepage Formspree quick-lead form and its dedicated `demo-request.js` handler; the homepage now links to the canonical discovery brief. The weekly story newsletter form remains separate because it is an email subscription, not a sales lead form.

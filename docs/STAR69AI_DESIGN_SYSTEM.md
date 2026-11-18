@@ -9,7 +9,7 @@ Status: Phase 1 in progress. This document is the working source of truth for vi
 - Electric blue: `#43B4FE`.
 - Neon green: `#34FD78`.
 - Primary text on dark surfaces: `#F4F8FF`; muted copy should remain readable and meet WCAG contrast.
-- Typography roles: DM Sans for body copy; Manrope for display/headings; IBM Plex Mono for technical labels and data.
+- Typography roles: Manrope for body/interface copy; Michroma for major display headings (regular weight); IBM Plex Mono for technical labels and data.
 - Use consistent 8px-based spacing, 8px control radius, 16px card radius, and a shared 1160px content width unless a page has a documented reason to differ.
 - Keep the cinematic hero/banner treatment on the homepage only. Interior pages use a compact shared header; client Mission Control keeps its own product-specific cockpit shell.
 
@@ -17,7 +17,7 @@ Status: Phase 1 in progress. This document is the working source of truth for vi
 
 - The repository contains 35 CSS files.
 - The homepage `index.html` loads 18 external stylesheets and contains 3 inline style blocks. Several of these stylesheets overlap in purpose (homepage polish, refresh, readability, experience, conversion, and design refresh).
-- The homepage imports DM Mono, DM Sans, IBM Plex Mono, Manrope, and Michroma. The working typography system standardizes the first three roles above; Michroma should be removed only after checking whether any live element still depends on it.
+- The homepage imports DM Mono, DM Sans, IBM Plex Mono, Manrope, and Michroma. Michroma/Manrope/IBM Plex Mono are the target roles; DM Sans and DM Mono are legacy imports still referenced by older CSS and must not be removed until those references are migrated.
 - The inspected shared `styles.css` contains 127 `!important` declarations; `readability.css` contains 77; `experience.css` 76; `site-header.css` 41; `homepage-refresh.css` 19; and `design-refresh.css` 11. These are per-file counts, not a repository-wide total.
 - The base stylesheet still contains legacy teal/mint references and a white body canvas, while newer homepage and multi-page refresh layers introduce the deep-space palette. Some of this contrast is intentional for light content sections, but hard-coded accent colors compete with the canonical brand palette.
 - The handoff design lock identifies `site-header.js` and `site-header.css` as protected shared navigation files. Phase 1 will preserve them unless a separately reviewed decision explicitly unlocks them.
@@ -35,6 +35,6 @@ Status: Phase 1 in progress. This document is the working source of truth for vi
 
 ## Phase 1 implementation log
 
-- Added canonical brand and typography role tokens to `styles.css` while preserving existing semantic aliases and light-surface text tokens.
+- Added canonical brand and typography role tokens to `styles.css` while preserving existing semantic aliases and light-surface text tokens. The typography token roles now follow the existing Star69AI signature standard: Michroma display, Manrope interface/body, IBM Plex Mono technical.
 - Aligned the newer multi-page design-refresh accent variables with the canonical electric purple/blue/neon-green palette.
 - Next: migrate public marketing components to the tokens, remove duplicated homepage cascade layers safely, then perform responsive and accessibility checks.

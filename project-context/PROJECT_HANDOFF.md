@@ -1832,7 +1832,7 @@ This section supersedes the earlier activation-status notes above where they des
 - Review through the PR. Do not merge to `main` without the founder's explicit approval. GitHub Pages deployment and live-site behavior remain unverified until after merge and deployment.
 
 
-## Visitor arrival spaceship and complete header artwork fit — 2026-11-18 — REVIEW REQUIRED
+## Visitor arrival spaceship and complete header artwork fit — 2026-11-18 — OWNER APPROVED
 
 - Working branch: `design/visitor-arrival-header-fit-2026-11-18`, based on current `main` after reading this handoff and inspecting the shared header implementation and both image assets.
 - Reuses the existing `assets/visitorspaceship.png` as a decorative visitor-arrival overlay on the homepage header. The ship flies in from the right and settles over the banner; it is hidden from assistive technology, cannot intercept clicks, and is shown once per browser session where session storage is available.

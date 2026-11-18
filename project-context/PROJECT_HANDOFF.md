@@ -1674,3 +1674,13 @@ This section supersedes the earlier activation-status notes above where they des
 - The visual direction is original Star69AI styling inspired by cinematic space-exploration interfaces; it does not use Star Trek or Stargate logos, characters, or copied screen assets.
 - The approved public header/menu files `site-header.js` and `site-header.css` were not changed. No Worker, D1, authentication, billing, Retell, customer data or production configuration changed.
 - Source checks: verified the new stylesheet is linked after the existing client styles, the workspace label is updated, and the new CSS has balanced braces. Browser visual QA at desktop/tablet/mobile widths and GitHub Pages deployment remain unverified. Review via PR; do not merge `main` without the founder's explicit approval.
+
+
+## Cinematic checkout page refresh — 2026-11-18
+
+- Working branch: `design/modern-cinematic-checkout-2026-11-18`, based on current `main` after reviewing this handoff, the existing checkout page and its JavaScript contract, the canonical public Mission Control header, and the public checkout Worker validation.
+- Replaced the checkout page's legacy standalone top bar with the shared cinematic Star69AI navigation and added a new responsive deep-space checkout visual layer: mission-style hero, orbital identity motif, restrained neon accents, readable dark form controls, clearer plan summary, and stronger action styling.
+- Preserved the existing `paid-checkout-form` element, every JavaScript-referenced field ID, form field names, promo-code prefill, `checkout.js` submit/capture/resume logic, and all checkout API/payment behavior. No Worker, D1, Stripe, PayPal, Retell, authentication, or customer data was changed.
+- Preserved the November `3FORFREE` promo handoff. The current Worker accepts it only for monthly plans during 2026-11-01 through 2026-11-30 and requires a configured Stripe coupon that is valid, 100% off, and one-time. The production secret/configuration was not inspected, so redemption readiness is not confirmed.
+- Static validation: shared header and new stylesheet are linked; legacy top bar removed; checkout form and JavaScript preserved; all IDs queried by `checkout.js` are present; promo field retained; CSS brace balance is zero.
+- Not yet performed: browser visual QA at mobile/tablet/desktop widths, live form submission, real Stripe/PayPal checkout, or GitHub Pages deployment. Do not claim the page is live until the PR is reviewed/merged and the Pages deployment succeeds. No production billing or customer data was changed.

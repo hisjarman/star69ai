@@ -773,6 +773,34 @@ async function sendOverageProtectionNotice(env,customer,periodKey,eventType,over
   return true;
  }catch(e){console.error("overage_protection_email_error",e.message);return false}
 }
+async function callShieldCallerHash(secret,value){
+ const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(String(secret)),"HMAC",false,["sign"]);
+ const signature=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(String(value)));
+ return Array.from(new Uint8Array(signature),byte=>byte.toString(16).padStart(2,"0")).join("");
+}
+async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,callId){
+ const dialed=String(dialedNumber||"").trim(),caller=String(callerNumber||"").trim(),id=String(callId||"").trim();
+ // Withheld/invalid caller IDs cannot be safely fingerprinted. Do not block them solely for being private.
+ if(!/^\\+[1-9]\\d{6,14}$/.test(caller)||!/^\\+[1-9]\\d{6,14}$/.test(dialed)||!id)return {blocked:false,reason:"caller_id_unavailable"};
+ const callerHash=await callShieldCallerHash(env.RETELL_API_KEY,String(customerId)+"|"+dialed+"|"+caller);
+ const prior=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
+ if(prior)return {blocked:prior.decision==="rejected",duplicate:true,reason:prior.reason||"duplicate_event"};
+ const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-10*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+15*60*1000).toISOString();
+ const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_call_shield_events(call_id,customer_id,dialed_number,caller_hash,decision,reason,created_at) VALUES(?,?,?,?,'pending','screening',?)").bind(id,customerId,dialed,callerHash,nowIso).run();
+ if(!inserted.meta?.changes){
+  const duplicate=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
+  return {blocked:duplicate?.decision==="rejected",duplicate:true,reason:duplicate?.reason||"duplicate_event"};
+ }
+ const state=await env.DB.prepare("INSERT INTO avr_call_shield_state(customer_id,dialed_number,caller_hash,window_started_at,attempt_count,blocked_until,last_seen_at) VALUES(?,?,?, ?,1,NULL,?) ON CONFLICT(customer_id,dialed_number,caller_hash) DO UPDATE SET attempt_count=CASE WHEN avr_call_shield_state.window_started_at<=? THEN 1 ELSE avr_call_shield_state.attempt_count+1 END,window_started_at=CASE WHEN avr_call_shield_state.window_started_at<=? THEN excluded.window_started_at ELSE avr_call_shield_state.window_started_at END,blocked_until=CASE WHEN avr_call_shield_state.blocked_until>? THEN avr_call_shield_state.blocked_until WHEN avr_call_shield_state.window_started_at<=? THEN NULL WHEN avr_call_shield_state.attempt_count+1>=9 THEN ? ELSE NULL END,last_seen_at=excluded.last_seen_at RETURNING attempt_count,blocked_until")
+  .bind(customerId,dialed,callerHash,nowIso,nowIso,windowStart,windowStart,nowIso,windowStart,blockedUntil).first();
+ const blocked=!!(state&&Number(state.attempt_count)>=9&&state.blocked_until&&state.blocked_until>nowIso);
+ await env.DB.prepare("UPDATE avr_call_shield_events SET decision=?,reason=? WHERE call_id=?").bind(blocked?"rejected":"allowed",blocked?"repeat_caller_burst_limit":"within_screening_limits",id).run();
+ // Keep only a short operational history; caller identities are stored as keyed HMACs, never raw caller numbers.
+ const retention=new Date(now.getTime()-30*24*60*60*1000).toISOString();
+ await env.DB.prepare("DELETE FROM avr_call_shield_events WHERE created_at<?").bind(retention).run();
+ await env.DB.prepare("DELETE FROM avr_call_shield_state WHERE last_seen_at<?").bind(retention).run();
+ return {blocked,reason:blocked?"repeat_caller_burst_limit":"within_screening_limits",attempts:Number(state?.attempt_count||0),cooldownUntil:blocked?state.blocked_until:null};
+}
 async function retellInboundWebhook(req,env){
  const raw=await req.text();
  if(!await retellVerify(raw,req.headers.get("x-retell-signature"),env.RETELL_API_KEY))throw Error("invalid_retell_signature");
@@ -783,18 +811,21 @@ async function retellInboundWebhook(req,env){
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=? LIMIT 1").bind(number.customer_id).first();
  if(!customer||customer.status!=="active")return {call_inbound:{reject:true}};
  const agentId=String(incoming.agent_id||number.agent_id||"");if(!agentId)return {call_inbound:{reject:true}};
+ const callId=String(incoming.call_id||payload.call_id||"").trim();
+ const callerNumber=String(incoming.from_number||incoming.from||payload.from_number||"").trim();
+ const screening=await screenInboundCaller(env,customer.id,phone,callerNumber,callId);
+ if(screening.blocked)return {call_inbound:{reject:true}};
  if(isFlexCustomer(customer)){
   const wallet=await env.DB.prepare("SELECT status FROM avr_payg_wallets WHERE customer_id=?").bind(customer.id).first();
   const balance=await env.DB.prepare("SELECT COALESCE(SUM(amount_cents),0) AS balance_cents FROM avr_payg_wallet_ledger WHERE customer_id=?").bind(customer.id).first();
   if(env.PAYG_INGRESS_GATE_ENABLED!=="true"||wallet?.status!=="funded"||Number(balance?.balance_cents||0)<=0)return {call_inbound:{reject:true}};
-  const callId=String(incoming.call_id||payload.call_id||"").trim(),reservedMs=await reserveFlexCall(env,customer,Number(balance?.balance_cents||0),callId);
+  const reservedMs=await reserveFlexCall(env,customer,Number(balance?.balance_cents||0),callId);
   if(reservedMs<60000)return {call_inbound:{reject:true}};
   return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:reservedMs}}}};
  }
  const prepaid=["six_month","annual"].includes(customer.billing_cadence);
  if(!["active","trialing"].includes(customer.subscription_status)&&!prepaid)return {call_inbound:{reject:true}};
  const usage=await refreshMinuteVault(env,customer),cap=subscriptionOverageCap(customer),periodKey=new Date().toISOString().slice(0,7);
- const callId=String(incoming.call_id||payload.call_id||"").trim();
  const reservedMs=await reserveSubscriptionCall(env,customer,usage,callId);
  if(reservedMs<60000){await sendOverageProtectionNotice(env,customer,periodKey,"blocked_75",Number(usage.billableOverageMinutes||0),cap,cap);return {call_inbound:{reject:true}}}
  const over=Number(usage.billableOverageMinutes||0);

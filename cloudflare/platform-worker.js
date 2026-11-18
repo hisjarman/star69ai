@@ -1326,7 +1326,7 @@ async function route(req,env){
     await audit(env,u,"retell_prompt_optimization_drafted",agentRow.customer_id,{agentId,proposalId:id,sourceCallId:intel.call_id,scenarioCount:scenarios.length});
     return json({created:true,id,scenarioCount:scenarios.length,status:"draft"},201,origin,env)
    }
-   const proposalAction=path.match(/^\\/api\\/admin\\/agent-prompt-proposals\\/([^/]+)\\/(test|approve|reject|rollback)$/);
+   const proposalAction=path.match(new RegExp("^/api/admin/agent-prompt-proposals/([^/]+)/(test|approve|reject|rollback)$"));
    if(proposalAction&&req.method==="POST"){
     const id=decodeURIComponent(proposalAction[1]),action=proposalAction[2],p=await body(req,14000);
     const proposal=await env.DB.prepare("SELECT * FROM avr_agent_prompt_proposals WHERE id=?").bind(id).first();

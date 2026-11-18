@@ -1153,6 +1153,30 @@ async function route(req,env){
    await env.DB.prepare("INSERT INTO avr_call_shield_settings(customer_id,protection_mode,max_attempts,window_minutes,cooldown_minutes,max_call_duration_minutes,updated_at,updated_by) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(customer_id) DO UPDATE SET protection_mode=excluded.protection_mode,max_attempts=excluded.max_attempts,window_minutes=excluded.window_minutes,cooldown_minutes=excluded.cooldown_minutes,max_call_duration_minutes=excluded.max_call_duration_minutes,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(c.id,mode,maxAttempts,windowMinutes,cooldownMinutes,maxCallDurationMinutes,now,"client:"+String(u.id||"").slice(0,120)).run();
    return json({saved:true,settings:{mode,maxAttempts,windowMinutes,cooldownMinutes,maxCallDurationMinutes}},200,origin,env);
   }
+
+  if(path==="/api/client/integrations/hubspot"&&req.method==="GET"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   return json(await hubspotStatus(env,c.id),200,origin,env);
+  }
+  if(path==="/api/client/integrations/hubspot/connect"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   hubspotCredentials(env);await integrationKey(env);
+   const existing=await hubspotConnection(env,c.id);if(existing?.status==="connected")return json({error:"hubspot_already_connected"},409,origin,env);
+   const bytes=crypto.getRandomValues(new Uint8Array(32)),state=Array.from(bytes,x=>x.toString(16).padStart(2,"0")).join(""),hash=await sha256Hex(state),id=crypto.randomUUID(),expires=new Date(Date.now()+600000).toISOString(),now=new Date().toISOString();
+   await env.DB.prepare("INSERT INTO avr_oauth_states(id,state_hash,customer_id,provider,redirect_uri,scopes_json,expires_at,created_at) VALUES(?,?,?,'hubspot',?,?,?,?)").bind(id,hash,c.id,HUBSPOT_REDIRECT_URI,JSON.stringify(HUBSPOT_SCOPES),expires,now).run();
+   const auth=new URL("https://app.hubspot.com/oauth/authorize");auth.searchParams.set("client_id",String(env.HUBSPOT_CLIENT_ID));auth.searchParams.set("redirect_uri",HUBSPOT_REDIRECT_URI);auth.searchParams.set("scope",HUBSPOT_SCOPES.join(" "));auth.searchParams.set("state",state);
+   return json({authorizationUrl:auth.toString(),expiresAt:expires},200,origin,env);
+  }
+  if(path==="/api/client/integrations/hubspot/disconnect"&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   const row=await hubspotConnection(env,c.id);if(!row)return json({disconnected:true,status:"not_connected"},200,origin,env);
+   await revokeHubspotConnection(env,row);
+   await env.DB.prepare("DELETE FROM avr_provider_connections WHERE id=? AND customer_id=? AND provider='hubspot'").bind(row.id,c.id).run();
+   await env.DB.prepare("DELETE FROM avr_provider_sync_jobs WHERE customer_id=? AND provider='hubspot'").bind(c.id).run();
+   await audit(env,u,"provider_disconnected",c.id,{provider:"hubspot",accountId:row.provider_account_id});
+   return json({disconnected:true,status:"not_connected"},200,origin,env);
+  }
+
   if(path==="/api/client/intelligence"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
    const [rows,shieldBlocked]=await Promise.all([env.DB.prepare("SELECT i.id,i.call_id,i.analysis_status,i.caller_intent,i.call_outcome,i.lead_capture_status,i.confidence,i.friction_points_json,i.recommendations_json,i.caller_risk_assessment,i.caller_risk_signals_json,i.analyzed_at,x.start_timestamp,x.call_summary FROM avr_call_intelligence i LEFT JOIN avr_calls x ON x.call_id=i.call_id WHERE i.customer_id=? ORDER BY i.analyzed_at DESC LIMIT 100").bind(c.id).all(),env.DB.prepare("SELECT COUNT(*) AS total FROM avr_call_shield_events WHERE customer_id=? AND decision='rejected' AND created_at>=?").bind(c.id,new Date(Date.now()-30*24*60*60*1000).toISOString()).first()]);

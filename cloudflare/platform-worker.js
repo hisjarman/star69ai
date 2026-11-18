@@ -781,7 +781,6 @@ async function callShieldCallerHash(secret,value){
 async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,callId){
  const dialed=String(dialedNumber||"").trim(),caller=String(callerNumber||"").trim(),id=String(callId||"").trim();
  // Withheld/invalid caller IDs cannot be safely fingerprinted. Do not block them solely for being private.
- if(!/^\+[1-9]\d{6,14}$/.test(caller)||!/^\+[1-9]\d{6,14}$/.test(dialed)||!id)return {blocked:false,reason:"caller_id_unavailable"};
  try{
   // Enforce the 30-day operational retention window on every inbound screening attempt.
   const retention=new Date(Date.now()-30*24*60*60*1000).toISOString();

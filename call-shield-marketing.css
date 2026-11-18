@@ -1,0 +1,18 @@
+/* Star69AI Call Shield + Intelligence marketing section */
+.call-shield{position:relative;overflow:hidden;padding:clamp(58px,7vw,92px) 22px;background:radial-gradient(ellipse at 85% 18%,rgba(67,180,254,.12),transparent 38%),radial-gradient(ellipse at 8% 85%,rgba(244,97,254,.09),transparent 36%),#071321;border-top:1px solid rgba(67,180,254,.14);border-bottom:1px solid rgba(67,180,254,.14)}
+.call-shield-inner{width:min(1120px,100%);margin:0 auto}
+.call-shield-heading{max-width:760px;margin-bottom:34px}
+.call-shield-kicker{color:#34fd78;font:700 10px/1.5 "IBM Plex Mono",monospace;letter-spacing:.15em}
+.call-shield-heading h2{margin:14px 0;color:#f3f7ff;font:800 clamp(32px,4.8vw,52px)/1.08 Manrope,sans-serif;letter-spacing:-.05em}
+.call-shield-heading h2 em{font-style:normal;color:#43b4fe}
+.call-shield-heading>p{max-width:720px;color:#b9cadc;font-size:15px;line-height:1.75}
+.call-shield-link{display:inline-flex;gap:10px;align-items:center;margin-top:10px;color:#43b4fe;font-size:13px;font-weight:800;text-decoration:none}
+.call-shield-link:hover{color:#f461fe}
+.call-shield-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.call-shield-card{min-width:0;padding:24px;border:1px solid rgba(117,157,204,.22);border-radius:16px;background:linear-gradient(145deg,rgba(17,37,61,.92),rgba(7,19,35,.96));box-shadow:0 16px 44px rgba(0,0,0,.18)}
+.call-shield-icon{display:grid;place-items:center;width:38px;height:38px;margin-bottom:18px;border:1px solid rgba(67,180,254,.32);border-radius:11px;background:rgba(67,180,254,.08);color:#43b4fe;font-size:21px}
+.call-shield-card h3{margin:0 0 10px;color:#f2f7ff;font-size:17px}
+.call-shield-card p{margin:0;color:#b9cadc;font-size:13px;line-height:1.7}
+.call-shield-card small{display:block;margin-top:18px;color:#34fd78;font:700 9px/1.5 "IBM Plex Mono",monospace;letter-spacing:.07em;text-transform:uppercase}
+.call-shield-disclaimer{max-width:940px;margin:20px 0 0;color:#8199b2;font-size:10px;line-height:1.65}
+@media(max-width:760px){.call-shield-grid{grid-template-columns:1fr}.call-shield-card{padding:20px}.call-shield-heading{margin-bottom:25px}}

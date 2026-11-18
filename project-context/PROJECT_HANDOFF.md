@@ -1,3 +1,16 @@
+## Call Shield and caller-risk intelligence — 2026-11-18
+
+- Working branch: `feature/ai-call-shield-intelligence-2026-11-18`, based on main after PR #272 merged at `35a911749303b376f1a59299f25b1f8499fe09d5`.
+- Existing architecture already provided a Retell inbound webhook before agent connection, per-call minute reservations, and plan/wallet usage gates. Added Call Shield screening ahead of those existing reservations.
+- Call Shield scopes caller fingerprints to customer + dialed business number using HMAC keyed by the existing Retell API secret; raw caller numbers are not written to shield tables. It deduplicates by Retell call ID, allows the first eight same-caller attempts in a fixed ten-minute burst window, rejects the ninth and subsequent attempts for a 15-minute cooldown, and retains operational events/state for at most 30 days. Withheld/invalid caller IDs are not automatically blocked. Caller-ID spoofing cannot be reliably detected by this rule.
+- Screening is pre-answer: a rejected call does not connect to the AI agent and therefore avoids AI-agent conversation minutes. Carrier/telephony delivery charges may still apply. Existing per-call reservations and account minute/overage controls remain in place.
+- If the new Call Shield tables are missing or screening errors, the shield fails open and existing billing/minute protections still execute. This prevents an un-applied migration from accidentally rejecting all legitimate calls.
+- Extended Cloudflare Workers AI post-call analysis with cautious caller-risk assessment and evidence signals. AI risk findings are advisory only; they never automatically block/blacklist a caller or publish live agent changes. Mission Control now displays risk assessments and a 30-day count of repeat-call attempts rejected before agent connection.
+- Added public homepage and Receptionist Intelligence page messaging for Call Shield and continuous call intelligence, including limitations (caller-ID spoofing, unavailable caller ID, no guarantee of blocking every spam call, possible carrier fees).
+- New D1 migration: `cloudflare/migrations/20261118_call_shield_protection.sql`. Must be applied to production `avr-trust-lab` before Worker deployment. Worker inbound webhook is already configured via the existing admin billing-protection sync route; verify all live numbers still point to `/webhooks/retell/inbound`.
+- Source changes only. No D1 migration applied, Worker deployed, Retell phone-number settings modified, or GitHub Pages deployment verified. Before rollout, validate migration on a non-production copy, run SQL/Worker syntax checks, test allowed/rejected/deduplicated caller sequences, test private caller IDs, test minute reservation and overage behavior, and verify client tenant isolation. Browser QA at mobile/tablet/desktop widths remains outstanding.
+- No merge to `main` without the founder's explicit approval.
+
 ## Homepage Call Rescue Simulator — 2026-11-18
 
 - Working branch: `feature/call-rescue-simulator-2026-11-18`, based on current `main` at `97291e220a6c84965d58eb86ba22f0e8b9dbb2e1`.

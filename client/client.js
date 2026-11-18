@@ -306,7 +306,7 @@ function renderAgentRequests(items){
   const status=$("#intelligence-status"),root=$("#intelligence-list");if(!root)return;
   try{
    const d=await api("/api/client/intelligence"),t=d.totals||{};
-   $("#intel-total").textContent=Number(t.calls||0).toLocaleString();$("#intel-missed").textContent=Number(t.missed||0).toLocaleString();$("#intel-partial").textContent=Number(t.partial||0).toLocaleString();$("#intel-recommendations").textContent=Number(t.recommendations||0).toLocaleString();
+   $("#intel-total").textContent=Number(t.calls||0).toLocaleString();$("#intel-missed").textContent=Number(t.missed||0).toLocaleString();$("#intel-partial").textContent=Number(t.partial||0).toLocaleString();$("#intel-recommendations").textContent=Number(t.recommendations||0).toLocaleString();$("#intel-blocked").textContent=Number(t.blockedRepeatCalls30d||0).toLocaleString();
    if(!d.configured){status.textContent="Call analysis is waiting for the Cloudflare Workers AI binding. Existing call records remain available in Call Activity.";return}
    status.textContent=d.items?.length?"Analyzed "+d.items.length+" completed calls. New Retell call_analyzed events are processed automatically.":"No analyzed calls yet. Once Retell sends a completed call analysis, it will appear here.";
    const items=d.items||[];
@@ -314,7 +314,10 @@ function renderAgentRequests(items){
     const recs=(item.recommendations||[]).map(r=>'<li><b>'+safe(r.title)+'</b><p>'+safe(r.reason)+'</p><small>Suggested: '+safe(r.suggested_change)+'</small><span class="intel-risk risk-'+safe(r.risk_level)+'">'+safe(r.risk_level)+' risk · Crew review</span></li>').join("");
     const friction=(item.frictionPoints||[]).map(x=>'<li>'+safe(x)+'</li>').join("");
     const lead=String(item.leadCaptureStatus||"unclear");
-    return '<article class="intelligence-call"><div class="intelligence-call-head"><div><small>'+safe(fmtDate(item.callDate||item.analyzedAt))+'</small><h4>'+safe(item.intent||"Caller intent not identified")+'</h4></div><span class="intel-lead intel-'+safe(lead)+'">'+safe(lead.replace("-"," "))+'</span></div><p>'+safe(item.outcome||"Call outcome not determined")+'</p>'+(friction?'<div class="intel-subhead">FRICTION POINTS</div><ul>'+friction+'</ul>':"")+(recs?'<div class="intel-subhead">RECOMMENDED IMPROVEMENTS</div><ul class="intel-recommendations">'+recs+'</ul>':'<p class="small">No specific improvement was supported by this call.</p>')+'<small>AI confidence: '+Math.round(Number(item.confidence||0)*100)+'% · Review before changing live behavior</small></article>';
+    const callerRisk=String(item.callerRiskAssessment||"unclear");
+    const riskSignals=(item.callerRiskSignals||[]).map(x=>'<li>'+safe(x)+'</li>').join("");
+    const riskBlock=callerRisk!=="unclear"?'<div class="intel-subhead">CALLER RISK ASSESSMENT · '+safe(callerRisk.replace("_"," "))+'</div>'+(riskSignals?'<ul>'+riskSignals+'</ul>':'<p class="small">No additional risk signals were returned.</p>')+'<small>Advisory AI assessment only · does not automatically block callers</small>':"";
+    return '<article class="intelligence-call"><div class="intelligence-call-head"><div><small>'+safe(fmtDate(item.callDate||item.analyzedAt))+'</small><h4>'+safe(item.intent||"Caller intent not identified")+'</h4></div><span class="intel-lead intel-'+safe(lead)+'">'+safe(lead.replace("-"," "))+'</span></div><p>'+safe(item.outcome||"Call outcome not determined")+'</p>'+riskBlock+(friction?'<div class="intel-subhead">FRICTION POINTS</div><ul>'+friction+'</ul>':"")+(recs?'<div class="intel-subhead">RECOMMENDED IMPROVEMENTS</div><ul class="intel-recommendations">'+recs+'</ul>':'<p class="small">No specific improvement was supported by this call.</p>')+'<small>AI confidence: '+Math.round(Number(item.confidence||0)*100)+'% · Review before changing live behavior</small></article>';
    }).join(""):'<div class="empty">No intelligence reports yet. The system analyzes each call when Retell marks it call_analyzed.</div>';
   }catch(e){status.textContent="Could not load intelligence: "+e.message;root.innerHTML='<div class="empty">Intelligence data is temporarily unavailable.</div>'}
  }

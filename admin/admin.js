@@ -222,7 +222,7 @@ $("#marketing-send-cancel").onclick=()=>{
  $("#marketing-send").textContent=Number(selectedMarketingProspect?.send_count||0)>0?"Review follow-up email":"Review initial email";
  $("#marketing-send-feedback").textContent="Send cancelled. No email was submitted.";
 };
-$("#refresh-marketing")?.addEventListener("click",loadMarketing);async function refresh(){await Promise.all([overview(),loadCustomers()])}async function syncInboundProtection(){if(protectionSynced)return;const d=await api("/api/admin/retell/billing-protection/sync",{method:"POST",body:"{}"});protectionSynced=true;note("Inbound hard usage protection synchronized on "+d.enabled+" of "+d.total+" assigned numbers."+(d.failed?" "+d.failed+" failed; review Retell number settings.":"") ,d.failed>0)}async function activate(){
+$("#refresh-marketing")?.addEventListener("click",loadMarketing);async function refresh(){await Promise.all([overview(),loadCustomers()])}async function syncInboundProtection(){if(protectionSynced)return;const d=await api("/api/admin/retell/billing-protection/sync",{method:"POST",body:"{}"});protectionSynced=true;note("Call Shield and pre-answer minute protection synchronized on "+d.enabled+" of "+d.total+" assigned numbers."+(d.failed?" "+d.failed+" failed; review Retell number settings.":"") ,d.failed>0)}async function activate(){
  if(activationInFlight){activationQueued=true;return}
  activationInFlight=true;
  try{

@@ -1,3 +1,13 @@
+## Owner-approved compact homepage cover and visitor flight — 2026-11-18
+
+- Founder reported the previous full-width natural-height banner was too tall and the two-second visitor arrival ended before it felt like an exploration.
+- Revised the homepage cover to a compact social-media-style banner with capped desktop height and a shorter mobile height, using a deliberate crop of the existing artwork rather than allowing its natural image height to dictate the page layout.
+- Updated the decorative visitor ship to replay on every homepage refresh. Each load selects one of four routes that explores the banner before landing on the central yin-yang emblem on the astronaut and planting a small flag.
+- The flight remains pointer-inert and hidden from assistive technology. Reduced-motion users see a stationary ship and flag. Existing menu/navigation, utility links, interior header, footer and accessibility interactions remain unchanged.
+- Protection workflow fingerprints are updated alongside `site-header.js`, `site-header.css` and the design lock in the same PR. Required protected-header CI must pass before merge.
+- Scope is limited to the public header/banner experience and its documentation. No backend, Worker, D1, Retell, billing, auth, customer data or unrelated deployment changes.
+- Browser visual QA at desktop/tablet/mobile and live GitHub Pages verification remain required after merge; do not claim those checks have passed based on source inspection alone.
+
 ## Capabilities hero refinement — 2026-11-18
 
 - Removed the abstract orb / AI-front-office centerpiece artwork from the capabilities hero.

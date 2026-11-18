@@ -1321,7 +1321,7 @@ async function route(req,env){
     const scenarios=Array.isArray(draft.scenarios)?draft.scenarios.slice(0,6).map(x=>({name:String(x.name||"Scenario").slice(0,120),caller_message:String(x.caller_message||"").slice(0,1000),expected_behavior:String(x.expected_behavior||"").slice(0,1000)})).filter(x=>x.caller_message&&x.expected_behavior):[];
     if(scenarios.length<4)throw Error("at_least_four_test_scenarios_required");
     const id=crypto.randomUUID(),now=new Date().toISOString();
-    await env.DB.prepare("INSERT INTO avr_agent_prompt_proposals(id,customer_id,agent_id,source_call_id,source_intelligence_id,engine_id,prompt_type,base_prompt,proposed_prompt,change_summary,scenarios_json,test_results_json,test_status,status,base_agent_version,base_engine_version,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'[]','not_run','draft',?,?,?,?,?)")
+    await env.DB.prepare("INSERT INTO avr_agent_prompt_proposals(id,customer_id,agent_id,source_call_id,source_intelligence_id,engine_id,prompt_type,base_prompt,proposed_prompt,change_summary,scenarios_json,test_results_json,test_status,status,base_agent_version,base_engine_version,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'[]','not_run','draft',?,?,?,?,?)")
      .bind(id,agentRow.customer_id,agentId,intel.call_id,intelligenceId,cfg.engineId,cfg.promptType,cfg.prompt,proposed,summary,JSON.stringify(scenarios),JSON.stringify([]),Number(cfg.agent.version??0),Number(cfg.engine.version??0),u.id||u.userId||"admin",now,now).run();
     await audit(env,u,"retell_prompt_optimization_drafted",agentRow.customer_id,{agentId,proposalId:id,sourceCallId:intel.call_id,scenarioCount:scenarios.length});
     return json({created:true,id,scenarioCount:scenarios.length,status:"draft"},201,origin,env)
@@ -1339,7 +1339,7 @@ async function route(req,env){
     if(action==="test"){
      const edited=String(p.proposedPrompt??proposal.proposed_prompt).trim();
      if(!edited||edited.length>12000)throw Error("proposed_prompt_invalid_length");
-     if(/(?:Bearer\\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,}|(?:api[_ -]?key|secret|password)\\s*[:=]\\s*\\S+)/i.test(edited))throw Error("remove_credentials_before_testing");
+     if(/(?:Bearer\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,}|(?:api[_ -]?key|secret|password)\s*[:=]\s*\S+)/i.test(edited))throw Error("remove_credentials_before_testing");
      if(cfg.prompt!==proposal.base_prompt)throw Error("base_prompt_changed_since_draft_refresh_and_create_a_new_proposal");
      const scenarios=JSON.parse(proposal.scenarios_json||"[]");
      const system="You are a strict QA reviewer simulating an AI receptionist prompt. This is an offline language-model scenario simulation, not a live Retell call or proof of real-world behavior. For each scenario, simulate the receptionist's likely response under the candidate prompt and judge it against expected_behavior. Fail if it invents business facts, confirms an unverified booking, violates pricing/policy/safety rules, ignores emergency escalation instructions, or misses the expected behavior. Be conservative: uncertain means fail. Return JSON only with results array of {name,pass,reason,risk_level} where risk_level is low, medium, or high.";
@@ -1349,7 +1349,7 @@ async function route(req,env){
      const results=Array.isArray(verdict.results)?verdict.results.slice(0,6).map(x=>({name:String(x.name||"Scenario").slice(0,120),pass:x.pass===true,reason:String(x.reason||"").slice(0,600),risk_level:["low","medium","high"].includes(x.risk_level)?x.risk_level:"high"})): [];
      if(results.length!==scenarios.length)throw Error("prompt_test_scenario_count_mismatch");
      const passed=results.every(x=>x.pass&&x.risk_level==="low");
-     const staticChecks=[{name:"No credential-like strings",pass:!/(?:Bearer\\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,})/i.test(edited)}];
+     const staticChecks=[{name:"No credential-like strings",pass:!/(?:Bearer\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,})/i.test(edited)}];
      const testStatus=passed&&staticChecks.every(x=>x.pass)?"passed":"needs_review";
      await env.DB.prepare("UPDATE avr_agent_prompt_proposals SET proposed_prompt=?,test_results_json=?,test_status=?,status=?,updated_at=? WHERE id=?").bind(edited,JSON.stringify({scenarios:results,static_checks:staticChecks,mode:"offline_ai_simulation"}),testStatus,testStatus==="passed"?"tested":"draft",now,id).run();
      await audit(env,u,"retell_prompt_optimization_tested",proposal.customer_id,{proposalId:id,testStatus,scenarioCount:results.length});

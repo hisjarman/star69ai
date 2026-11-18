@@ -30,6 +30,7 @@ for (const file of files.filter((f) => !excluded(f))) {
   const canonical = head.match(/<link\s+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i)?.[1];
   const h1Count = (html.match(/<h1\b/gi) ?? []).length;
   if (!title) problems.push(file + ": missing title");
+  else if (title.length < 25 || title.length > 60) problems.push(file + ": title length outside 25–60 chars (" + title.length + ")");
   if (!description || description.length < 50 || description.length > 180)
     problems.push(file + ": missing or unusually sized meta description");
   if (!canonical) problems.push(file + ": missing canonical URL");

@@ -160,3 +160,51 @@ body.site-home-page .site-global-cover-image{
 @media(prefers-reduced-motion:reduce){
   .site-global-visitor-ship{left:70%;top:56%;opacity:1;animation:none;transform:translate3d(0,-50%,0);width:clamp(88px,10vw,144px)}
 }
+
+
+/* Responsive banner fit: preserve the full artwork on desktop/tablet; use a deliberate center crop on mobile. */
+body.site-home-page .site-global-cover{
+  width:100%;
+  height:auto!important;
+  min-height:0!important;
+  aspect-ratio:auto;
+  overflow:hidden;
+}
+body.site-home-page .site-global-cover-image{
+  position:relative!important;
+  inset:auto!important;
+  display:block;
+  width:100%!important;
+  height:auto!important;
+  max-width:none;
+  object-fit:initial!important;
+  object-position:center!important;
+  z-index:0!important;
+}
+body.site-home-page .site-global-cover-shade{
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+body.site-home-page .site-global-cover-topline{z-index:2}
+body.site-home-page .site-global-toggle{z-index:5}
+body.site-home-page .site-global-nav{z-index:4}
+body.site-home-page .site-global-visitor-ship{z-index:3}
+@media(max-width:700px){
+  body.site-home-page .site-global-cover{
+    height:auto!important;
+    min-height:0!important;
+    aspect-ratio:4 / 3;
+  }
+  body.site-home-page .site-global-cover-image{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    object-position:center 50%!important;
+  }
+  body.site-home-page .site-global-cover-topline{top:12px}
+  body.site-home-page .site-global-toggle{top:48px}
+  body.site-home-page .site-global-nav{top:91px}
+}

@@ -55,7 +55,7 @@ try {
           assert(consent >= 1, "Discovery form: required privacy consent checkbox missing");
         }
         if (screenshotRoutes.has(route)) {
-          const name = route === "/" ? "home" : route.replace(/^\//, "").replace(".html", "");
+          const name = route.split("/").filter(Boolean).join("-").replace(".html", "") || "home";
           try {
             await page.screenshot({ path: path.join("artifacts/site-qa", name + "-" + viewport.name + ".png"), fullPage: false, timeout: 10000 });
           } catch (error) {

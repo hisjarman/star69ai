@@ -1729,3 +1729,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserved the November `3FORFREE` promo handoff. The current Worker accepts it only for monthly plans during 2026-11-01 through 2026-11-30 and requires a configured Stripe coupon that is valid, 100% off, and one-time. The production secret/configuration was not inspected, so redemption readiness is not confirmed.
 - Static validation: shared header and new stylesheet are linked; legacy top bar removed; checkout form and JavaScript preserved; all IDs queried by `checkout.js` are present; promo field retained; CSS brace balance is zero.
 - Not yet performed: browser visual QA at mobile/tablet/desktop widths, live form submission, real Stripe/PayPal checkout, or GitHub Pages deployment. Do not claim the page is live until the PR is reviewed/merged and the Pages deployment succeeds. No production billing or customer data was changed.
+
+
+## Call Shield audience documentation — 2026-11-18
+
+- Added a customer-facing Call Shield guide at `docs/knowledge-base/CALL_SHIELD_CLIENT_GUIDE.md`, covering presets, bounded client controls, repeat-caller behavior, cooldowns, duration caps, privacy, limitations and troubleshooting.
+- Added an internal administrator operations manual at `docs/knowledge-base/CALL_SHIELD_ADMIN_MANUAL.md`, covering daily operations, Crew overrides, permanent-block review, incident response, security and the remaining release QA checklist.
+- Added the public Learning Center page at `learning-center/call-shield.html` with product explanation, client controls, safeguards, limitations and FAQs.
+- Linked the guides from the knowledge-base index and repository README. This branch is documentation/content only: no Worker, D1, Retell, billing, authentication, client settings or customer data changed.
+- The guides explicitly preserve the current evidence boundary: PR #274 and Worker/D1 deployment are recorded as merged/deployed, while authenticated browser tests, live Retell inbound-call tests and GitHub Pages publication verification remain outstanding. Do not claim those tests passed until performed.
+- Working branch: `docs/call-shield-knowledge-guides-2026-11-18`. Review through PR; do not merge to `main` without the founder's explicit approval.

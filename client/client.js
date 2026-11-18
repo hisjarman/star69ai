@@ -243,7 +243,7 @@ function renderAgentRequests(items){
   const labels={submitted:"Submitted",reviewing:"Being reviewed",quoted:"Quote ready",approved:"Approved",in_progress:"In progress",completed:"Completed",declined:"Not proceeding"};
   const hub=$("#integration-request-list");
   if(hub){
-   const integrations=(items||[]).filter(r=>r.request_type==="workflow"&&/integration request:/i.test(String(r.title||"")));
+   const integrations=(items||[]).filter(r=>r.request_type==="workflow"&&/integration request:/i.test(String(r.details||"")));
    const labels={submitted:"Submitted",reviewing:"Being reviewed",quoted:"Quote ready",approved:"Approved",in_progress:"In progress",completed:"Setup complete",declined:"Not proceeding"};
    hub.innerHTML=integrations.length?integrations.map(r=>'<article class="resource integration-request-item"><div><b>'+safe(r.title||"Integration request")+'</b><p class="small">'+safe(r.details)+'</p><span class="small">Submitted '+safe(fmtDate(r.created_at))+'</span>'+(r.admin_note?'<p class="small">Crew update: '+safe(r.admin_note)+'</p>':'')+(r.quote_summary?'<p class="small integration-quote">'+safe(r.quote_summary)+'</p>':'')+'</div><span class="status">'+safe(labels[r.status]||r.status)+'</span></article>').join(""):'<div class="empty">No integration requests yet. Choose a system above and our Crew will review the connection path with you.</div>';
   }

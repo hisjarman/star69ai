@@ -45,7 +45,15 @@ try {
           await toggle.waitFor({ state: "visible", timeout: 5000 });
           await toggle.click();
           assert(await toggle.getAttribute("aria-expanded") === "true", "Mobile navigation did not expand");
-          assert(await page.locator(".site-global-nav").isVisible(), "Mobile navigation panel is not visible");
+          const navState = await page.evaluate(() => {
+            const header = document.querySelector(".site-global-header");
+            const toggle = document.querySelector(".site-global-toggle");
+            const nav = document.querySelector(".site-global-nav");
+            const style = nav ? getComputedStyle(nav) : null;
+            const rect = nav ? nav.getBoundingClientRect() : null;
+            return { headerClass: header?.className, expanded: toggle?.getAttribute("aria-expanded"), visibility: style?.visibility, opacity: style?.opacity, display: style?.display, rect: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null };
+          });
+          assert(await page.locator(".site-global-nav").isVisible(), "Mobile navigation panel is not visible: " + JSON.stringify(navState));
           await toggle.click();
         }
         if (route === "/get-started.html") {

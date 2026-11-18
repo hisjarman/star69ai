@@ -1811,3 +1811,10 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserved existing newsletter form fields and `data-story-subscribe` hook, existing forms, CTA destinations, scripts, and backend behavior. No Worker, D1, Retell, billing, authentication, customer/prospect data or production configuration changed.
 - Static verification required: ensure exactly one newsletter subscription section remains and is last before the footer; verify the disclosure begins after the initial selling-point sections and closes before newsletter; check stylesheet link and hash-reveal script; run HTML/JS/CSS syntax and link/ID checks. Browser visual QA at desktop/tablet/mobile and GitHub Pages publication remain outstanding.
 - Source-only PR review required. Do not merge to `main` without explicit founder approval.
+
+## Capabilities card text overflow correction — 2026-11-18 — REVIEW REQUIRED
+
+- Working branch: `fix/capabilities-card-text-overflow-2026-11-18`.
+- Added explicit min/max-width and box-sizing constraints to capability card grid items, plus safe wrapping and hyphenation for card tags, headings and descriptions. Mobile cards remain a single full-width column.
+- Scoped to `capabilities.css`; no copy, navigation, integrations, Worker, D1, Retell, billing, auth or customer data changed.
+- Source-level checks and browser visual QA at 360px, 768px and 1280px remain required before merge. Do not merge without the founder's explicit approval.

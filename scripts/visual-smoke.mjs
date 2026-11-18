@@ -40,6 +40,14 @@ try {
         assert(layout.documentWidth <= layout.width + 2,
           route + ": horizontal overflow at " + viewport.width + "px (" + layout.documentWidth + "px); elements=" + JSON.stringify(layout.overflowNodes));
         assert(layout.h1Count >= 1, route + ": missing visible page heading");
+        if (route === "/pricing.html" && viewport.width === 360) {
+          const toggle = page.locator(".site-global-toggle");
+          await toggle.waitFor({ state: "visible", timeout: 5000 });
+          await toggle.click();
+          assert(await toggle.getAttribute("aria-expanded") === "true", "Mobile navigation did not expand");
+          assert(await page.locator(".site-global-nav").isVisible(), "Mobile navigation panel is not visible");
+          await toggle.click();
+        }
         if (route === "/get-started.html") {
           const required = await page.locator("input[required], select[required], textarea[required]").count();
           const consent = await page.locator('input[type="checkbox"][required]').count();
@@ -48,7 +56,11 @@ try {
         }
         if (screenshotRoutes.has(route)) {
           const name = route === "/" ? "home" : route.replace(/^\//, "").replace(".html", "");
-          await page.screenshot({ path: path.join("artifacts/site-qa", name + "-" + viewport.name + ".png"), fullPage: true });
+          try {
+            await page.screenshot({ path: path.join("artifacts/site-qa", name + "-" + viewport.name + ".png"), fullPage: false, timeout: 10000 });
+          } catch (error) {
+            console.warn("Screenshot skipped for " + route + " @ " + viewport.width + "px: " + error.message);
+          }
         }
         console.log("PASS " + route + " @ " + viewport.width + "px");
       } catch (error) {

@@ -1334,7 +1334,7 @@ async function route(req,env){
     let cached={};const agentRow=await env.DB.prepare("SELECT agent_id,customer_id,raw_json FROM avr_agents WHERE agent_id=?").bind(proposal.agent_id).first();
     if(!agentRow||agentRow.customer_id!==proposal.customer_id)throw Error("proposal_agent_assignment_changed");
     try{cached=JSON.parse(agentRow.raw_json||"{}")}catch{}
-    const cfg=await retellAgentConfiguration(env,proposal.agent_id,cached.channel||"voice",cached);
+    const cfg=action==="reject"?null:await retellAgentConfiguration(env,proposal.agent_id,cached.channel||"voice",cached);
     const now=new Date().toISOString();
     if(action==="test"){
      const edited=String(p.proposedPrompt??proposal.proposed_prompt).trim();

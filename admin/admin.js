@@ -57,7 +57,7 @@ async function loadDemoRequests(){
   else if(v.includes("real estate")||v.includes("property"))scenarios=["A buyer asks about a property and requests a callback","A seller wants to discuss listing services","A caller requests a showing without the agent claiming availability is confirmed"];
   else if(v.includes("dental")||v.includes("medical")||v.includes("health")||v.includes("clinic"))scenarios=["A new patient asks about office services and requests a callback","An existing patient asks to reschedule without disclosing private information","A caller raises an urgent clinical concern and is directed to qualified staff or emergency services when appropriate"];
   else scenarios=["A new caller asks what services the business provides","A prospect requests an estimate or appointment and shares contact details","A caller asks a question not covered by the supplied FAQs; the agent should not guess"];
-  const clean=value=>String(value||"").replace(/\\s+/g," ").trim().slice(0,220);
+  const clean=value=>String(value||"").replace(/\s+/g," ").trim().slice(0,220);
   const tasks=clean(discovery.callTasks),services=clean(discovery.services),faqs=clean(discovery.faqs),area=clean(discovery.serviceArea);
   if(tasks)scenarios.unshift("Caller describes the request this business wants handled: "+tasks);
   if(services)scenarios.push("Caller asks whether the business provides "+services+" and what details are needed");

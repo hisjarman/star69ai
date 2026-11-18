@@ -306,7 +306,7 @@ function renderAgentRequests(items){
   const status=$("#intelligence-status"),root=$("#intelligence-list");if(!root)return;
   try{
    const d=await api("/api/client/intelligence"),t=d.totals||{};
-   $("#intel-total").textContent=Number(t.calls||0).toLocaleString();$("#intel-missed").textContent=Number(t.missed||0).toLocaleString();$("#intel-partial").textContent=Number(t.partial||0).toLocaleString();$("#intel-recommendations").textContent=Number(t.recommendations||0).toLocaleString();
+   $("#intel-total").textContent=Number(t.calls||0).toLocaleString();$("#intel-missed").textContent=Number(t.missed||0).toLocaleString();$("#intel-partial").textContent=Number(t.partial||0).toLocaleString();$("#intel-recommendations").textContent=Number(t.recommendations||0).toLocaleString();$("#intel-blocked").textContent=Number(t.blockedRepeatCalls30d||0).toLocaleString();
    if(!d.configured){status.textContent="Call analysis is waiting for the Cloudflare Workers AI binding. Existing call records remain available in Call Activity.";return}
    status.textContent=d.items?.length?"Analyzed "+d.items.length+" completed calls. New Retell call_analyzed events are processed automatically.":"No analyzed calls yet. Once Retell sends a completed call analysis, it will appear here.";
    const items=d.items||[];

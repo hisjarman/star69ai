@@ -1,3 +1,11 @@
+## Clickable canonical logo on interior pages and complete homepage banner — 2026-11-18
+
+- Added the same canonical `/assets/main_logo.webp` wordmark used by the footer to the shared public header on interior pages. The wordmark links directly to the homepage and is hidden on the homepage itself to keep the cinematic landing page uncluttered.
+- Kept the existing header/banner dimensions unchanged. The homepage's `/assets/image_hero.webp` now uses `object-fit: contain` so the full supplied artwork is visible instead of being cropped; the unused space stays within the existing dark banner.
+- Confirmed the desktop cursor rule continues to use the supplied `/assets/cursor.webp` with its 16×16 hotspot; touch devices retain their native cursor behavior.
+- No Worker, D1, authentication, billing, Retell, Stripe, PayPal, Resend, customer data or backend configuration changed.
+- Source review only until PR approval, merge, GitHub Pages deployment, and desktop/mobile browser visual checks.
+
 ## Secret Mission reward and custom cursor — 2026-11-18
 
 - Replaced the desktop spaceship cursor data-URI with the supplied `/assets/cursor.webp`; touch devices retain native cursor behavior.

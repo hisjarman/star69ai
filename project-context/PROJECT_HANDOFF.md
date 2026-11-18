@@ -1604,3 +1604,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Uses new root-level `secret-mission.js` and `secret-mission.css`; only adds stylesheet/script references to the five participating public pages. Does not modify protected `site-header.js`, `site-header.css`, the header design lock, client dashboard or existing AI Challenge.
 - Source validation: JavaScript parses successfully; all five pages reference both assets; CSS braces are balanced. Browser visual QA, touch-device testing and GitHub Pages deployment remain unverified.
 - Review through PR. Do not merge `main` without explicit user approval.
+
+
+## Receptionist Intelligence deployment and prompt optimization workbench — 2026-11-18
+
+- PR #256 merged to main at `8ab19d3d59670f962bd4fc980af0c405fa0f8619`.
+- Applied and verified production D1 migration `avr_call_intelligence` in database `avr-trust-lab`.
+- Deployed Worker `avr-platform-api` from merged main source via Cloudflare API. Added native Workers AI binding `AI` while preserving existing plain-text, secret-text and D1 bindings. New deployment version `0f02d042-63ac-4be3-bc58-0f56c2b3a93c`, deployment `c18492c7-1673-4615-b4a6-6c1626d9d97b`, 100% traffic. GitHub Pages publication and real Retell webhook analysis still need live verification; direct site URL fetch was not available during this session.
+- Started branch `feature/agent-prompt-optimization-workbench-2026-11-18` for call-linked prompt proposal generation with Cloudflare Workers AI, offline scenario simulation, admin approval before publishing a new Retell agent version, stale-base protection, and rollback by publishing the stored previous prompt as a new Retell version.
+- Next phase remains source-only until reviewed, merged, D1 migration applied and Worker/site deployed. The scenario simulation is model-based QA, not a live Retell call or guaranteed behavior. Conversation Flow agents remain out of scope for this prompt-only workflow.

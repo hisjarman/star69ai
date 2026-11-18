@@ -704,6 +704,21 @@ async function retellList(env,path,method="GET",data){
  }while(cursor);
  return all;
 }
+async function publishRetellPromptVersion(env,agentId,cfg,cached,prompt,description){
+ if(cfg.engineType!=="retell-llm"||!cfg.engineId)throw Error("retell_llm_engine_required");
+ const latest=Number(cfg.agent.latest_published_version??cached.latest_published_version??0);
+ const isPublished=cfg.agent.is_published===true||(cfg.agent.is_published!==false&&latest>0);
+ if(!isPublished)throw Error("publish_current_agent_baseline_before_prompt_optimization");
+ const baseVersion=Number(cfg.agent.latest_published_version??cached.latest_published_version??cfg.agent.version??0);
+ const draft=await retellApi(env,"/create-agent-version/"+encodeURIComponent(agentId),"POST",{base_version:baseVersion});
+ const draftVersion=Number(draft.version),engineVersion=Number(draft.response_engine?.version??draftVersion);
+ if(!Number.isInteger(draftVersion)||draftVersion<0||!Number.isInteger(engineVersion)||engineVersion<0)throw Error("retell_draft_version_unavailable");
+ await retellApi(env,"/update-retell-llm/"+encodeURIComponent(cfg.engineId)+"?version="+encodeURIComponent(engineVersion),"PATCH",{general_prompt:prompt});
+ await retellApi(env,"/publish-agent-version/"+encodeURIComponent(agentId),"POST",{version:draftVersion,version_description:String(description||"Star69AI approved receptionist prompt update").slice(0,180)});
+ const verified=await retellAgentConfiguration(env,agentId,cfg.channel,cached);
+ if(verified.prompt!==prompt)throw Error("retell_publish_verification_mismatch");
+ return {version:draftVersion,engineVersion,verified};
+}
 async function retellAgentConfiguration(env,agentId,channel="voice",listed={}){
  const endpoint=String(channel).toLowerCase()==="chat"?"/get-chat-agent/":"/get-agent/";
  const agent=await retellApi(env,endpoint+encodeURIComponent(agentId));
@@ -1270,6 +1285,100 @@ async function route(req,env){
      catch(e){return {...row,retell_prompt:"",retell_prompt_type:"",response_engine_type:"",response_engine_id:"",retell_prompt_supported:false,retell_prompt_note:"Could not import this agent's current Retell configuration.",retell_sync_error:String(e.message||"retell_read_failed")}}
     }));
     return json({agents,numbers:n.results||[]},200,origin,env)
+   }
+   if(path==="/api/admin/agent-prompt-proposals"&&req.method==="GET"){
+    const [proposals,opportunities]=await Promise.all([
+     env.DB.prepare("SELECT p.*,c.business_name,a.agent_name FROM avr_agent_prompt_proposals p LEFT JOIN avr_customers c ON c.id=p.customer_id LEFT JOIN avr_agents a ON a.agent_id=p.agent_id ORDER BY p.created_at DESC LIMIT 100").all(),
+     env.DB.prepare("SELECT i.id,i.call_id,i.caller_intent,i.call_outcome,i.recommendations_json,i.analyzed_at,x.agent_id,a.agent_name,a.customer_id,c.business_name FROM avr_call_intelligence i JOIN avr_calls x ON x.call_id=i.call_id JOIN avr_agents a ON a.agent_id=x.agent_id LEFT JOIN avr_customers c ON c.id=a.customer_id WHERE a.customer_id IS NOT NULL ORDER BY i.analyzed_at DESC LIMIT 60").all()
+    ]);
+    return json({proposals:proposals.results||[],opportunities:opportunities.results||[]},200,origin,env)
+   }
+   if(path==="/api/admin/agent-prompt-proposals"&&req.method==="POST"){
+    const p=await body(req,12000),agentId=String(p.agentId||""),intelligenceId=String(p.intelligenceId||"");
+    if(!agentId||!intelligenceId)throw Error("select_agent_and_call_analysis");
+    if(!env.AI||typeof env.AI.run!=="function")throw Error("cloudflare_workers_ai_binding_not_configured");
+    const [agentRow,intel]=await Promise.all([
+     env.DB.prepare("SELECT agent_id,customer_id,raw_json,agent_name FROM avr_agents WHERE agent_id=?").bind(agentId).first(),
+     env.DB.prepare("SELECT i.*,x.agent_id AS call_agent_id FROM avr_call_intelligence i JOIN avr_calls x ON x.call_id=i.call_id WHERE i.id=?").bind(intelligenceId).first()
+    ]);
+    if(!agentRow||!agentRow.customer_id)throw Error("assigned_customer_agent_required");
+    if(!intel||intel.call_agent_id!==agentId)throw Error("analysis_must_belong_to_selected_agent");
+    let cached={};try{cached=JSON.parse(agentRow.raw_json||"{}")}catch{}
+    const cfg=await retellAgentConfiguration(env,agentId,cached.channel||"voice",cached);
+    if(!cfg.supported||!cfg.prompt)throw Error("only_retell_llm_agents_with_readable_prompts_are_supported");
+    if(cfg.agent.is_published===false&&Number(cfg.agent.latest_published_version||cached.latest_published_version||0)===0)throw Error("publish_current_agent_baseline_before_prompt_optimization");
+    const recommendations=JSON.parse(intel.recommendations_json||"[]");
+    if(!recommendations.length)throw Error("selected_call_has_no_improvement_recommendations");
+    const source=JSON.stringify({caller_intent:intel.caller_intent,call_outcome:intel.call_outcome,lead_capture_status:intel.lead_capture_status,friction_points:JSON.parse(intel.friction_points_json||"[]"),recommendations}).slice(0,9000);
+    const system="You are Star69AI's prompt optimization engineer. Improve an existing customer-specific receptionist prompt using only evidence in the call analysis. Preserve all existing business facts and every safety, privacy, pricing, legal, emergency, escalation, appointment and availability rule. Never invent business facts, services, hours, prices, guarantees, integrations or capabilities. Do not remove or weaken any instruction that prevents false bookings or false claims. Do not include credentials, phone routing secrets, webhook URLs or Star69AI internal instructions. Make the smallest useful change. Return JSON only: proposed_prompt (complete replacement prompt), change_summary (short), scenarios (array of 4 to 6 objects with name, caller_message, expected_behavior). Scenarios must cover the call's issue plus at least one safety/uncertainty case and one unrelated baseline case. If the call does not justify a safe prompt change, return proposed_prompt unchanged and explain why.";
+    const response=await env.AI.run(String(env.INTELLIGENCE_MODEL||"@cf/zai-org/glm-4.7-flash"),{messages:[{role:"system",content:system},{role:"user",content:"CURRENT COMPLETE PROMPT:\n"+cfg.prompt.slice(0,11000)+"\n\nCALL ANALYSIS:\n"+source}],temperature:0.15,max_tokens:5000});
+    const raw=typeof response==="string"?response:(response?.response||response?.result?.response||response?.choices?.[0]?.message?.content||"");
+    let draft;try{draft=JSON.parse(String(raw).trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,""))}catch{throw Error("prompt_draft_invalid_workers_ai_json")}
+    const proposed=String(draft.proposed_prompt||"").trim(),summary=String(draft.change_summary||"").trim();
+    if(!proposed||proposed.length>12000)throw Error("proposed_prompt_invalid_length");
+    if(proposed===cfg.prompt)throw Error("no_safe_prompt_change_suggested");
+    if(/(?:Bearer\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,}|(?:api[_ -]?key|secret|password)\s*[:=]\s*\S+)/i.test(proposed))throw Error("proposed_prompt_contains_credential_like_text");
+    const scenarios=Array.isArray(draft.scenarios)?draft.scenarios.slice(0,6).map(x=>({name:String(x.name||"Scenario").slice(0,120),caller_message:String(x.caller_message||"").slice(0,1000),expected_behavior:String(x.expected_behavior||"").slice(0,1000)})).filter(x=>x.caller_message&&x.expected_behavior):[];
+    if(scenarios.length<4)throw Error("at_least_four_test_scenarios_required");
+    const id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO avr_agent_prompt_proposals(id,customer_id,agent_id,source_call_id,source_intelligence_id,engine_id,prompt_type,base_prompt,proposed_prompt,change_summary,scenarios_json,test_results_json,test_status,status,base_agent_version,base_engine_version,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'[]','not_run','draft',?,?,?,?,?)")
+     .bind(id,agentRow.customer_id,agentId,intel.call_id,intelligenceId,cfg.engineId,cfg.promptType,cfg.prompt,proposed,summary,JSON.stringify(scenarios),JSON.stringify([]),Number(cfg.agent.version??0),Number(cfg.engine.version??0),u.id||u.userId||"admin",now,now).run();
+    await audit(env,u,"retell_prompt_optimization_drafted",agentRow.customer_id,{agentId,proposalId:id,sourceCallId:intel.call_id,scenarioCount:scenarios.length});
+    return json({created:true,id,scenarioCount:scenarios.length,status:"draft"},201,origin,env)
+   }
+   const proposalAction=path.match(/^\\/api\\/admin\\/agent-prompt-proposals\\/([^/]+)\\/(test|approve|reject|rollback)$/);
+   if(proposalAction&&req.method==="POST"){
+    const id=decodeURIComponent(proposalAction[1]),action=proposalAction[2],p=await body(req,14000);
+    const proposal=await env.DB.prepare("SELECT * FROM avr_agent_prompt_proposals WHERE id=?").bind(id).first();
+    if(!proposal)throw Error("prompt_proposal_not_found");
+    let cached={};const agentRow=await env.DB.prepare("SELECT agent_id,customer_id,raw_json FROM avr_agents WHERE agent_id=?").bind(proposal.agent_id).first();
+    if(!agentRow||agentRow.customer_id!==proposal.customer_id)throw Error("proposal_agent_assignment_changed");
+    try{cached=JSON.parse(agentRow.raw_json||"{}")}catch{}
+    const cfg=await retellAgentConfiguration(env,proposal.agent_id,cached.channel||"voice",cached);
+    const now=new Date().toISOString();
+    if(action==="test"){
+     const edited=String(p.proposedPrompt??proposal.proposed_prompt).trim();
+     if(!edited||edited.length>12000)throw Error("proposed_prompt_invalid_length");
+     if(/(?:Bearer\\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,}|(?:api[_ -]?key|secret|password)\\s*[:=]\\s*\\S+)/i.test(edited))throw Error("remove_credentials_before_testing");
+     if(cfg.prompt!==proposal.base_prompt)throw Error("base_prompt_changed_since_draft_refresh_and_create_a_new_proposal");
+     const scenarios=JSON.parse(proposal.scenarios_json||"[]");
+     const system="You are a strict QA reviewer simulating an AI receptionist prompt. This is an offline language-model scenario simulation, not a live Retell call or proof of real-world behavior. For each scenario, simulate the receptionist's likely response under the candidate prompt and judge it against expected_behavior. Fail if it invents business facts, confirms an unverified booking, violates pricing/policy/safety rules, ignores emergency escalation instructions, or misses the expected behavior. Be conservative: uncertain means fail. Return JSON only with results array of {name,pass,reason,risk_level} where risk_level is low, medium, or high.";
+     const tested=await env.AI.run(String(env.INTELLIGENCE_MODEL||"@cf/zai-org/glm-4.7-flash"),{messages:[{role:"system",content:system},{role:"user",content:"CANDIDATE PROMPT:\n"+edited+"\n\nSCENARIOS:\n"+JSON.stringify(scenarios)}],temperature:0,max_tokens:2500});
+     const textOut=typeof tested==="string"?tested:(tested?.response||tested?.result?.response||tested?.choices?.[0]?.message?.content||"");
+     let verdict;try{verdict=JSON.parse(String(textOut).trim().replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,""))}catch{throw Error("prompt_test_invalid_workers_ai_json")}
+     const results=Array.isArray(verdict.results)?verdict.results.slice(0,6).map(x=>({name:String(x.name||"Scenario").slice(0,120),pass:x.pass===true,reason:String(x.reason||"").slice(0,600),risk_level:["low","medium","high"].includes(x.risk_level)?x.risk_level:"high"})): [];
+     if(results.length!==scenarios.length)throw Error("prompt_test_scenario_count_mismatch");
+     const passed=results.every(x=>x.pass&&x.risk_level==="low");
+     const staticChecks=[{name:"No credential-like strings",pass:!/(?:Bearer\\s+[A-Za-z0-9._~-]{12,}|(?:sk|rk|whsec|pk)_[A-Za-z0-9_-]{12,})/i.test(edited)}];
+     const testStatus=passed&&staticChecks.every(x=>x.pass)?"passed":"needs_review";
+     await env.DB.prepare("UPDATE avr_agent_prompt_proposals SET proposed_prompt=?,test_results_json=?,test_status=?,status=?,updated_at=? WHERE id=?").bind(edited,JSON.stringify({scenarios:results,static_checks:staticChecks,mode:"offline_ai_simulation"}),testStatus,testStatus==="passed"?"tested":"draft",now,id).run();
+     await audit(env,u,"retell_prompt_optimization_tested",proposal.customer_id,{proposalId:id,testStatus,scenarioCount:results.length});
+     return json({tested:true,testStatus,results,staticChecks,simulationOnly:true},200,origin,env)
+    }
+    if(action==="approve"){
+     if(proposal.status!=="tested"||proposal.test_status!=="passed")throw Error("proposal_must_pass_scenario_tests_before_approval");
+     if(cfg.prompt!==proposal.base_prompt)throw Error("base_prompt_changed_since_draft_refresh_and_create_a_new_proposal");
+     const result=await publishRetellPromptVersion(env,proposal.agent_id,cfg,cached,proposal.proposed_prompt,"Star69AI approved optimization proposal "+id);
+     await env.DB.prepare("UPDATE avr_agent_prompt_proposals SET status='published',rollback_prompt=base_prompt,published_agent_version=?,reviewed_by=?,published_at=?,updated_at=? WHERE id=?").bind(result.version,u.id||u.userId||"admin",now,now,id).run();
+     await env.DB.prepare("UPDATE avr_agents SET client_visible_prompt=?,raw_json=?,synced_at=? WHERE agent_id=?").bind(proposal.proposed_prompt,JSON.stringify({...cfg.agent,channel:cfg.channel,_avr_engine_type:cfg.engineType,_avr_engine_id:cfg.engineId}),now,proposal.agent_id).run();
+     await audit(env,u,"retell_prompt_optimization_published",proposal.customer_id,{proposalId:id,agentId:proposal.agent_id,version:result.version});
+     return json({published:true,version:result.version,verified:true},200,origin,env)
+    }
+    if(action==="rollback"){
+     if(proposal.status!=="published"||!proposal.rollback_prompt)throw Error("published_proposal_with_rollback_prompt_required");
+     if(cfg.prompt!==proposal.proposed_prompt)throw Error("live_prompt_has_changed_since_proposal_publication_refuse_automatic_rollback");
+     const result=await publishRetellPromptVersion(env,proposal.agent_id,cfg,cached,proposal.rollback_prompt,"Star69AI rollback of optimization proposal "+id);
+     await env.DB.prepare("UPDATE avr_agent_prompt_proposals SET status='rolled_back',updated_at=? WHERE id=?").bind(now,id).run();
+     await env.DB.prepare("UPDATE avr_agents SET client_visible_prompt=?,raw_json=?,synced_at=? WHERE agent_id=?").bind(proposal.rollback_prompt,JSON.stringify({...cfg.agent,channel:cfg.channel,_avr_engine_type:cfg.engineType,_avr_engine_id:cfg.engineId}),now,proposal.agent_id).run();
+     await audit(env,u,"retell_prompt_optimization_rolled_back",proposal.customer_id,{proposalId:id,agentId:proposal.agent_id,version:result.version});
+     return json({rolledBack:true,version:result.version,verified:true},200,origin,env)
+    }
+    if(action==="reject"){
+     if(["published","rolled_back"].includes(proposal.status))throw Error("published_proposal_cannot_be_rejected");
+     await env.DB.prepare("UPDATE avr_agent_prompt_proposals SET status='rejected',reviewed_by=?,updated_at=? WHERE id=?").bind(u.id||u.userId||"admin",now,id).run();
+     await audit(env,u,"retell_prompt_optimization_rejected",proposal.customer_id,{proposalId:id});
+     return json({rejected:true},200,origin,env)
+    }
    }
    const clientPromptMatch=path.match(/^\/api\/admin\/agents\/([^/]+)\/client-prompt$/);
    if(clientPromptMatch&&req.method==="PUT"){

@@ -1,3 +1,14 @@
+## Phase 2 discovery-to-demo personalization — 2026-11-18
+
+- Working branch: `feature/phase-2-discovery-demo-personalization-2026-11-18`, created from current `main` after reviewing this handoff and the existing homepage intake, three-step discovery form, Worker API, D1 migrations and Command Center demo queue.
+- Audit confirmed the complete discovery pipeline already exists: `get-started.html` collects business and call-handling preferences; `app.js` sends the complete brief to `POST /api/demo-requests`; the Worker stores the structured answers in `avr_demo_requests.discovery_json`; Command Center displays the discovery record and gates demo-agent creation behind approval; Retell demo-agent provisioning includes supplied discovery facts as unverified business context and explicitly disclaims unconnected integrations.
+- The homepage has a shorter quick-lead form. A later full discovery submission from the same email is merged into an eligible quick lead when no demo agent has been created. Formspree remains a fallback only when the platform request cannot be reached; those backup submissions require manual review and are not automatically placed in the demo queue.
+- Corrected the full discovery form's misleading “every field optional” copy. Contact name, business email, phone, business name and industry are now required, and client-side step validation now enforces required fields. Selecting “Other / not listed” also requires the custom industry detail.
+- Made the discovery privacy acknowledgement required in the browser and enforced it server-side for complete discovery submissions. Quick-lead submissions remain compatible with their existing lighter intake path.
+- Personalized the Command Center's suggested demo call scenarios using the prospect's own call tasks, services, FAQs and service area, in addition to the existing industry-specific scenarios. The supplied answers remain prospect-provided context; the demo must not invent facts or claim integrations that are not connected.
+- Static validation performed on the branch: JavaScript syntax checks passed for `app.js`, `admin/admin.js`, and `cloudflare/platform-worker.js` (Worker default export wrapped for parse-only validation); source assertions confirmed required-field, custom-industry, consent and personalized-scenario wiring.
+- Not yet performed: browser QA at mobile/tablet/desktop widths, live form submission, production D1 verification, Retell demo-agent creation, or Cloudflare Worker deployment. No customer data was submitted or changed. No production Worker deployment or merge to `main` has been performed. Review via PR; do not merge without the founder's explicit approval.
+
 ## Sitewide design-system consistency pass — 2026-11-18
 
 - Working branch: `design/phase-1-sitewide-token-consistency-2026-11-18`, based on current `main` after PR #260 was merged and its GitHub Pages deployment succeeded.

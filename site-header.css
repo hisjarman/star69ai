@@ -138,7 +138,9 @@ body.site-home-page .site-global-cover-image{
   object-fit:contain;object-position:center;pointer-events:none;
   opacity:0;filter:drop-shadow(0 0 12px rgba(67,180,254,.7));
   transform:translate3d(0,-50%,0);
-  animation:star69VisitorArrival 2.15s cubic-bezier(.18,.72,.24,1) .18s forwards;
+  animation:none;
+}
+.site-global-visitor-ship.is-ready{animation:star69VisitorArrival 2.15s cubic-bezier(.18,.72,.24,1) .18s forwards;
 }
 @keyframes star69VisitorArrival{
   0%{opacity:0;transform:translate3d(0,-50%,0)}
@@ -147,7 +149,8 @@ body.site-home-page .site-global-cover-image{
   100%{opacity:1;transform:translate3d(-27vw,-50%,0)}
 }
 @media(max-width:700px){
-  .site-global-visitor-ship{top:58%;width:clamp(88px,25vw,128px);max-height:64%;animation-duration:1.8s}
+  .site-global-visitor-ship{top:58%;width:clamp(88px,25vw,128px);max-height:64%}
+  .site-global-visitor-ship.is-ready{animation-duration:1.8s}
   @keyframes star69VisitorArrival{
     0%{opacity:0;transform:translate3d(0,-50%,0)}
     12%{opacity:1}

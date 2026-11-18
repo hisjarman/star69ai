@@ -1,3 +1,11 @@
+## Secret Mission reward and custom cursor — 2026-11-18
+
+- Replaced the desktop spaceship cursor data-URI with the supplied `/assets/cursor.webp`; touch devices retain native cursor behavior.
+- Secret Mission completion now unlocks the Star Navigator reward: 15% off monthly subscription charges for 12 billing months.
+- Added checkout handoff using `STAR15MISSION`; checkout pre-fills the reward automatically. Worker validates the configured Stripe coupon is exactly 15% off, repeating for 12 months, and rejects prepaid plans and partner-discount stacking. Stripe coupon is supplied through Worker secret `STRIPE_COUPON_SECRET_MISSION15`; it must be configured to a matching Stripe coupon ID before this reward can be redeemed.
+- Public pricing and reward terms clarify exclusions: setup, overage, taxes, third-party charges and other promotions.
+- Source changes only until reviewed, merged, the Stripe coupon is created/configured, and the Cloudflare Worker is deployed. Do not claim the reward is live before all steps are complete.
+
 ## Sitewide footer branding, readability and banner confirmation — 2026-11-17
 
 - Owner requested that the existing /assets/image_hero.webp remain the primary cinematic site banner, that footer presentation be corrected across pages, and that undersized/inconsistent Star69AI logos be fixed.

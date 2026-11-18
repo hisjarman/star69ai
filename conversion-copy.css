@@ -20,7 +20,7 @@
 .conversion-table{width:100%;min-width:760px;border-collapse:collapse;color:#dce8f5;font:400 14px/1.6 Manrope,sans-serif}
 .conversion-table th,.conversion-table td{padding:17px 19px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(84,157,215,.17)}
 .conversion-table thead th{background:#10243d;color:#f6fbff;font-size:13px;font-weight:800}
-.conversion-table thead th:last-child{background:linear-gradient(120deg,rgba(20,210,81,.16),rgba(33,183,255,.12));color:#eafff1}
+.conversion-table thead th:last-child{background:linear-gradient(120deg,rgba(52,253,120,.16),rgba(67,180,254,.12));color:#eafff1}
 .conversion-table tbody th{width:19%;color:#f0f6ff;font-weight:800}
 .conversion-table tbody td{color:#bfd0e2}
 .conversion-table tbody td:last-child{color:#e1f4e8}
@@ -31,11 +31,11 @@
 .safeguard-card>span,.roofing-scenarios article>span{color:#43B4FE;font:700 10px/1.5 "IBM Plex Mono",monospace;letter-spacing:.1em}
 .safeguard-card h3,.roofing-scenarios h3{margin:13px 0 10px;color:#f4f8ff;font:700 19px/1.3 Manrope,sans-serif}
 .safeguard-card p,.roofing-scenarios p{margin:0;color:#bfd0e2;font:400 14px/1.7 Manrope,sans-serif}
-.roofing-feature{background:radial-gradient(ellipse at 8% 50%,rgba(20,210,81,.09),transparent 38%),linear-gradient(115deg,#08152a,#06101f)}
+.roofing-feature{background:radial-gradient(ellipse at 8% 50%,rgba(52,253,120,.09),transparent 38%),linear-gradient(115deg,#08152a,#06101f)}
 .roofing-feature-inner{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:54px;align-items:center}
 .roofing-feature h2{margin:0 0 19px}
 .roofing-feature-inner>div:first-child>p:not(.conversion-kicker){margin-bottom:22px}
-.roofing-feature-link{display:inline-flex;align-items:center;gap:12px;margin-top:23px;color:#8cebb0;font:800 14px/1.5 Manrope,sans-serif;text-decoration:none;border-bottom:1px solid rgba(20,210,81,.55);padding-bottom:7px}
+.roofing-feature-link{display:inline-flex;align-items:center;gap:12px;margin-top:23px;color:#8cebb0;font:800 14px/1.5 Manrope,sans-serif;text-decoration:none;border-bottom:1px solid rgba(52,253,120,.55);padding-bottom:7px}
 .roofing-feature-link:hover{color:#fff}
 .roofing-scenarios{display:grid;gap:12px}
 .roofing-scenarios article{padding:18px 20px;border:1px solid rgba(75,157,213,.25);border-radius:13px;background:rgba(10,29,51,.76)}

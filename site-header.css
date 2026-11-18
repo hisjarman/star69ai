@@ -76,3 +76,27 @@ body.site-interior-page .site-global-utility{background:#030918}
 .site-global-footer-brand{width:min(320px,100%)!important;max-width:320px!important;margin:0 0 14px!important}
 .site-global-footer-brand img{width:100%!important;max-width:320px!important;max-height:none!important;height:auto!important;object-fit:contain;object-position:left center}
 @media(max-width:700px){.site-global-footer-brand{width:min(280px,100%)!important;max-width:280px!important}.site-global-footer-brand img{max-width:280px!important}}
+
+
+/* 2026-11-18: show the complete homepage banner artwork without increasing header height. */
+body.site-home-page .site-global-cover-image{
+  object-fit:contain!important;
+  object-position:center center!important;
+  background:#030918!important;
+}
+/* Interior pages get the same canonical, clickable wordmark used in the footer. */
+.site-global-home-brand{
+  position:absolute;z-index:2;left:clamp(14px,3vw,38px);top:50%;
+  display:flex;align-items:center;justify-content:flex-start;
+  width:min(230px,42vw);max-height:58px;transform:translateY(-50%);
+  padding:0;text-decoration:none;
+}
+.site-global-home-brand img{
+  display:block;width:100%;height:auto;max-height:58px;object-fit:contain;object-position:left center;
+}
+body.site-home-page .site-global-home-brand{display:none!important}
+@media(max-width:700px){
+  .site-global-home-brand{left:12px;width:min(175px,48vw);max-height:46px}
+  .site-global-home-brand img{max-height:46px}
+  body.site-interior-page .site-global-toggle{right:12px}
+}

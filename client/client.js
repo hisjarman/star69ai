@@ -254,6 +254,19 @@ function renderAgentRequests(items){
   try{const [c,r]=await Promise.all([api("/api/client/agent-configuration"),api("/api/client/agent-change-requests")]);renderAgentConfiguration(c.configuration);renderAgentRequests(r.requests||[])}
   catch(e){const root=$("#agent-configuration");if(root)root.innerHTML='<div class="empty">'+safe(e.message)+'</div>';const req=$("#agent-change-requests");if(req)req.innerHTML='<div class="empty">'+safe(e.message)+'</div>'}
  }
+
+ async function loadHubSpotConnection(){
+  const status=$("#hubspot-connection-status"),detail=$("#hubspot-connection-detail"),connect=$("#hubspot-connect"),disconnect=$("#hubspot-disconnect");
+  if(!status||!detail)return;
+  try{
+   const d=await api("/api/client/integrations/hubspot");
+   status.textContent=d.status==="connected"?"Connected":d.configured?"Not connected":"Setup pending";
+   status.dataset.state=d.status==="connected"?"active":"pending";
+   detail.textContent=d.status==="connected"?"Connected to "+(d.accountName||("HubSpot portal "+d.accountId))+". Read-only contact access is authorized. Last used: "+fmtDate(d.lastUsedAt):d.configured?"No HubSpot account is connected yet. Select Connect HubSpot to authorize your own account.":"The HubSpot connection is being prepared. Star69AI must finish the secure provider app setup before clients can authorize.";
+   connect.hidden=!d.configured||d.status==="connected";disconnect.hidden=d.status!=="connected";connect.disabled=!d.configured;
+  }catch(e){status.textContent="Status unavailable";detail.textContent=e.message;connect.hidden=true;disconnect.hidden=true}
+ }
+
  async function requestIntegration(provider,button){
   if(!provider)return;
   const original=button.textContent;button.disabled=true;button.textContent="Sending…";
@@ -393,7 +406,7 @@ function renderAgentRequests(items){
    $("#number-list").innerHTML=d.numbers.length?d.numbers.map(n=>'<div class="resource"><b>'+safe(n.phone_number)+'</b><span class="small">'+safe(n.nickname||"Business line")+'</span></div>').join(""):'<div class="empty"><b>Phone number not assigned yet</b><p class="small">That is expected at this stage. Your demo can be reviewed before a business number is assigned. We will complete number assignment and live-call testing during managed launch.</p></div>';
    renderCalls(d.calls||[],customer.email||"");
    await loadIntelligence();
-   await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration(),loadFlexWallet()]);
+   await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration(),loadFlexWallet(),loadHubSpotConnection()]);
    renderReceptionistStatus(d);
    renderAgentOptions();
   }catch(e){note(e.message,true)}
@@ -469,11 +482,17 @@ function renderAgentRequests(items){
  $("#agent-change-form")?.addEventListener("submit",submitAgentChange);$("#agent-change-type")?.addEventListener("change",toggleSmsFields);toggleSmsFields();
  $("#refresh-agent-requests")?.addEventListener("click",loadAgentConfiguration);
  $("#refresh-integration-requests")?.addEventListener("click",loadAgentConfiguration);
+
+ $("#hubspot-refresh")?.addEventListener("click",loadHubSpotConnection);
+ $("#hubspot-connect")?.addEventListener("click",async()=>{const b=$("#hubspot-connect");b.disabled=true;try{const d=await api("/api/client/integrations/hubspot/connect",{method:"POST",body:"{}"});if(!d.authorizationUrl)throw Error("HubSpot authorization URL was not returned.");location.assign(d.authorizationUrl)}catch(e){note(e.message,true);b.disabled=false}});
+ $("#hubspot-disconnect")?.addEventListener("click",async()=>{if(!confirm("Disconnect this HubSpot portal from Star69AI? This stops future access and revokes the authorization."))return;const b=$("#hubspot-disconnect");b.disabled=true;try{await api("/api/client/integrations/hubspot/disconnect",{method:"POST",body:"{}"});note("HubSpot disconnected and local connection data removed.");await loadHubSpotConnection()}catch(e){note(e.message,true)}finally{b.disabled=false}});
+
  document.querySelectorAll(".integration-request").forEach(b=>b.addEventListener("click",()=>requestIntegration(b.dataset.integration,b)));
  $("#billing-portal").onclick=async()=>{try{const d=await api("/api/billing/portal",{method:"POST",body:"{}"});location.href=d.url}catch(e){note(e.message,true)}};
  document.querySelectorAll(".plan-btn").forEach(b=>b.onclick=async()=>{try{b.disabled=true;const d=await api("/api/billing/checkout",{method:"POST",body:JSON.stringify({plan:b.dataset.plan,cadence:$("#billing-cadence")?.value||"monthly",promoCode:$("#billing-promo-code")?.value||""})});location.href=d.url}catch(e){const messages={invalid_promo_code:"That offer code is not valid. Check the code and try again.",challenge_offer_not_configured:"The challenge discount is not active in checkout yet. Please contact Star69AI before paying.",partner_offer_not_configured:"The partner discount is not active in checkout yet. Please contact Star69AI before paying.",prepaid_price_not_configured:"That prepaid billing option is not configured yet. Please contact Star69AI before paying.",prepaid_offer_cannot_be_combined_with_promo:"Prepaid savings cannot be combined with a first-month offer. Clear the code or choose monthly billing."};note(messages[e.message]||e.message,true);b.disabled=false}});
  const params=new URLSearchParams(location.search);
  if(params.has("billing"))note(params.get("billing")==="success"?"Checkout completed. Your subscription will appear after Stripe confirms the webhook.":"Checkout was cancelled.");
+  if(params.has("hubspot"))note(params.get("hubspot")==="connected"?"HubSpot was authorized. Refreshing connection status.":params.get("hubspot")==="authorization_denied"?"HubSpot authorization was declined.":"HubSpot authorization did not complete. Please retry or contact the Crew.");
  if(params.has("overage_card"))note(params.get("overage_card")==="success"?"Card setup completed. Stripe is confirming your saved payment method. Refresh shortly.":"Card setup was cancelled.");
  init();
 })();

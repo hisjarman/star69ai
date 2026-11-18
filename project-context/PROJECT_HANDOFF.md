@@ -1758,3 +1758,15 @@ This section supersedes the earlier activation-status notes above where they des
 - The existing PR remains a request catalog only. It does not implement OAuth or claim any provider is connected. Retell-native OAuth must not be used until independent per-client authorization ownership and revocation are proven; otherwise Star69AI Worker must broker provider access and expose narrowly scoped custom functions.
 - No Worker routes, D1 migrations, OAuth app credentials, provider tokens, Retell settings, customer records, production secrets or deployment configuration changed. No merge or deployment performed.
 - Before implementing live OAuth, select one provider, verify its official endpoints/scopes/review requirements and confirm required Star69AI OAuth app credentials are available as Worker secrets. Test two-tenant isolation, connect/refresh/revoke/disconnect, least privilege and call-time data minimization. Browser QA and signed-in end-to-end tests for PR #276 remain outstanding.
+
+
+## HubSpot OAuth foundation — 2026-11-18 — FEATURE BRANCH
+
+- Started the first provider implementation on \`feature/hubspot-oauth-foundation-2026-11-18\`, based on current \`main\` after reviewing this handoff, the existing Mission Control Integrations Hub, tenant-scoped client request APIs and the OAuth security architecture.
+- Added tenant-bound HubSpot OAuth authorization: single-use hashed state, 10-minute expiry, exact redirect URI, server-side callback, HubSpot date-versioned token exchange endpoint, AES-GCM encrypted token persistence, tenant-scoped status, connect and revoke/disconnect routes.
+- Added a Mission Control HubSpot connection panel and client connect/status/disconnect controls. Connect remains unavailable until Star69AI's HubSpot OAuth app credentials and encryption secret are configured in Cloudflare.
+- Added D1 migration \`cloudflare/migrations/20261118_hubspot_oauth_connections.sql\` and setup/release checklist \`docs/HUBSPOT_INTEGRATION_ROLLOUT.md\`.
+- Initial scope is read-only \`crm.objects.contacts.read\` plus \`oauth\`. This milestone does not yet implement contact lookup/import/sync, CRM writes, Retell custom functions or call-time customer recognition.
+- Required Cloudflare Worker secrets: \`HUBSPOT_CLIENT_ID\`, \`HUBSPOT_CLIENT_SECRET\`, and a 32-byte base64url \`INTEGRATION_ENCRYPTION_KEY\`. Register redirect URI \`https://avr-platform-api.hisjarman.workers.dev/oauth/hubspot/callback\`.
+- Official HubSpot API references were checked on 2026-11-18. New implementation uses \`/oauth/2026-03/token\` and \`/oauth/2026-03/token/revoke\`, not the deprecated v1 token/revoke routes.
+- Not deployed: HubSpot app not created/configured, Worker secrets not set, D1 migration not applied, Worker not deployed, no customer portal connected. Two-tenant isolation, denied/replayed state, token encryption, callback, refresh/revocation, browser QA and live OAuth tests remain outstanding. Do not describe HubSpot as live or connected until these gates pass.

@@ -94,6 +94,12 @@
 
 <section class="panel overview-shortcuts"><div class="panel-head"><div><div class="eyebrow">QUICK ACCESS</div><h2>Manage your service</h2></div></div><div class="shortcut-grid"><button type="button" data-page="receptionist"><span>✧</span><b>Receptionist</b><small>View agent and phone lines</small></button><button type="button" data-page="billing"><span>$</span><b>Plan &amp; billing</b><small>Usage, subscription and profile</small></button><button type="button" data-page="calls"><span>◖</span><b>Call activity</b><small>Review recent conversations</small></button><button type="button" data-page="support"><span>?</span><b>Crew Support</b><small>Submit and track requests</small></button></div></section></section>
           <section class="client-page integrations-page" data-page-panel="integrations">
+  <section class="panel hubspot-connection-panel">
+    <div class="panel-head"><div><div class="eyebrow">FIRST LIVE PROVIDER</div><h2>HubSpot CRM</h2><p class="small">Authorize your own HubSpot portal. Star69AI requests read-only contact access for this first connection.</p></div><span class="status" id="hubspot-connection-status">Not connected</span></div>
+    <div class="integration-guardrail">You will sign in and approve permissions on HubSpot's official consent screen. Star69AI does not receive your HubSpot password. Your access tokens are encrypted and tied to this Star69AI workspace.</div>
+    <p class="small" id="hubspot-connection-detail">Checking connection availability…</p>
+    <div class="row" style="gap:10px;flex-wrap:wrap"><button class="btn" id="hubspot-connect" type="button">Connect HubSpot</button><button class="btn secondary" id="hubspot-disconnect" type="button" hidden>Disconnect</button><button class="btn secondary" id="hubspot-refresh" type="button">Refresh status</button></div>
+  </section>
   <section class="panel integration-hero">
     <div class="eyebrow">CONNECTED BUSINESS SYSTEMS</div>
     <h2>Your tools. Your workflow. One managed setup.</h2>

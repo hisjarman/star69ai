@@ -1322,7 +1322,7 @@ async function route(req,env){
     if(scenarios.length<4)throw Error("at_least_four_test_scenarios_required");
     const id=crypto.randomUUID(),now=new Date().toISOString();
     await env.DB.prepare("INSERT INTO avr_agent_prompt_proposals(id,customer_id,agent_id,source_call_id,source_intelligence_id,engine_id,prompt_type,base_prompt,proposed_prompt,change_summary,scenarios_json,test_results_json,test_status,status,base_agent_version,base_engine_version,created_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'[]','not_run','draft',?,?,?,?,?)")
-     .bind(id,agentRow.customer_id,agentId,intel.call_id,intelligenceId,cfg.engineId,cfg.promptType,cfg.prompt,proposed,summary,JSON.stringify(scenarios),JSON.stringify([]),Number(cfg.agent.version??0),Number(cfg.engine.version??0),u.id||u.userId||"admin",now,now).run();
+     .bind(id,agentRow.customer_id,agentId,intel.call_id,intelligenceId,cfg.engineId,cfg.promptType,cfg.prompt,proposed,summary,JSON.stringify(scenarios),Number(cfg.agent.version??0),Number(cfg.engine.version??0),u.id||u.userId||"admin",now,now).run();
     await audit(env,u,"retell_prompt_optimization_drafted",agentRow.customer_id,{agentId,proposalId:id,sourceCallId:intel.call_id,scenarioCount:scenarios.length});
     return json({created:true,id,scenarioCount:scenarios.length,status:"draft"},201,origin,env)
    }

@@ -112,7 +112,7 @@ body {
 .legal-callout {
   margin: 24px 0;
   padding: 20px 22px;
-  border: 1px solid rgba(20,210,81,.38);
+  border: 1px solid rgba(52,253,120,.38);
   border-left: 3px solid var(--legal-accent);
   border-radius: 12px;
   background: var(--legal-surface);

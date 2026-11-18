@@ -441,8 +441,9 @@ html body footer.site-footer>a.site-global-footer-brand{
   }
 }
 @media (hover:hover) and (pointer:fine){
-  html,body{cursor:url("/assets/cursor.webp") 16 16,auto}
-  a,button,[role="button"],input[type="submit"],input[type="button"],summary,label[for]{cursor:pointer}
+  html,body{cursor:none!important}
+  a,button,[role="button"],input[type="submit"],input[type="button"],summary,label[for]{cursor:none!important}
+  input,textarea,[contenteditable="true"]{cursor:text!important}
 }
 
 

@@ -1,3 +1,11 @@
+## Cinematic homepage, astronaut spaceship cursor and client Mission Control refinement — 2026-11-18
+
+- Homepage banner source artwork is 2080×1136. Changed from contain (which made it look like a small centered picture) to cover/crop inside a slightly shorter fixed-height responsive banner. Header height was reduced, not expanded.
+- Receptionist portrait source is 608×1181. Reduced its visual size and constrained it to the right-side desktop column beside homepage copy; mobile layout stacks a smaller portrait beneath the copy. The portrait and call-summary card link to the custom-demo form.
+- Root cause of the non-working native cursor: supplied assets/cursor.webp is 1920×1280. MDN notes Chromium and Firefox commonly ignore cursor images above 128×128 and recommends 32×32. A desktop-only scaled image follower now renders the exact supplied spaceship-with-astronaut artwork at a small visual size. Text fields retain text cursor; touch devices keep native behavior.
+- Upgraded authenticated client Mission Control with a cinematic space-horizon banner, starfield/glow treatment, glass-like panels, neon blue/purple/green accents and stronger hierarchy. Existing data, navigation, Clerk session and Worker/API workflows are unchanged.
+- Source-level validation only until PR review, merge, GitHub Pages deployment and browser QA at desktop/mobile widths. Cursor must be checked with mouse/trackpad; touch devices retain native cursor.
+
 ## Clickable canonical logo on interior pages and complete homepage banner — 2026-11-18
 
 - Added the same canonical `/assets/main_logo.webp` wordmark used by the footer to the shared public header on interior pages. The wordmark links directly to the homepage and is hidden on the homepage itself to keep the cinematic landing page uncluttered.

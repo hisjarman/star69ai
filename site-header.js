@@ -55,6 +55,8 @@
     document.body.classList.toggle("site-home-page", homePath === "/");
     document.body.classList.toggle("site-interior-page", homePath !== "/");
     document.querySelectorAll(".reference-topbar,.s69-header,header.topbar,header.site-header,[data-legacy-site-header]").forEach(node => node.remove());
+    if (!document.querySelector("[data-site-global-header]")) document.body.insertAdjacentHTML("afterbegin", markup);
+    // The shared header (and its banner cover) must exist before the visitor ship is attached.
     if (homePath === "/" && !document.querySelector(".site-global-visitor-ship")) {
       let arrivalSeen = false;
       try { arrivalSeen = window.sessionStorage.getItem("star69ai-visitor-arrival-seen") === "1"; } catch (_) {}
@@ -68,12 +70,15 @@
           visitorShip.setAttribute("aria-hidden", "true");
           visitorShip.decoding = "async";
           visitorShip.draggable = false;
+          visitorShip.addEventListener("load", () => {
+            visitorShip.classList.add("is-ready");
+            try { window.sessionStorage.setItem("star69ai-visitor-arrival-seen", "1"); } catch (_) {}
+          }, { once: true });
+          visitorShip.addEventListener("error", () => visitorShip.remove(), { once: true });
           cover.appendChild(visitorShip);
-          try { window.sessionStorage.setItem("star69ai-visitor-arrival-seen", "1"); } catch (_) {}
         }
       }
     }
-    if (!document.querySelector("[data-site-global-header]")) document.body.insertAdjacentHTML("afterbegin", markup);
     document.querySelectorAll("[data-site-global-header]").forEach((node,index) => { if (index > 0) node.remove(); });
     const header = document.querySelector("[data-site-global-header]");
     if (!header || header.dataset.navigationReady === "true") return;

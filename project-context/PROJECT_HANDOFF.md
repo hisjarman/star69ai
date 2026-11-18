@@ -1840,3 +1840,24 @@ This section supersedes the earlier activation-status notes above where they des
 - Reduced-motion users receive a stationary ship instead of the arrival animation. The ship is a separate overlay, not baked into the banner or brand logo.
 - Source-level checks required: verify asset paths exist; JavaScript syntax; exactly one ship overlay on homepage; no overlay on interior pages; image contain behavior; pointer-events:none; responsive and reduced-motion styles; navigation markup unchanged. Browser visual QA at desktop/tablet/mobile and live GitHub Pages verification remain outstanding.
 - No new image upload, Worker, D1, Retell, billing, authentication, customer data or production configuration changes. Review through PR; do not merge without explicit founder approval.
+
+
+## Visitor arrival spaceship initialization correction — 2026-11-18
+
+- Follow-up branch: `fix/visitor-spaceship-arrival-init-2026-11-18`.
+- Fixed the initialization order: the homepage banner container is part of the shared header markup, so the ship is now attached after that markup is inserted.
+- The arrival animation begins only after `/assets/visitorspaceship.png` successfully loads. A failed image is removed and does not consume the once-per-session display.
+- Updated the approved-header protection fingerprints and design lock for this narrowly scoped correction. Navigation, banner design, reduced-motion behavior, and all unrelated systems remain unchanged.
+- CI and browser/live-site verification are pending review; do not merge until required checks pass and the founder explicitly approves.
+
+
+## Responsive homepage banner display correction — 2026-11-18
+
+- Added to the existing visitor-arrival fix PR after the founder specified exact screen behavior.
+- Desktop/large monitor: full-width original artwork with natural proportional height; no crop or fixed-height letterboxing.
+- Tablet: proportional full-width scaling with central composition preserved.
+- Mobile: intentional centered 4:3 crop of the existing artwork. A dedicated mobile source image may replace this CSS crop when provided.
+- Kept menu, utility links, footer, and visitor-arrival overlay behavior intact. Updated design lock and protected CSS fingerprint.
+- Browser screenshots at desktop, large monitor, tablet and mobile remain required before merge; GitHub Pages publication is not yet verified.
+
+- Versioned the once-per-session key to avoid a stale flag from the prior broken initializer suppressing the corrected arrival on first visit after update.

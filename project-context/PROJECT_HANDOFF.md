@@ -1561,3 +1561,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Updated `project-context/STAR69AI_HEADER_DESIGN_LOCK.md` and `.github/workflows/protect-approved-header.yml` because the explicit owner request intentionally revises the previously frozen header design. New protected Git blob IDs are recorded in both the lock and workflow.
 - No authentication, Worker, D1, billing, call data, customer/prospect records or email behavior changed. No merge or deployment performed.
 - Validation performed: confirmed the branch is based on current main; confirmed homepage route detection, interior hero-art hiding, dashboard navy header override, all three approved accent colors, footer sizing overrides, and synchronized design-lock/workflow blob IDs. Automated browser visual QA, responsive screenshot review, GitHub Actions check, PR review/merge and Pages deployment remain outstanding.
+
+## Star69AI Secret Mission Easter egg — 2026-11-18
+
+- Feature branch: `feature/secret-mission-easter-egg-2026-11-18`, based on current `main` after reading this handoff and inspecting the homepage, How It Works, Industries, Pricing, Demos and the shared header installer.
+- Adds an optional five-signal treasure hunt across the homepage, How It Works, Industries, Pricing and Demos. Each page has one subtle spacecraft signal marker; collecting a fragment reveals the next riddle and destination.
+- Adds a cinematic star-map dialog, progress tracker, resume control, and a non-monetary Star Navigator achievement. The map launcher appears after the visitor starts.
+- Progress is stored only in the visitor's browser localStorage. No accounts, emails, analytics events, server calls, customer records, discounts, checkout, billing or backend changes are introduced.
+- Uses new root-level `secret-mission.js` and `secret-mission.css`; only adds stylesheet/script references to the five participating public pages. Does not modify protected `site-header.js`, `site-header.css`, the header design lock, client dashboard or existing AI Challenge.
+- Source validation: JavaScript parses successfully; all five pages reference both assets; CSS braces are balanced. Browser visual QA, touch-device testing and GitHub Pages deployment remain unverified.
+- Review through PR. Do not merge `main` without explicit user approval.

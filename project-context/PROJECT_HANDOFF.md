@@ -1,3 +1,12 @@
+## Single discovery intake and corrected prepaid pricing — 2026-11-18
+
+- Consolidated homepage demo lead capture into the existing three-step `get-started.html` discovery form. Removed the separate homepage Formspree quick-lead form and its dedicated `demo-request.js` handler; the homepage now links to the canonical discovery brief. The weekly story newsletter form remains separate because it is an email subscription, not a sales lead form.
+- Updated the discovery form's billing schedule to the approved six-month 25% and twelve-month 35% prepaid discounts. Added the exact upfront totals for Starter ($670.50 / $1,162.20), Growth ($1,120.50 / $1,942.20) and Pro ($1,795.50 / $3,112.20).
+- Clarified that prepaid terms are paid in full through PayPal and waive the $99 setup fee; monthly plans retain the separately invoiced $99 setup fee. Prepaid savings are not stackable with partner, AI Challenge or other promotional discounts.
+- Updated homepage pricing copy to match the same prepaid savings and setup-fee treatment.
+- No Worker, D1, billing integration, Stripe subscription, PayPal checkout, partner commission, AI Challenge, authentication or customer/prospect data behavior was changed. No records were submitted or modified.
+- Static source checks are required before PR review. Browser QA and GitHub Pages deployment remain outstanding. This branch is not merged; do not merge `main` without the founder's explicit approval.
+
 ## Phase 2 discovery-to-demo personalization — 2026-11-18
 
 - Working branch: `feature/phase-2-discovery-demo-personalization-2026-11-18`, created from current `main` after reviewing this handoff and the existing homepage intake, three-step discovery form, Worker API, D1 migrations and Command Center demo queue.

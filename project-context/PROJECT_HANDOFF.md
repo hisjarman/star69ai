@@ -1,3 +1,14 @@
+## Homepage Call Rescue Simulator — 2026-11-18
+
+- Working branch: `feature/call-rescue-simulator-2026-11-18`, based on current `main` at `97291e220a6c84965d58eb86ba22f0e8b9dbb2e1`.
+- Audited the existing public Secret Mission and Receptionist Architect challenge before adding anything. The site already has a five-signal Secret Mission with local progress and a separate 45-scenario learning challenge; do not create a duplicate Easter-egg or quiz system.
+- Added a homepage Call Rescue Simulator immediately after the hero. Visitors can compare letting a fictional plumbing inquiry reach voicemail, answering personally while working, or having a configured AI receptionist capture the request and prepare a team handoff.
+- The simulator is explicitly fictional and local-only: it does not place calls, submit forms, collect visitor data, claim bookings/dispatch, or promise outcomes. The AI path is described as an example subject to client-approved configuration and business rules.
+- Added dedicated responsive CSS and accessible interaction JavaScript, including keyboard focus, live result announcements and reduced-motion support. The CTA leads to the existing discovery form.
+- Preserved the existing Secret Mission, its reward/checkout logic, the Receptionist Architect challenge, pricing, navigation and all backend integrations. No Worker, D1, Retell, Stripe, PayPal, Resend, auth, customer or prospect data changed.
+- Static source assertions passed for the section, stylesheet/script references, all three outcomes, no outbound call/API behavior, reduced-motion/mobile styles and the simulation disclaimer. Browser QA at mobile/tablet/desktop widths and GitHub Pages deployment remain outstanding.
+- PR review required. Do not merge `main` without the founder's explicit approval.
+
 ## Client Mission Control visual correction — 2026-11-18
 
 - Follow-up to the initial cinematic client dashboard pass: the dashboard still read too much like the previous interface, the atmosphere was too faint, and default green buttons were not approved.

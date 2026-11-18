@@ -1787,3 +1787,14 @@ This section supersedes the earlier activation-status notes above where they des
 - Capability wording remains qualified: connections and actions depend on supported providers, client authorization, plan, configuration and testing. No new integrations or backend functionality are claimed.
 - Source-level checks performed in this change: exact old illustration markup removed from homepage hero; 12 capability tiles and detailed-page links present; responsive 3-column/2-column breakpoints and focus-visible styling included; reduced-motion behavior retained. Browser screenshots/visual QA and live GitHub Pages verification remain to be performed.
 - Source-only change. No Worker, D1, Retell, billing, authentication, customer/prospect records or production configuration changed. Review through PR; do not merge `main` without the founder's explicit approval.
+
+
+## Owner-approved grouped public navigation — 2026-11-18
+
+- Working branch: `feature/group-public-navigation-menu-2026-11-18`, created from current `main` after reading the project handoff, the frozen header design lock and the live shared header implementation.
+- Grouped all 19 existing public destinations into five visitor-intent sections: **Explore** (Home, How it works, What it can do, Industry Hub, Industry overview, Provider directory); **See It in Action** (Demos, AI Challenge, AI Trust Lab); **Learn & Support** (Learning Center, Stories, FAQ, Managed AI research); **Company & Plans** (About Star69AI, Managed service, Pricing, Partner program); **Policies** (Privacy, Terms).
+- Preserved all 19 destination labels/routes, active-page highlighting, inert-while-closed behavior, Escape/outside-click close, MENU/CLOSE interaction, and the separate Partner Login, Client Console and Initiate Contact utility strip.
+- Added responsive grouped cards: three columns on wide screens, two on tablet, one on mobile; links inside each group use a two-column layout. Existing keyboard focus-visible styling and reduced-motion behavior are retained.
+- Updated `STAR69AI_HEADER_DESIGN_LOCK.md` and the protection workflow's pinned Git blob IDs because the owner explicitly requested a navigation organization change. New approved source blobs: JS `6664131e13969a38938c84657db4ec4b9a4df636`, CSS `34a920b0f858198d33efc8a2174f21008cd2abc9`.
+- Source checks: 5 groups; 19 destinations; no routes removed; CSS braces balanced; responsive group breakpoints present. Browser screenshot/interaction QA at desktop, tablet and mobile remains outstanding.
+- No Worker, D1, Retell, billing, authentication, customer/prospect records or production configuration changed. Source-only PR; no merge until explicit owner approval.

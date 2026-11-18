@@ -430,3 +430,17 @@ html body footer.site-footer>a.site-global-footer-brand{
     width:min(280px,100%)!important;max-width:280px!important;
   }
 }
+
+/* Star69AI spaceship cursor + duplicate footer-logo guard — 2026-11-17.
+   The shared header installer can insert a fallback wordmark before an existing
+   legacy footer wordmark because its logo matcher is over-escaped. Keep the
+   original brand-column wordmark and suppress only that redundant injected copy. */
+@supports selector(footer:has(.footer-brand-column .brand-footer img)){
+  footer.site-footer:has(.footer-brand-column .brand-footer img)>a.site-global-footer-brand[data-star69ai-footer-brand]{
+    display:none!important;
+  }
+}
+@media (hover:hover) and (pointer:fine){
+  html,body{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M4 20 30 5 24 19 36 25 9 30 15 23Z' fill='%2308162d' stroke='%2343b4fe' stroke-width='1.8' stroke-linejoin='round'/%3E%3Cpath d='m15 23 9-4 12 6-14 1Z' fill='%2334fd78' opacity='.95'/%3E%3Cpath d='m4 20 10 2-5 8Z' fill='%23f4f8ff' stroke='%2343b4fe' stroke-width='1'/%3E%3Cpath d='m5 20-3-3m4 5-5 1' stroke='%23e156ff' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") 8 20,auto}
+  a,button,[role="button"],input[type="submit"],input[type="button"],summary,label[for]{cursor:pointer}
+}

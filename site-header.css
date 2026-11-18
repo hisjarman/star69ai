@@ -168,7 +168,7 @@ body.site-home-page .site-global-cover{
   height:auto!important;
   min-height:0!important;
   aspect-ratio:auto;
-  overflow:hidden;
+  overflow:visible;
 }
 body.site-home-page .site-global-cover-image{
   position:relative!important;

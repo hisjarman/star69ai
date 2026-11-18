@@ -112,7 +112,8 @@ The operating standards and training materials are organized for three audiences
 
 - **Founder/operator:** [Founder Operations Playbook](docs/knowledge-base/FOUNDER_OPERATIONS_PLAYBOOK.md), [Product Truth & Claims](docs/knowledge-base/PRODUCT_TRUTH_AND_CLAIMS.md) and [QA & Release Checklist](docs/knowledge-base/QA_RELEASE_CHECKLIST.md).
 - **AI assistants and developers:** [AI Assistant Working Context](docs/knowledge-base/AI_ASSISTANT_CONTEXT.md), [Knowledge Base Index](docs/knowledge-base/README.md) and [Project Handoff](project-context/PROJECT_HANDOFF.md).
-- **Clients:** public [Client Success Guide](https://star69ai.com/learning-center/client-success.html) and the authenticated Mission Control → Knowledge Center.
+- **Clients:** public [Client Success Guide](https://star69ai.com/learning-center/client-success.html), [Call Shield Guide](https://star69ai.com/learning-center/call-shield.html), and the authenticated Mission Control → Knowledge Center.
+- **Call Shield operations:** [Client Guide](docs/knowledge-base/CALL_SHIELD_CLIENT_GUIDE.md), [Administrator Operations Manual](docs/knowledge-base/CALL_SHIELD_ADMIN_MANUAL.md) (internal only), and [Public Learning Center](learning-center/call-shield.html).
 
 Use the evidence labels in the knowledge base: verified in source, configured in production, tested end to end, not verified, planned or customer-specific. Source code is not proof of deployment. Never claim a workflow is live or successful without a real test. Keep the customer agreement and approved configuration authoritative for each account.
 

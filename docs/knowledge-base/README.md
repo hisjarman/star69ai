@@ -11,7 +11,7 @@
 | Founder / operator | [Founder Operations Playbook](FOUNDER_OPERATIONS_PLAYBOOK.md) | [Product Truth & Claims](PRODUCT_TRUTH_AND_CLAIMS.md), [QA & Release Checklist](QA_RELEASE_CHECKLIST.md) |
 | AI assistants / developers | [AI Working Context](AI_ASSISTANT_CONTEXT.md) | [Product Truth & Claims](PRODUCT_TRUTH_AND_CLAIMS.md), [QA & Release Checklist](QA_RELEASE_CHECKLIST.md), [Project Handoff](../../project-context/PROJECT_HANDOFF.md) |
 | Crew / implementation | [Client Service Standards](CLIENT_SERVICE_STANDARDS.md) | [Industry Agent Configuration & QA Playbooks](../INDUSTRY_AGENT_CONFIGURATION_PLAYBOOKS.md) |
-| Clients | [Client Success Guide](../../learning-center/client-success.html) | Authenticated Mission Control → Knowledge Center |
+| Clients | [Call Shield Client Guide](CALL_SHIELD_CLIENT_GUIDE.md), [Client Success Guide](../../learning-center/client-success.html) | Authenticated Mission Control → Knowledge Center |
 
 ## Authority and conflict resolution
 
@@ -31,6 +31,12 @@
 - **Customer-specific:** Depends on the accepted order, approved configuration or enabled integration.
 
 Never convert “verified in source” into “live” or “tested.”
+
+## Call Shield references
+
+- [Client Guide](CALL_SHIELD_CLIENT_GUIDE.md)
+- [Administrator Operations Manual](CALL_SHIELD_ADMIN_MANUAL.md) — internal only; do not publish to customers.
+- [Public Call Shield Learning Center](../../learning-center/call-shield.html)
 
 ## Related standards
 

@@ -55,3 +55,13 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Wait for the existing spaceship image to load before starting the arrival animation; failed image loads remove the decorative element and do not mark the session as having seen it.
 - No visual redesign, navigation changes, route changes, or changes to the approved banner artwork, reduced-motion fallback, pointer behavior or one-arrival-per-session intent.
 - Updated the protected source fingerprints in the same reviewed change. This does not authorize broader header or navigation modifications.
+
+
+## Responsive homepage banner display correction — 2026-11-18 — OWNER REQUESTED
+
+- Desktop and large monitors: display the complete original banner at 100% available width with automatic proportional height; do not crop, stretch, squash or constrain it to a fixed-height box.
+- Tablet: continue proportional full-width scaling with the complete composition preserved.
+- Mobile: use a deliberate centered 4:3 crop of the existing artwork so the focal center remains prominent. A separately authored mobile asset can replace this CSS crop when one is supplied.
+- The cover container follows the desktop image's natural height; the menu and visitor-arrival overlays remain positioned above the artwork.
+- This is a narrowly scoped banner presentation correction. The menu destinations, utility links, header structure and footer remain protected.
+- Updated the protected CSS blob fingerprint in the same reviewed change.

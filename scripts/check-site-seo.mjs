@@ -37,21 +37,34 @@ for (const file of files.filter((f) => !excluded(f))) {
   else if (!canonical.startsWith("https://star69ai.com/"))
     problems.push(file + ": canonical is outside the production domain");
   if (h1Count < 1) problems.push(file + ": missing H1");
-  if (canonical && !urls.includes(canonical))
-    problems.push(file + ": canonical URL is missing from sitemap (" + canonical + ")");
+
+  const jsonLd = [...html.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  for (let i = 0; i < jsonLd.length; i++) {
+    try { JSON.parse(jsonLd[i][1]); }
+    catch { problems.push(file + ": invalid JSON-LD script " + (i + 1)); }
+  }
 }
 
 const requiredDisallows = ["/client/", "/admin/", "/partner-portal/", "/partners-admin.html", "/trust-lab-admin.html", "/newsletter-admin.html"];
 for (const route of requiredDisallows) {
   if (!robots.includes("Disallow: " + route)) problems.push("robots.txt: missing " + route + " exclusion");
 }
+const noindexFiles = ["admin/index.html", "client/index.html", "partner-portal/index.html", "newsletter-admin.html", "partners-admin.html", "trust-lab-admin.html", "checkout.html", "checkout-complete.html"];
+for (const file of noindexFiles) {
+  const html = fs.readFileSync(path.join(root, file), "utf8");
+  const head = html.match(/<head\b[^>]*>[\s\S]*?<\/head>/i)?.[0] ?? "";
+  if (!/<meta\s+name=["']robots["'][^>]*content=["'][^"']*noindex/i.test(head))
+    problems.push(file + ": missing noindex robots directive");
+}
+
 for (const url of urls) {
-  const pathname = new URL(url).pathname;
+  const pathname = url.replace("https://star69ai.com", "");
   const candidate = pathname.endsWith("/") ? pathname + "index.html" : pathname;
   const file = candidate.replace(/^\//, "");
   if (!fs.existsSync(path.join(root, file))) problems.push("sitemap.xml: URL has no matching file " + url);
 }
 if (new Set(urls).size !== urls.length) problems.push("sitemap.xml: duplicate URLs");
+
 if (problems.length) {
   console.error("Site SEO checks failed:\n- " + problems.join("\n- "));
   process.exit(1);

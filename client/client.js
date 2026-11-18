@@ -258,9 +258,9 @@ function renderAgentRequests(items){
   if(!provider)return;
   const original=button.textContent;button.disabled=true;button.textContent="Sending…";
   try{
-   const details="Integration request: "+provider+". Please review the supported Retell/API connection options for this business. Confirm required permissions, read-only versus write access, setup scope, third-party costs and testing steps with me before activation. I will not provide passwords or API keys in this request.";
+   const details="Integration request: "+provider+". Please review provider support and the secure client-authorized connection path. Before any access is established, show me the provider account, exact requested scopes, read-only versus write permissions, data accessed, setup scope and third-party costs. I will authorize through the provider's official consent screen; do not ask me to send passwords, API keys or tokens.";
    await api("/api/client/agent-change-requests",{method:"POST",body:JSON.stringify({requestType:"workflow",priority:"normal",details})});
-   note("Integration request submitted. Our Crew will review the supported connection path and contact you before any access or charges are authorized.");
+   note("Review request submitted. No provider account has been connected and no access has been granted. Our Crew will confirm the provider's authorization screen, exact permissions, data access and any charges before asking you to approve access.");
    await loadAgentConfiguration();
   }catch(e){note(e.message,true)}
   finally{button.disabled=false;button.textContent=original}

@@ -1749,3 +1749,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Linked the guides from the knowledge-base index and repository README. This branch is documentation/content only: no Worker, D1, Retell, billing, authentication, client settings or customer data changed.
 - The guides explicitly preserve the current evidence boundary: PR #274 and Worker/D1 deployment are recorded as merged/deployed, while authenticated browser tests, live Retell inbound-call tests and GitHub Pages publication verification remain outstanding. Do not claim those tests passed until performed.
 - Working branch: `docs/call-shield-knowledge-guides-2026-11-18`. Review through PR; do not merge to `main` without the founder's explicit approval.
+
+
+## Client-owned OAuth authorization requirements — 2026-11-18
+
+- Revised Integrations Hub PR #276 to state that clients authorize their own provider account through the provider's official consent screen; Mission Control must never collect provider passwords, API keys or tokens.
+- Added `docs/INTEGRATIONS_OAUTH_SECURITY_ARCHITECTURE.md` as the required security/release contract: single-use tenant-bound OAuth state, PKCE where supported, server-side code exchange, application-layer token encryption with Worker secrets, strict tenant ownership, least-privilege scopes, read-only default, audit/revoke/disconnect, minimal per-call data access and provider-by-provider rollout gates.
+- The existing PR remains a request catalog only. It does not implement OAuth or claim any provider is connected. Retell-native OAuth must not be used until independent per-client authorization ownership and revocation are proven; otherwise Star69AI Worker must broker provider access and expose narrowly scoped custom functions.
+- No Worker routes, D1 migrations, OAuth app credentials, provider tokens, Retell settings, customer records, production secrets or deployment configuration changed. No merge or deployment performed.
+- Before implementing live OAuth, select one provider, verify its official endpoints/scopes/review requirements and confirm required Star69AI OAuth app credentials are available as Worker secrets. Test two-tenant isolation, connect/refresh/revoke/disconnect, least privilege and call-time data minimization. Browser QA and signed-in end-to-end tests for PR #276 remain outstanding.

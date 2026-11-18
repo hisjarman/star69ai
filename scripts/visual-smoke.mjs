@@ -55,7 +55,11 @@ try {
             return { headerClass: header?.className, expanded: toggle?.getAttribute("aria-expanded"), visibility: style?.visibility, opacity: style?.opacity, display: style?.display, rect: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null, contained: header?.contains(nav), selectorMatches: nav?.matches(".site-global-header.menu-open .site-global-nav") };
           });
           assert(await page.locator(".site-global-nav").isVisible(), "Mobile navigation panel is not visible: " + JSON.stringify(navState));
+          await page.screenshot({ path: path.join("artifacts/site-qa", "mobile-navigation-open.png"), fullPage: false, timeout: 10000 }).catch((error) => console.warn("Mobile navigation screenshot skipped: " + error.message));
           await toggle.click();
+          await page.waitForTimeout(300);
+          assert(await toggle.getAttribute("aria-expanded") === "false", "Mobile navigation did not close");
+          assert(!(await page.locator(".site-global-nav").isVisible()), "Mobile navigation remained visible after closing");
         }
         if (route === "/get-started.html") {
           const required = await page.locator("input[required], select[required], textarea[required]").count();

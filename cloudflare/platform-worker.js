@@ -783,6 +783,11 @@ async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,call
  // Withheld/invalid caller IDs cannot be safely fingerprinted. Do not block them solely for being private.
  if(!/^\+[1-9]\d{6,14}$/.test(caller)||!/^\+[1-9]\d{6,14}$/.test(dialed)||!id)return {blocked:false,reason:"caller_id_unavailable"};
  try{
+  // Enforce the 30-day operational retention window on every inbound screening attempt.
+  const retention=new Date(Date.now()-30*24*60*60*1000).toISOString();
+  await env.DB.prepare("DELETE FROM avr_call_shield_events WHERE created_at<?").bind(retention).run();
+  await env.DB.prepare("DELETE FROM avr_call_shield_state WHERE last_seen_at<?").bind(retention).run();
+  if(!/^\+[1-9]\d{6,14}$/.test(caller)||!/^\+[1-9]\d{6,14}$/.test(dialed)||!id)return {blocked:false,reason:"caller_id_unavailable"};
   // HMAC is scoped to the client and dialed business line; raw caller IDs are never stored in Call Shield tables.
   const callerHash=await callShieldCallerHash(env.RETELL_API_KEY,String(customerId)+"|"+dialed+"|"+caller);
   const prior=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
@@ -797,10 +802,6 @@ async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,call
    .bind(customerId,dialed,callerHash,nowIso,nowIso,windowStart,windowStart,nowIso,windowStart,blockedUntil).first();
   const blocked=!!(state&&Number(state.attempt_count)>=9&&state.blocked_until&&state.blocked_until>nowIso);
   await env.DB.prepare("UPDATE avr_call_shield_events SET decision=?,reason=? WHERE call_id=?").bind(blocked?"rejected":"allowed",blocked?"repeat_caller_burst_limit":"within_screening_limits",id).run();
-  // Keep only a short operational history; caller identities are stored as keyed HMACs, never raw caller numbers.
-  const retention=new Date(now.getTime()-30*24*60*60*1000).toISOString();
-  await env.DB.prepare("DELETE FROM avr_call_shield_events WHERE created_at<?").bind(retention).run();
-  await env.DB.prepare("DELETE FROM avr_call_shield_state WHERE last_seen_at<?").bind(retention).run();
   return {blocked,reason:blocked?"repeat_caller_burst_limit":"within_screening_limits",attempts:Number(state?.attempt_count||0),cooldownUntil:blocked?state.blocked_until:null};
  }catch(error){
   // Screening failure must not disable existing billing reservations or reject every legitimate caller.

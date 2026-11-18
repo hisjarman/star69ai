@@ -1,3 +1,15 @@
+## Client-configurable Call Shield — 2026-11-18
+
+- Working branch: `feature/client-configurable-call-shield-2026-11-18`, based on current `main` after reviewing merged PR #273 and the Call Shield webhook, D1 migration, Mission Control intelligence panel and admin client-workspace controls.
+- Added migration `cloudflare/migrations/20261118_call_shield_client_settings.sql` for tenant-scoped protection preferences. Default policy preserves the existing 8 attempts / 10-minute window / 15-minute cooldown; default maximum AI call duration is 20 minutes.
+- Client Mission Control gains a dedicated Call Shield page with Standard, Strict and Business Friendly presets plus editable limits: 3–20 attempts, 1–60 minute window, 1–120 minute cooldown, and 1–30 minute maximum AI call duration. It displays 30-day screening/rejection totals and recent privacy-preserving event history (no raw caller numbers).
+- The authenticated client API is tenant-scoped and validates every value server-side. Administrator-only GET/PUT routes allow the Crew to inspect and override the same bounded settings in the existing client supervision modal. Admin changes and client changes are recorded with an actor label in the settings row.
+- The inbound Retell webhook applies each customer's attempt/window/cooldown values before connecting the agent. Both subscription and Flex call overrides cap `max_call_duration_ms` at the configured customer duration or the lower amount permitted by existing minute/balance reservations. Existing 75% overage hard-stop and Minute Vault/plan checks are unchanged.
+- Global hard bounds remain server-controlled. Client settings cannot disable screening, bypass account authorization, raise the 75% overage ceiling, or automatically create a permanent denylist. Private/invalid caller IDs remain unblocked by the repeat-caller rule; permanent blocks require Crew review. AI caller-risk labels remain advisory only.
+- Fallback behavior: if the new settings table is unavailable, the Worker uses the safe default 8/10/15 and 20-minute duration settings; the existing repeat-caller screening retains its fail-open behavior if its own processing fails.
+- Source changes only. No production D1 migration applied, Cloudflare Worker deployed, Retell number configuration changed, or GitHub Pages deployment performed. Before rollout, apply both Call Shield migrations in order (the original `20261118_call_shield_protection.sql`, then this settings migration), validate SQL on a non-production copy, run Worker/client/admin syntax checks, verify tenant isolation and preset/custom values, exercise repeat attempts and cooldown expiry, test max-duration caps against both plan and Flex reservation limits, and complete authenticated browser QA at mobile/tablet/desktop widths.
+- Do not merge or deploy until source review and founder approval.
+
 ## Call Shield and caller-risk intelligence — 2026-11-18
 
 - Working branch: `feature/ai-call-shield-intelligence-2026-11-18`, based on main after PR #272 merged at `35a911749303b376f1a59299f25b1f8499fe09d5`.

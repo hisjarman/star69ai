@@ -48,7 +48,7 @@
             <button class="client-nav-item" type="button" data-page="receptionist"><span class="nav-icon">✧</span><span>Receptionist</span></button>
             <button class="client-nav-item" type="button" data-page="billing"><span class="nav-icon">$</span><span>Plan &amp; billing</span></button>
             <button class="client-nav-item" type="button" data-page="addons"><span class="nav-icon">✚</span><span>Upgrades</span></button>
-            <button class="client-nav-item" type="button" data-page="intelligence"><span class="nav-icon">✧</span><span>Receptionist Intelligence</span></button><button class="client-nav-item" type="button" data-page="calls"><span class="nav-icon">◖</span><span>Call activity</span></button>
+            <button class="client-nav-item" type="button" data-page="intelligence"><span class="nav-icon">✧</span><span>Receptionist Intelligence</span></button><button class="client-nav-item" type="button" data-page="call-shield"><span class="nav-icon">◈</span><span>Call Shield</span></button><button class="client-nav-item" type="button" data-page="calls"><span class="nav-icon">◖</span><span>Call activity</span></button>
             <button class="client-nav-item" type="button" data-page="support"><span class="nav-icon">?</span><span>Crew Support</span></button>
             <button class="client-nav-item" type="button" data-page="knowledge"><span class="nav-icon">▤</span><span>Knowledge center</span></button>
           </nav>
@@ -230,6 +230,22 @@
  <section class="panel"><div class="panel-head"><div><div class="eyebrow">CONVERSATION DIAGNOSTICS</div><h3>What callers are telling us</h3></div><span class="pill">Evidence-based</span></div><div id="intelligence-list" class="intelligence-list"><div class="empty">Your first completed analyzed calls will appear here.</div></div></section>
  <p class="small intelligence-footnote">Lead-capture labels are AI-assisted assessments of call content, not verified sales or bookings. Actual conversion measurement requires your CRM or confirmed booking outcomes.</p>
  </section>
+<section class="client-page" data-page-panel="call-shield">
+ <section class="panel">
+  <div class="panel-head"><div><div class="eyebrow">YOUR CALL PROTECTION</div><h2>Call Shield settings</h2><p class="small">Choose how your receptionist handles repeat callers. Star69AI's security and usage limits always remain active.</p></div><span class="pill" id="call-shield-status">Loading protection</span></div>
+  <div class="grid"><article class="card metric"><small>CALLS SCREENED · 30 DAYS</small><strong id="shield-screened">—</strong></article><article class="card metric"><small>REPEAT CALLS REJECTED · 30 DAYS</small><strong id="shield-rejected">—</strong></article></div>
+  <form id="call-shield-form" class="form-grid">
+   <div class="field full"><label for="shield-mode">Protection mode</label><select id="shield-mode"><option value="standard">Standard — balanced protection</option><option value="strict">Strict — stronger repeat-caller controls</option><option value="business_friendly">Business Friendly — more tolerance for repeat callers</option></select><span class="small">Selecting a mode fills recommended starting values. You can then customize each setting.</span></div>
+   <div class="field"><label for="shield-attempts">Maximum attempts from one caller</label><input id="shield-attempts" type="number" min="3" max="20" step="1" required><span class="small">Allowed range: 3–20 attempts.</span></div>
+   <div class="field"><label for="shield-window">Attempt counting window (minutes)</label><input id="shield-window" type="number" min="1" max="60" step="1" required><span class="small">Allowed range: 1–60 minutes.</span></div>
+   <div class="field"><label for="shield-cooldown">Cooldown after limit (minutes)</label><input id="shield-cooldown" type="number" min="1" max="120" step="1" required><span class="small">Allowed range: 1–120 minutes.</span></div>
+   <div class="field"><label for="shield-duration">Maximum AI call duration (minutes)</label><input id="shield-duration" type="number" min="1" max="30" step="1" required><span class="small">Allowed range: 1–30 minutes. The actual limit may be shorter when your plan or available balance requires it.</span></div>
+   <div class="field full"><p class="small">Temporary cooldowns are automatic. Permanent caller blocking is not automatic: request a permanent block through Crew Support so our team can review it. Private or unavailable caller IDs are not automatically blocked. Carrier charges may still apply to rejected calls.</p></div>
+   <div class="field full row"><button class="btn" type="submit">Save Call Shield settings</button><span class="small" id="call-shield-save-status" role="status"></span></div>
+  </form>
+ </section>
+ <section class="panel"><div class="panel-head"><div><div class="eyebrow">RECENT PROTECTION ACTIVITY</div><h2>Screening history</h2></div><span class="pill">Last 30 days</span></div><div id="call-shield-events" class="stack"><div class="empty">Loading protection events…</div></div></section>
+</section>
 <section class="client-page" data-page-panel="calls">
       <section class="panel call-email-settings">
         <div class="panel-head"><div><div class="eyebrow">BUSINESS NOTIFICATIONS</div><h2>Email call summaries automatically</h2><p class="small">Send a summary to your business mailbox or several team members after each call is analyzed.</p></div><span class="pill">Per-business settings</span></div>

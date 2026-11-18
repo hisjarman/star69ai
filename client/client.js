@@ -13,7 +13,7 @@
  function safeHttps(v){try{const u=new URL(v);return u.protocol==="https:"?u.href:""}catch{return ""}}
  function money(v){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v)}
  function showPage(page){
-  const labels={overview:["Mission Control","A clear view of your receptionist and business activity."],intelligence:["Receptionist Intelligence","Call analysis, missed opportunities and receptionist improvements."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Crew Support","Open a channel with our Crew, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
+  const labels={overview:["Mission Control","A clear view of your receptionist and business activity."],intelligence:["Receptionist Intelligence","Call analysis, missed opportunities and receptionist improvements."],"call-shield":["Call Shield","Configure repeat-caller protection and maximum call duration."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Crew Support","Open a channel with our Crew, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   document.querySelectorAll(".cockpit-top-tab").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
@@ -302,6 +302,16 @@ function renderAgentRequests(items){
   set("#performance-data-note",count?"Based on all recorded calls in the current UTC calendar month; daily bars show the last 14 days. Bookings, qualified leads and revenue are not yet captured as structured outcomes.":"No calls are recorded for the current month yet. Once calls arrive, this panel will show verified activity and provider-analyzed sentiment.");
  }
 
+ async function loadCallShield(){
+  const status=$("#call-shield-status"),events=$("#call-shield-events");if(!events)return;
+  try{
+   const d=await api("/api/client/call-shield"),s=d.settings||{};
+   $("#shield-mode").value=s.mode||"standard";$("#shield-attempts").value=s.maxAttempts||8;$("#shield-window").value=s.windowMinutes||10;$("#shield-cooldown").value=s.cooldownMinutes||15;$("#shield-duration").value=s.maxCallDurationMinutes||20;
+   $("#shield-screened").textContent=Number(d.totals?.screened||0).toLocaleString();$("#shield-rejected").textContent=Number(d.totals?.rejected||0).toLocaleString();status.textContent="Protection active";
+   const rows=d.events||[];
+   events.innerHTML=rows.length?rows.map(e=>'<div class="resource"><b>'+safe(e.decision==="rejected"?"Repeat attempt rejected":"Call screened")+'</b><span class="small">'+safe(String(e.reason||"").replaceAll("_"," "))+' · '+safe(fmtDate(e.created_at))+'</span></div>').join(""):'<div class="empty">No screening events recorded in the last 30 days.</div>';
+  }catch(e){status.textContent="Protection settings unavailable";events.innerHTML='<div class="empty">'+safe(e.message||"Could not load Call Shield settings.")+'</div>'}
+ }
  async function loadIntelligence(){
   const status=$("#intelligence-status"),root=$("#intelligence-list");if(!root)return;
   try{
@@ -321,7 +331,7 @@ function renderAgentRequests(items){
    }).join(""):'<div class="empty">No intelligence reports yet. The system analyzes each call when Retell marks it call_analyzed.</div>';
   }catch(e){status.textContent="Could not load intelligence: "+e.message;root.innerHTML='<div class="empty">Intelligence data is temporarily unavailable.</div>'}
  }
- async function load(){
+ async function load(){await loadCallShield();
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
    await captureSetupReturn();await captureWalletTopupReturn();const d=await api("/api/client/dashboard");customer=d.customer;
@@ -383,6 +393,12 @@ function renderAgentRequests(items){
  }
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
  $("#refresh-intelligence")?.addEventListener("click",loadIntelligence);
+ $("#call-shield-form")?.addEventListener("submit",async e=>{
+  e.preventDefault();const b=e.currentTarget.querySelector('button[type="submit"]'),status=$("#call-shield-save-status");b.disabled=true;status.textContent="Saving…";
+  try{const d=await api("/api/client/call-shield",{method:"PUT",body:JSON.stringify({mode:$("#shield-mode").value,maxAttempts:Number($("#shield-attempts").value),windowMinutes:Number($("#shield-window").value),cooldownMinutes:Number($("#shield-cooldown").value),maxCallDurationMinutes:Number($("#shield-duration").value)})});status.textContent="Saved. New inbound calls will use these settings.";$("#call-shield-status").textContent="Protection active";await loadCallShield()}catch(err){status.textContent=err.message||"Could not save settings."}finally{b.disabled=false}
+ });
+ $("#shield-mode")?.addEventListener("change",()=>{const p={standard:[8,10,15],strict:[5,10,30],business_friendly:[12,15,10]}[$("#shield-mode").value];if(p){$("#shield-attempts").value=p[0];$("#shield-window").value=p[1];$("#shield-cooldown").value=p[2]}});
+
  const cockpitMenu=$("#cockpit-menu-toggle"),cockpitBackdrop=$("#cockpit-drawer-backdrop");
  const setCockpitDrawer=open=>{
   const workspace=$("#workspace");if(!workspace)return;

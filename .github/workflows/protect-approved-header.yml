@@ -31,8 +31,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected_js="7eb9798412d112f3b4a900d71c41e09dd719a7e3"
-          expected_css="287b90d5eba3aadc83125e5939fc423864025cfe"
+          expected_js="6664131e13969a38938c84657db4ec4b9a4df636"
+          expected_css="34a920b0f858198d33efc8a2174f21008cd2abc9"
           actual_js="$(git rev-parse HEAD:site-header.js)"
           actual_css="$(git rev-parse HEAD:site-header.css)"
 
@@ -48,4 +48,4 @@ jobs:
             exit 1
           fi
 
-          echo "Approved Star69AI homepage hero, compact interior Mission Control menu, navigation and footer styles are unchanged."
+          echo "Approved Star69AI cinematic header, grouped navigation menu and footer styles are unchanged."

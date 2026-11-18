@@ -430,6 +430,24 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 })();
 </script>
 
+<script>
+(() => {
+  const details = document.getElementById("home-more-details");
+  if (!details) return;
+  const revealLinkedSection = (hash) => {
+    if (!hash || hash === "#") return;
+    const id = decodeURIComponent(hash.slice(1));
+    const target = document.getElementById(id);
+    if (target && details.contains(target)) details.open = true;
+  };
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    if (link) revealLinkedSection(link.getAttribute("href"));
+  });
+  window.addEventListener("hashchange", () => revealLinkedSection(window.location.hash));
+  revealLinkedSection(window.location.hash);
+})();
+</script>
 <script defer src="./app.js"></script><script defer src="./story-series.js"></script><script defer src="./experience.js"></script>
 <script defer src="/call-rescue-simulator.js?v=20261118-1"></script>
 <script defer src="/secret-mission.js"></script>

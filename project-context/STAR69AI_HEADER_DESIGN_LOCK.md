@@ -47,3 +47,11 @@ This is the permanent public-site header/navigation baseline. The owner explicit
 - Footer refinements retained: PR #243
 
 This lock protects the approved source implementation. It cannot guarantee that third-party browser extensions, cached assets, future browser behavior, or unrelated page-specific CSS will never affect how a visitor renders the page; visual regression checks remain useful after substantial site-wide styling work.
+
+
+## Visitor arrival initialization reliability fix — 2026-11-18
+
+- Narrow follow-up correction to the already owner-approved visitor-arrival behavior: attach the visitor spaceship only after the shared header markup has been inserted, because the banner container is created by that markup.
+- Wait for the existing spaceship image to load before starting the arrival animation; failed image loads remove the decorative element and do not mark the session as having seen it.
+- No visual redesign, navigation changes, route changes, or changes to the approved banner artwork, reduced-motion fallback, pointer behavior or one-arrival-per-session intent.
+- Updated the protected source fingerprints in the same reviewed change. This does not authorize broader header or navigation modifications.

@@ -919,6 +919,70 @@ async function retellWebhook(req,env){
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('retell',?)").bind(eventKey).run();
  return {received:true,event,call_id:id,customer_matched:!!cid};
 }
+
+const HUBSPOT_REDIRECT_URI="https://avr-platform-api.hisjarman.workers.dev/oauth/hubspot/callback";
+const HUBSPOT_SCOPES=["oauth","crm.objects.contacts.read"];
+async function integrationKey(env){
+ if(!env.INTEGRATION_ENCRYPTION_KEY)throw Error("integration_encryption_key_not_configured");
+ const raw=b64u(String(env.INTEGRATION_ENCRYPTION_KEY));
+ if(raw.length!==32)throw Error("integration_encryption_key_invalid");
+ return crypto.subtle.importKey("raw",raw,{name:"AES-GCM"},false,["encrypt","decrypt"]);
+}
+async function encryptIntegrationSecret(env,value){
+ const nonce=crypto.getRandomValues(new Uint8Array(12)),key=await integrationKey(env);
+ const cipher=await crypto.subtle.encrypt({name:"AES-GCM",iv:nonce},key,new TextEncoder().encode(String(value)));
+ const bytes=new Uint8Array(nonce.length+cipher.byteLength);bytes.set(nonce);bytes.set(new Uint8Array(cipher),nonce.length);
+ return btoa(String.fromCharCode(...bytes)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+async function decryptIntegrationSecret(env,value){
+ const bytes=b64u(String(value||""));if(bytes.length<29)throw Error("integration_secret_ciphertext_invalid");
+ const key=await integrationKey(env),nonce=bytes.slice(0,12),cipher=bytes.slice(12);
+ const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:nonce},key,cipher);
+ return new TextDecoder().decode(plain);
+}
+function hubspotCredentials(env){
+ if(!env.HUBSPOT_CLIENT_ID||!env.HUBSPOT_CLIENT_SECRET)throw Error("hubspot_app_not_configured");
+ return {clientId:String(env.HUBSPOT_CLIENT_ID),clientSecret:String(env.HUBSPOT_CLIENT_SECRET)};
+}
+async function hubspotTokenRequest(env,fields){
+ const credentials=hubspotCredentials(env),form=new URLSearchParams({...fields,client_id:credentials.clientId,client_secret:credentials.clientSecret});
+ const response=await fetch("https://api.hubapi.com/oauth/2026-03/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",Accept:"application/json"},body:form.toString()});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!data.access_token||!data.refresh_token)throw Error("hubspot_authorization_exchange_failed");
+ return data;
+}
+async function hubspotConnection(env,customerId){
+ return env.DB.prepare("SELECT * FROM avr_provider_connections WHERE customer_id=? AND provider='hubspot' LIMIT 1").bind(customerId).first();
+}
+async function hubspotStatus(env,customerId){
+ const row=await hubspotConnection(env,customerId);
+ return {provider:"hubspot",configured:!!(env.HUBSPOT_CLIENT_ID&&env.HUBSPOT_CLIENT_SECRET&&env.INTEGRATION_ENCRYPTION_KEY),status:row?.status||"not_connected",accountId:row?.provider_account_id||null,accountName:row?.provider_account_name||null,scopes:row?JSON.parse(row.scopes_json||"[]"):[],connectedAt:row?.connected_at||null,lastUsedAt:row?.last_used_at||null};
+}
+async function hubspotCallback(req,env){
+ const url=new URL(req.url),state=String(url.searchParams.get("state")||""),code=String(url.searchParams.get("code")||"");
+ const finish=status=>Response.redirect("https://star69ai.com/client/?hubspot="+encodeURIComponent(status)+"#integrations",303);
+ if(url.searchParams.has("error"))return finish("authorization_denied");
+ if(!state||state.length>200||!code||code.length>2000)return finish("authorization_failed");
+ const hash=await sha256Hex(state),record=await env.DB.prepare("SELECT id,customer_id,redirect_uri,expires_at,used_at FROM avr_oauth_states WHERE state_hash=? AND provider='hubspot' LIMIT 1").bind(hash).first();
+ if(!record||record.used_at||Date.parse(record.expires_at)<=Date.now())return finish("authorization_expired");
+ const consumed=await env.DB.prepare("UPDATE avr_oauth_states SET used_at=? WHERE id=? AND used_at IS NULL AND expires_at>?").bind(new Date().toISOString(),record.id,new Date().toISOString()).run();
+ if(Number(consumed.meta?.changes||0)!==1||record.redirect_uri!==HUBSPOT_REDIRECT_URI)return finish("authorization_expired");
+ try{
+  const token=await hubspotTokenRequest(env,{grant_type:"authorization_code",code,redirect_uri:HUBSPOT_REDIRECT_URI});
+  const scopes=(Array.isArray(token.scopes)?token.scopes:[]).filter(x=>HUBSPOT_SCOPES.includes(x));
+  if(!scopes.includes("crm.objects.contacts.read")||!token.hub_id)throw Error("hubspot_required_scope_or_account_missing");
+  const access=await encryptIntegrationSecret(env,token.access_token),refresh=await encryptIntegrationSecret(env,token.refresh_token),now=new Date().toISOString();
+  await env.DB.prepare("INSERT INTO avr_provider_connections(id,customer_id,provider,provider_account_id,provider_account_name,scopes_json,access_token_ciphertext,refresh_token_ciphertext,access_token_expires_at,status,connected_at,updated_at) VALUES(?,?, 'hubspot',?,?,?,?,?,?, 'connected',?,?) ON CONFLICT(customer_id,provider) DO UPDATE SET provider_account_id=excluded.provider_account_id,provider_account_name=excluded.provider_account_name,scopes_json=excluded.scopes_json,access_token_ciphertext=excluded.access_token_ciphertext,refresh_token_ciphertext=excluded.refresh_token_ciphertext,access_token_expires_at=excluded.access_token_expires_at,status='connected',connected_at=excluded.connected_at,updated_at=excluded.updated_at").bind(crypto.randomUUID(),record.customer_id,String(token.hub_id),"HubSpot account "+String(token.hub_id),JSON.stringify(scopes),access,refresh,Date.now()+Math.max(60,Number(token.expires_in||1800))*1000,now,now).run();
+  return finish("connected");
+ }catch(error){console.error("hubspot_oauth_callback_failed",String(error?.message||"oauth_failed"));return finish("authorization_failed")}
+}
+async function revokeHubspotConnection(env,row){
+ const refresh=await decryptIntegrationSecret(env,row.refresh_token_ciphertext),credentials=hubspotCredentials(env);
+ const form=new URLSearchParams({client_id:credentials.clientId,client_secret:credentials.clientSecret,token:refresh});
+ const response=await fetch("https://api.hubapi.com/oauth/2026-03/token/revoke",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:form.toString()});
+ if(!response.ok)throw Error("hubspot_revocation_failed");
+}
+
 async function route(req,env){
  const url=new URL(req.url),path=url.pathname,origin=req.headers.get("Origin");
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":origin&&origins(env).includes(origin)?origin:"null","Access-Control-Allow-Methods":"GET, POST, PUT, PATCH, DELETE, OPTIONS","Access-Control-Allow-Headers":"Authorization, Content-Type, Accept, Stripe-Signature, X-Retell-Signature","Access-Control-Max-Age":"86400","Vary":"Origin"}});

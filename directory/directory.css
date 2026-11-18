@@ -1,8 +1,8 @@
-:root{--dir-bg:#090f17;--dir-panel:#101a26;--dir-line:#263746;--dir-ink:#f5f8fa;--dir-muted:#a9bac8;--dir-green:#14d251;--dir-blue:#21b7ff;--dir-purple:#e156ff}
+:root{--dir-bg:#090f17;--dir-panel:#101a26;--dir-line:#263746;--dir-ink:#f5f8fa;--dir-muted:#a9bac8;--dir-green:#34FD78;--dir-blue:#43B4FE;--dir-purple:#F461FE}
 .directory-page{background:var(--dir-bg);color:var(--dir-ink);min-height:100vh}
 .directory-hero{padding:76px 24px 44px;background:radial-gradient(ellipse at 82% 12%,rgba(33,183,255,.18),transparent 38%),radial-gradient(ellipse at 15% 20%,rgba(225,86,255,.14),transparent 38%),#090f17}
 .directory-shell{width:min(1200px,calc(100% - 40px));margin:0 auto}
-.directory-kicker{font:600 12px 'DM Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--dir-green)}
+.directory-kicker{font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--dir-green)}
 .directory-hero h1{font:800 clamp(36px,6vw,66px)/1.02 Manrope,sans-serif;letter-spacing:-.045em;max-width:900px;margin:16px 0}
 .directory-hero p{max-width:800px;color:#c6d3dc;font-size:18px;line-height:1.7}
 .directory-stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
@@ -11,7 +11,7 @@
 .directory-main{padding:34px 0 84px}
 .directory-intro{max-width:900px;color:#c6d3dc;line-height:1.7;margin-bottom:24px}
 .directory-controls{display:grid;grid-template-columns:minmax(220px,2fr) repeat(3,minmax(150px,1fr));gap:12px;padding:16px;background:#101a26;border:1px solid var(--dir-line);border-radius:16px;position:sticky;top:84px;z-index:5}
-.directory-controls input,.directory-controls select{width:100%;min-height:48px;background:#0b131d;color:#fff;border:1px solid #3a4c5d;border-radius:9px;padding:0 13px;font:500 14px 'DM Sans',sans-serif}
+.directory-controls input,.directory-controls select{width:100%;min-height:48px;background:#0b131d;color:#fff;border:1px solid #3a4c5d;border-radius:9px;padding:0 13px;font:500 14px 'Manrope',sans-serif}
 .directory-controls input::placeholder{color:#9aabba}
 .directory-results-line{display:flex;justify-content:space-between;gap:16px;align-items:center;margin:22px 0 14px;color:var(--dir-muted);font-size:13px}
 .directory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}

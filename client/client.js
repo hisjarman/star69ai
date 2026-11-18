@@ -307,7 +307,7 @@ function renderAgentRequests(items){
   try{
    const d=await api("/api/client/intelligence"),t=d.totals||{};
    $("#intel-total").textContent=Number(t.calls||0).toLocaleString();$("#intel-missed").textContent=Number(t.missed||0).toLocaleString();$("#intel-partial").textContent=Number(t.partial||0).toLocaleString();$("#intel-recommendations").textContent=Number(t.recommendations||0).toLocaleString();
-   if(!d.configured){status.textContent="Call analysis is waiting for the OPENAI_API_KEY Worker secret. Existing call records remain available in Call Activity.";return}
+   if(!d.configured){status.textContent="Call analysis is waiting for the Cloudflare Workers AI binding. Existing call records remain available in Call Activity.";return}
    status.textContent=d.items?.length?"Analyzed "+d.items.length+" completed calls. New Retell call_analyzed events are processed automatically.":"No analyzed calls yet. Once Retell sends a completed call analysis, it will appear here.";
    const items=d.items||[];
    root.innerHTML=items.length?items.map(item=>{
@@ -405,7 +405,7 @@ function renderAgentRequests(items){
  }
  eliLauncher?.addEventListener("click",()=>setEliOpen(eliPanel?.hidden!==false));
  eliClose?.addEventListener("click",()=>setEliOpen(false));
- const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support","knowledge"].includes(initialPage)?initialPage:"overview");
+ const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support","knowledge","intelligence"].includes(initialPage)?initialPage:"overview");
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();

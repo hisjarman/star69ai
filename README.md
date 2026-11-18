@@ -106,6 +106,16 @@ Before onboarding paying customers, verify:
 
 See [project context and handoff](project-context/PROJECT_HANDOFF.md) for the latest implementation notes and open work. The approved first-month promotions, prepaid prices, unit-economics assumptions and Stripe activation checklist are documented in [Promotion & Prepaid Unit Economics](docs/PROMOTION_AND_PREPAID_UNIT_ECONOMICS.md). All new pages and substantial edits must also follow [Star69AI Design, Readability & Content Standards](docs/STAR69AI_DESIGN_CONTENT_STANDARDS.md) and the [Official Star69AI Brand Language Guide](docs/STAR69AI_BRAND_LANGUAGE_GUIDE.md). The [Industry Agent Configuration & QA Playbooks](docs/INDUSTRY_AGENT_CONFIGURATION_PLAYBOOKS.md) define the reusable client setup, safety boundaries, test suite and launch approval gates. The five public legal documents share `legal.css` for consistent, high-contrast presentation.
 
+## Star69AI knowledge and learning system
+
+The operating standards and training materials are organized for three audiences:
+
+- **Founder/operator:** [Founder Operations Playbook](docs/knowledge-base/FOUNDER_OPERATIONS_PLAYBOOK.md), [Product Truth & Claims](docs/knowledge-base/PRODUCT_TRUTH_AND_CLAIMS.md) and [QA & Release Checklist](docs/knowledge-base/QA_RELEASE_CHECKLIST.md).
+- **AI assistants and developers:** [AI Assistant Working Context](docs/knowledge-base/AI_ASSISTANT_CONTEXT.md), [Knowledge Base Index](docs/knowledge-base/README.md) and [Project Handoff](project-context/PROJECT_HANDOFF.md).
+- **Clients:** public [Client Success Guide](https://star69ai.com/learning-center/client-success.html) and the authenticated Mission Control → Knowledge Center.
+
+Use the evidence labels in the knowledge base: verified in source, configured in production, tested end to end, not verified, planned or customer-specific. Source code is not proof of deployment. Never claim a workflow is live or successful without a real test. Keep the customer agreement and approved configuration authoritative for each account.
+
 ## Intellectual property
 
 This repository contains proprietary Star69AI software and original materials. See [LICENSE](LICENSE). Third-party libraries, frameworks, services and assets remain subject to their respective terms and licenses.
@@ -117,4 +127,4 @@ This repository contains proprietary Star69AI software and original materials. S
 - Partner self-service: [Partner Center](https://star69ai.com/partner-portal/).
 - Private administration: `/partners-admin.html`.
 - First-party referral tracking and commission accounting use Cloudflare Workers/D1 and Stripe; Systeme.io is not required.
-- The partner portal and first-party referral tracking are under review in GitHub feature branches. The `feature/partner-link-discount-choice` branch adds two partner referral links (15% discount on monthly subscription payments for the first 12 months, with a challenge-code combination disclosed separately or standard/no customer discount), preserves commission attribution for both, and calculates commissions from the discounted subscription amount actually received. This branch requires its D1 migration, a `STRIPE_COUPON_PARTNER15` coupon ID, Worker deployment and Stripe test-mode validation before production use.
+- Partner applications, portal and referral/commission workflows have source-code and Worker implementations. Do not infer that a partner payment or payout workflow is production-ready from the presence of code or a portal. Verify the deployed Trust Lab Worker, D1 migrations, attribution on a provider-confirmed subscription payment, the applicable commission tier, validation hold and payout reference before marking a commission payable. Calculate commission from the actual qualifying subscription amount collected after customer discounts; exclude the separately invoiced setup fee and uncollected amounts. See the Founder Operations Playbook and Product Truth & Claims register.

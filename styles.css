@@ -440,11 +440,8 @@ html body footer.site-footer>a.site-global-footer-brand{
     display:none!important;
   }
 }
-@media (hover:hover) and (pointer:fine){
-  html,body{cursor:none!important}
-  a,button,[role="button"],input[type="submit"],input[type="button"],summary,label[for]{cursor:none!important}
-  input,textarea,[contenteditable="true"]{cursor:text!important}
-}
+/* The cursor follower hides the native pointer only after its image loads
+   and only while it can track the pointer. Native cursor remains the fallback. */
 
 
 /* Homepage cinematic cover repair. Keep the approved header files untouched;

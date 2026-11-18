@@ -1818,3 +1818,15 @@ This section supersedes the earlier activation-status notes above where they des
 - Added explicit min/max-width and box-sizing constraints to capability card grid items, plus safe wrapping and hyphenation for card tags, headings and descriptions. Mobile cards remain a single full-width column.
 - Scoped to `capabilities.css`; no copy, navigation, integrations, Worker, D1, Retell, billing, auth or customer data changed.
 - Source-level checks and browser visual QA at 360px, 768px and 1280px remain required before merge. Do not merge without the founder's explicit approval.
+
+
+## Spaceship cursor reliability and brand personality — 2026-11-18
+
+- Working branch: `fix/spaceship-cursor-and-brand-personality-2026-11-18`, based on the current `main`.
+- Reworked `assets/cursor-follower.js` so the spaceship pointer activates only after the cursor image loads; if the image fails, the native browser cursor remains available. The follower is reparented into the currently open native dialog/popover so it renders inside the browser top layer, including the Secret Mission map dialog.
+- Added pointer-exit, window-blur, tab-visibility, reduced-motion and unsupported-pointer fallbacks. Text-entry controls retain their native text cursor. The follower remains pointer-events:none and cannot intercept clicks.
+- Removed the unconditional desktop `cursor:none` rule from `styles.css`; this was the main reason the pointer could disappear when the follower was hidden, unloaded or visually trapped behind a native dialog.
+- Added a compact homepage brand note: “We love where technology is going. We care about where it takes people.” It expresses curiosity and optimism while connecting technology to human outcomes: giving owners time back, helping callers feel heard and making work lighter. The treatment is concise and responsive and sits before the optional expanded homepage content.
+- No Worker, D1, Retell, billing, authentication, customer records, forms, promotions, mission progress or reward logic changed.
+- Static source checks required: JavaScript syntax; image-load fallback; absence of global cursor hiding; overlay-host synchronization; pointer-events:none; mobile/reduced-motion behavior; homepage section placement and responsive CSS. Browser QA remains required for standard pages, the Secret Mission map/dialog, popovers, text inputs and pointer exit at desktop widths, plus touch/mobile checks.
+- Review through the PR. Do not merge to `main` without the founder's explicit approval. GitHub Pages deployment and live-site behavior remain unverified until after merge and deployment.

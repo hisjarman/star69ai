@@ -37,10 +37,13 @@ This is the permanent public-site header/navigation baseline. The owner explicit
 - The compact interior-page header, all 19 navigation destinations, grouped menu, utility strip, footer styling, keyboard behavior and existing accessibility protections remain protected and unchanged in intent.
 - This is a narrowly scoped approved presentation revision, not permission for unrelated navigation/header redesign or removal of automated protection.
 
-## Approved source baseline
+## Approved source baseline — current main after PR #285
 
-- `site-header.js` Git blob: `751b88c8ca38c52bde4ab52c97293c64c634e234`
-- `site-header.css` Git blob: `de9b5afd2fedf3a3dc931187c1d050b113f9f011`
+- `site-header.js` Git blob: `ccba8cb3db382ef1a0421addd360c11b3570865a`
+- `site-header.css` Git blob: `7ef3d5132bb79fdecedf3dacd081b1deae3408f0`
+- These are the current protected source fingerprints on `main`; the protection workflow already pins these exact values.
+- PR #284: owner-approved homepage banner and visitor-arrival presentation revision.
+- PR #285: narrow visitor-arrival initialization and responsive banner reliability corrections; preserves PR #284's approved design and existing navigation.
 - Original cinematic restoration: PR #244
 - Revised homepage-only hero and compact interior menu: owner-authorized change, 2026-11-17
 - Original approved design reference: PR #215

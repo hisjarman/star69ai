@@ -7,9 +7,9 @@
   --s69-line:rgba(126,166,207,.22);
   --s69-panel:rgba(12,27,49,.82);
   --s69-panel-raised:rgba(17,37,64,.94);
-  --s69-green:#3eff7a;
-  --s69-cyan:#00d5ff;
-  --s69-purple:#8b5cff;
+  --s69-green:#34FD78;
+  --s69-cyan:#43B4FE;
+  --s69-purple:#F461FE;
 }
 html{scroll-padding-top:100px}
 body.multi-page{background:#050b18;color:var(--s69-ink);overflow-x:hidden}

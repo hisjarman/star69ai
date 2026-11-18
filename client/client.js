@@ -254,6 +254,19 @@ function renderAgentRequests(items){
   try{const [c,r]=await Promise.all([api("/api/client/agent-configuration"),api("/api/client/agent-change-requests")]);renderAgentConfiguration(c.configuration);renderAgentRequests(r.requests||[])}
   catch(e){const root=$("#agent-configuration");if(root)root.innerHTML='<div class="empty">'+safe(e.message)+'</div>';const req=$("#agent-change-requests");if(req)req.innerHTML='<div class="empty">'+safe(e.message)+'</div>'}
  }
+
+ async function loadHubSpotConnection(){
+  const status=$("#hubspot-connection-status"),detail=$("#hubspot-connection-detail"),connect=$("#hubspot-connect"),disconnect=$("#hubspot-disconnect");
+  if(!status||!detail)return;
+  try{
+   const d=await api("/api/client/integrations/hubspot");
+   status.textContent=d.status==="connected"?"Connected":d.configured?"Not connected":"Setup pending";
+   status.dataset.state=d.status==="connected"?"active":"pending";
+   detail.textContent=d.status==="connected"?"Connected to "+(d.accountName||("HubSpot portal "+d.accountId))+". Read-only contact access is authorized. Last used: "+fmtDate(d.lastUsedAt):d.configured?"No HubSpot account is connected yet. Select Connect HubSpot to authorize your own account.":"The HubSpot connection is being prepared. Star69AI must finish the secure provider app setup before clients can authorize.";
+   connect.hidden=!d.configured||d.status==="connected";disconnect.hidden=d.status!=="connected";connect.disabled=!d.configured;
+  }catch(e){status.textContent="Status unavailable";detail.textContent=e.message;connect.hidden=true;disconnect.hidden=true}
+ }
+
  async function requestIntegration(provider,button){
   if(!provider)return;
   const original=button.textContent;button.disabled=true;button.textContent="Sending…";

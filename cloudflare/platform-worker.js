@@ -609,8 +609,8 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
 }
 
 function brandEmail(content){
-  const logo="https://star69ai-concierge.hisjarman.workers.dev/brand-logo.png";
-  return "<!doctype html><html><body style=\"margin:0;padding:24px 12px;background:#f3f7fa;font-family:Arial,Helvetica,sans-serif;color:#20343b\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e2eaf0;border-radius:12px\"><tr><td style=\"padding:24px\">"+content+"</td></tr><tr><td align=\"center\" style=\"padding:18px 24px 22px;border-top:1px solid #e8eef3;text-align:center\"><a href=\"https://star69ai.com/\" style=\"text-decoration:none\"><img src=\""+logo+"\" width=\"180\" height=\"42\" alt=\"Star69AI — Communications, Evolved.\" border=\"0\" style=\"display:block;width:180px;height:42px;max-width:100%;margin:0 auto 8px;border:0\"></a><span style=\"font-size:12px;line-height:1.5;color:#71808a\">Star69AI · <a href=\"https://star69ai.com/\" style=\"color:#1689a8;text-decoration:none\">star69ai.com</a></span></td></tr></table></body></html>";
+  const logo="https://star69ai.com/assets/main_logo.webp";
+  return "<!doctype html><html><body style=\"margin:0;padding:28px 12px;background:#07111f;font-family:Arial,Helvetica,sans-serif;color:#20343b\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\" style=\"max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #20384c;border-radius:14px;overflow:hidden\"><tr><td align=\"center\" style=\"padding:22px 24px 18px;background:#0b1727;border-bottom:2px solid #34FD78\"><a href=\"https://star69ai.com/\" style=\"text-decoration:none\"><img src=\""+logo+"\" width=\"190\" alt=\"Star69AI — Communications, Evolved.\" border=\"0\" style=\"display:block;width:190px;max-width:100%;height:auto;margin:0 auto;border:0\"></a></td></tr><tr><td style=\"padding:30px 28px;background:#ffffff;color:#20343b\">"+content+"</td></tr><tr><td align=\"center\" style=\"padding:20px 24px 22px;background:#0b1727;border-top:1px solid #20384c;text-align:center\"><p style=\"margin:0 0 5px;color:#ffffff;font-size:14px;line-height:1.5;font-weight:700\">Solomon Jarman</p><p style=\"margin:0 0 10px;color:#b7c5d6;font-size:12px;line-height:1.5\">Founder &amp; Operator · Star69AI</p><p style=\"margin:0;color:#b7c5d6;font-size:12px;line-height:1.6\">Communications, Evolved. · <a href=\"https://star69ai.com/\" style=\"color:#43B4FE;text-decoration:none\">star69ai.com</a> · <a href=\"mailto:support@star69ai.com\" style=\"color:#43B4FE;text-decoration:none\">support@star69ai.com</a></p></td></tr></table></body></html>";
 }
 
 
@@ -649,16 +649,22 @@ async function sendResendEmail(env,{payload,idempotencyKey,eventName="resend_ema
  return {ok:false,error,status,providerCode,referenceId};
 }
 
-async function sendDemoRequestAcknowledgement(env,{id,email,business,discoveryComplete}){
+async function sendDemoRequestAcknowledgement(env,{id,email,business,contactName,discoveryComplete}){
  try{
   if(!env.RESEND_API_KEY||!env.RESEND_FROM_EMAIL)return false;
   const esc=v=>String(v??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
-  const subject=discoveryComplete?"We received your Star69AI business discovery brief":"We received your Star69AI demo request";
+  const safeContact=String(contactName||"there").trim().slice(0,120);
+  const subject=discoveryComplete?"We received your business discovery brief | Star69AI":"We received your Star69AI demo request";
   const message=discoveryComplete
-   ?"Your business discovery brief has been received. Our Crew will review the information and prepare the next steps for a customized demonstration."
-   :"Your demo request has been received. You can complete the full business discovery form at https://star69ai.com/get-started.html so we can tailor the demonstration to your business.";
-  const text=["Thank you for contacting Star69AI.","Business: "+business,"",message,"","Creating a demo does not assign a production phone number, activate call routing, or start a paid subscription. Our Crew will contact you about the next step.","","Star69AI — Communications, Evolved.","https://star69ai.com/"].join("\n");
-  const html=brandEmail("<div style=\"font-family:Arial,sans-serif;color:#20343b\"><h2>"+(discoveryComplete?"We received your business brief":"We received your demo request")+"</h2><p>Hello,</p><p>"+esc(message)+"</p><p><b>Business:</b> "+esc(business)+"</p>"+(discoveryComplete?"":"<p><a href=\"https://star69ai.com/get-started.html\">Complete the full business discovery form</a> to help us tailor your demo.</p>")+"<p>Creating a demo does not assign a production phone number, activate call routing, or start a paid subscription. Our Crew will contact you about the next step.</p><p>Star69AI — Communications, Evolved.</p></div>");
+   ?"Your business discovery brief has been received. Our Crew will review your information and prepare a demonstration tailored to your business and call-handling needs."
+   :"Your demo request has been received. You can complete the full business discovery form so we can tailor the demonstration to your business.";
+  const nextSteps=discoveryComplete
+   ?"Our Crew will review your brief, prepare your customized demonstration, and contact you to discuss the next step."
+   :"Complete the full discovery brief to help our Crew prepare a more relevant demonstration.";
+  const important="Requesting a demonstration does not assign a production phone number, activate call routing, or start a paid subscription. Nothing goes live without your approval.";
+  const discoveryUrl="https://star69ai.com/get-started.html";
+  const text=["Hello "+safeContact+",","",message,"","Business: "+business,"","WHAT HAPPENS NEXT",nextSteps,...(discoveryComplete?[]:["Complete your discovery brief: "+discoveryUrl]),"","IMPORTANT",important,"","Best regards,","Solomon Jarman","Founder & Operator","Star69AI — Communications, Evolved.","https://star69ai.com/","support@star69ai.com"].join("\n");
+  const html=brandEmail("<div style=\"font-family:Arial,Helvetica,sans-serif;color:#20343b;font-size:15px;line-height:1.7\"><h2 style=\"margin:0 0 18px;color:#142536;font-size:23px;line-height:1.25\">"+(discoveryComplete?"We’ve received your business discovery brief":"We’ve received your demo request")+"</h2><p>Hello "+esc(safeContact)+",</p><p>"+esc(message)+"</p><p style=\"margin:22px 0 8px;color:#142536;font-weight:700\">What happens next</p><p>"+esc(nextSteps)+"</p>"+(discoveryComplete?"":"<p><a href=\""+discoveryUrl+"\" style=\"display:inline-block;padding:11px 17px;border-radius:7px;background:#34FD78;color:#07111f;text-decoration:none;font-weight:700\">Complete your discovery brief</a></p>")+"<p style=\"margin:24px 0 8px;padding:14px 16px;border-left:3px solid #34FD78;background:#f2f7f7\"><strong>Important:</strong> "+esc(important)+"</p><p style=\"margin:20px 0 0;color:#52616b;font-size:13px\">If you have questions, contact <a href=\"mailto:support@star69ai.com\" style=\"color:#087d9b\">support@star69ai.com</a>.</p></div>");
   const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-demo-ack/"+id+"/"+(discoveryComplete?"discovery":"quick")},body:JSON.stringify({from:resendFrom(env),to:[email],subject,html,text})});
   if(!response.ok){const result=await response.json().catch(()=>({}));console.error("demo_request_acknowledgement_failed",response.status,result);return false}
   return true;
@@ -934,7 +940,7 @@ async function route(req,env){
     id=crypto.randomUUID();
     await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,'new',?,?)").bind(id,contact,email,phone,business,industry,details,leadSource,discoveryJson,discoveryComplete?1:0,now,now).run();
    }
-   const notificationSent=await sendDemoRequestAcknowledgement(env,{id,email,business,discoveryComplete});
+   const notificationSent=await sendDemoRequestAcknowledgement(env,{id,email,business,contactName:contact,discoveryComplete});
    return json({accepted:true,id,discoveryComplete,notificationSent,message:discoveryComplete?"Your complete business discovery brief has been received.":"Your demo request has been received."},201,origin,env);
   }
   if(path==="/api/me"&&req.method==="GET"){const u=await clerkUser(req,env);return json({user:u},200,origin,env)}

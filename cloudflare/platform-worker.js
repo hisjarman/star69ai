@@ -801,9 +801,9 @@ async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,call
    const duplicate=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
    return {blocked:duplicate?.decision==="rejected",duplicate:true,reason:duplicate?.reason||"duplicate_event"};
   }
-  const state=await env.DB.prepare("INSERT INTO avr_call_shield_state(customer_id,dialed_number,caller_hash,window_started_at,attempt_count,blocked_until,last_seen_at) VALUES(?,?,?, ?,1,NULL,?) ON CONFLICT(customer_id,dialed_number,caller_hash) DO UPDATE SET attempt_count=CASE WHEN avr_call_shield_state.window_started_at<=? THEN 1 ELSE avr_call_shield_state.attempt_count+1 END,window_started_at=CASE WHEN avr_call_shield_state.window_started_at<=? THEN excluded.window_started_at ELSE avr_call_shield_state.window_started_at END,blocked_until=CASE WHEN avr_call_shield_state.blocked_until>? THEN avr_call_shield_state.blocked_until WHEN avr_call_shield_state.window_started_at<=? THEN NULL WHEN avr_call_shield_state.attempt_count+1>=9 THEN ? ELSE NULL END,last_seen_at=excluded.last_seen_at RETURNING attempt_count,blocked_until")
-   .bind(customerId,dialed,callerHash,nowIso,nowIso,windowStart,windowStart,nowIso,windowStart,blockedUntil).first();
-  const blocked=!!(state&&Number(state.attempt_count)>=9&&state.blocked_until&&state.blocked_until>nowIso);
+  const state=await env.DB.prepare("INSERT INTO avr_call_shield_state(customer_id,dialed_number,caller_hash,window_started_at,attempt_count,blocked_until,last_seen_at) VALUES(?,?,?, ?,1,NULL,?) ON CONFLICT(customer_id,dialed_number,caller_hash) DO UPDATE SET attempt_count=CASE WHEN avr_call_shield_state.window_started_at<=? THEN 1 ELSE avr_call_shield_state.attempt_count+1 END,window_started_at=CASE WHEN avr_call_shield_state.window_started_at<=? THEN excluded.window_started_at ELSE avr_call_shield_state.window_started_at END,blocked_until=CASE WHEN avr_call_shield_state.blocked_until>? THEN avr_call_shield_state.blocked_until WHEN avr_call_shield_state.window_started_at<=? THEN NULL WHEN avr_call_shield_state.attempt_count+1>=? THEN ? ELSE NULL END,last_seen_at=excluded.last_seen_at RETURNING attempt_count,blocked_until")
+   .bind(customerId,dialed,callerHash,nowIso,nowIso,windowStart,windowStart,nowIso,windowStart,settings.maxAttempts+1,blockedUntil).first();
+  const blocked=!!(state&&Number(state.attempt_count)>settings.maxAttempts&&state.blocked_until&&state.blocked_until>nowIso);
   await env.DB.prepare("UPDATE avr_call_shield_events SET decision=?,reason=? WHERE call_id=?").bind(blocked?"rejected":"allowed",blocked?"repeat_caller_burst_limit":"within_screening_limits",id).run();
   return {blocked,reason:blocked?"repeat_caller_burst_limit":"within_screening_limits",attempts:Number(state?.attempt_count||0),cooldownUntil:blocked?state.blocked_until:null};
  }catch(error){
@@ -842,7 +842,7 @@ async function retellInboundWebhook(req,env){
  if(reservedMs<60000){await sendOverageProtectionNotice(env,customer,periodKey,"blocked_75",Number(usage.billableOverageMinutes||0),cap,cap);return {call_inbound:{reject:true}}}
  const over=Number(usage.billableOverageMinutes||0);
  
- return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:reservedMs}}}};
+ return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:Math.min(reservedMs,shieldSettings.maxCallDurationMinutes*60000)}}}};
 }
 
 async function analyzeCallIntelligence(env,customerId,callId,transcript,summary){

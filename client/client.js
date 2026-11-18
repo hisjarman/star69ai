@@ -13,7 +13,7 @@
  function safeHttps(v){try{const u=new URL(v);return u.protocol==="https:"?u.href:""}catch{return ""}}
  function money(v){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v)}
  function showPage(page){
-  const labels={overview:["Mission Control","A clear view of your receptionist and business activity."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Crew Support","Open a channel with our Crew, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
+  const labels={overview:["Mission Control","A clear view of your receptionist and business activity."],intelligence:["Receptionist Intelligence","Call analysis, missed opportunities and receptionist improvements."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Crew Support","Open a channel with our Crew, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   document.querySelectorAll(".cockpit-top-tab").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
@@ -301,6 +301,23 @@ function renderAgentRequests(items){
   }
   set("#performance-data-note",count?"Based on all recorded calls in the current UTC calendar month; daily bars show the last 14 days. Bookings, qualified leads and revenue are not yet captured as structured outcomes.":"No calls are recorded for the current month yet. Once calls arrive, this panel will show verified activity and provider-analyzed sentiment.");
  }
+
+ async function loadIntelligence(){
+  const status=$("#intelligence-status"),root=$("#intelligence-list");if(!root)return;
+  try{
+   const d=await api("/api/client/intelligence"),t=d.totals||{};
+   $("#intel-total").textContent=Number(t.calls||0).toLocaleString();$("#intel-missed").textContent=Number(t.missed||0).toLocaleString();$("#intel-partial").textContent=Number(t.partial||0).toLocaleString();$("#intel-recommendations").textContent=Number(t.recommendations||0).toLocaleString();
+   if(!d.configured){status.textContent="Call analysis is waiting for the OPENAI_API_KEY Worker secret. Existing call records remain available in Call Activity.";return}
+   status.textContent=d.items?.length?"Analyzed "+d.items.length+" completed calls. New Retell call_analyzed events are processed automatically.":"No analyzed calls yet. Once Retell sends a completed call analysis, it will appear here.";
+   const items=d.items||[];
+   root.innerHTML=items.length?items.map(item=>{
+    const recs=(item.recommendations||[]).map(r=>'<li><b>'+safe(r.title)+'</b><p>'+safe(r.reason)+'</p><small>Suggested: '+safe(r.suggested_change)+'</small><span class="intel-risk risk-'+safe(r.risk_level)+'">'+safe(r.risk_level)+' risk · Crew review</span></li>').join("");
+    const friction=(item.frictionPoints||[]).map(x=>'<li>'+safe(x)+'</li>').join("");
+    const lead=String(item.leadCaptureStatus||"unclear");
+    return '<article class="intelligence-call"><div class="intelligence-call-head"><div><small>'+safe(fmtDate(item.callDate||item.analyzedAt))+'</small><h4>'+safe(item.intent||"Caller intent not identified")+'</h4></div><span class="intel-lead intel-'+safe(lead)+'">'+safe(lead.replace("-"," "))+'</span></div><p>'+safe(item.outcome||"Call outcome not determined")+'</p>'+(friction?'<div class="intel-subhead">FRICTION POINTS</div><ul>'+friction+'</ul>':"")+(recs?'<div class="intel-subhead">RECOMMENDED IMPROVEMENTS</div><ul class="intel-recommendations">'+recs+'</ul>':'<p class="small">No specific improvement was supported by this call.</p>')+'<small>AI confidence: '+Math.round(Number(item.confidence||0)*100)+'% · Review before changing live behavior</small></article>';
+   }).join(""):'<div class="empty">No intelligence reports yet. The system analyzes each call when Retell marks it call_analyzed.</div>';
+  }catch(e){status.textContent="Could not load intelligence: "+e.message;root.innerHTML='<div class="empty">Intelligence data is temporarily unavailable.</div>'}
+ }
  async function load(){
   if(loading)return;loading=true;$("#refresh-dashboard").disabled=true;
   try{
@@ -345,6 +362,7 @@ function renderAgentRequests(items){
 
    $("#number-list").innerHTML=d.numbers.length?d.numbers.map(n=>'<div class="resource"><b>'+safe(n.phone_number)+'</b><span class="small">'+safe(n.nickname||"Business line")+'</span></div>').join(""):'<div class="empty"><b>Phone number not assigned yet</b><p class="small">That is expected at this stage. Your demo can be reviewed before a business number is assigned. We will complete number assignment and live-call testing during managed launch.</p></div>';
    renderCalls(d.calls||[],customer.email||"");
+   await loadIntelligence();
    await Promise.all([loadAddons(),loadTickets(),loadCallEmailSettings(),loadAgentConfiguration(),loadFlexWallet()]);
    renderReceptionistStatus(d);
    renderAgentOptions();
@@ -361,6 +379,7 @@ function renderAgentRequests(items){
   }catch(e){note(e.message,true)}
  }
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+ $("#refresh-intelligence")?.addEventListener("click",loadIntelligence);
  const cockpitMenu=$("#cockpit-menu-toggle"),cockpitBackdrop=$("#cockpit-drawer-backdrop");
  const setCockpitDrawer=open=>{
   const workspace=$("#workspace");if(!workspace)return;

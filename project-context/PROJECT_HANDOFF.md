@@ -1,3 +1,12 @@
+## Receptionist Intelligence Engine — Cloudflare Workers AI migration — 2026-11-18
+
+- Updated PR #256 branch `feature/receptionist-intelligence-engine-2026-11-18` to remove the OpenAI API dependency and use Cloudflare Workers AI via `env.AI.run()`.
+- Default model is `@cf/zai-org/glm-4.7-flash`; optional Worker variable `INTELLIGENCE_MODEL` can override it. No OpenAI API key is required.
+- Updated the privacy notice and deployment guide to describe Cloudflare Workers AI.
+- This repository has no Wrangler configuration file for this Worker; production binding must be added in the Cloudflare Dashboard: Workers & Pages → avr-platform-api → Settings → Bindings → Add → Workers AI, variable name `AI`, then redeploy.
+- PR #256 remains open and unmerged. Production D1 migration, AI binding, Worker deployment, GitHub Pages publication and live Retell webhook verification are still required.
+- This implementation analyzes calls and recommends improvements; it does not yet publish changed prompts to live Retell agents. Prompt changes must remain subject to admin approval, scenario tests, version history and rollback.
+
 ## Cinematic homepage, astronaut spaceship cursor and client Mission Control refinement — 2026-11-18
 
 - Homepage banner source artwork is 2080×1136. Changed from contain (which made it look like a small centered picture) to cover/crop inside a slightly shorter fixed-height responsive banner. Header height was reduced, not expanded.

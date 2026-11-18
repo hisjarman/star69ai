@@ -1,15 +1,27 @@
 (() => {
-  const links = [
-    ["Home","/","home","cyan"],["How it works","/how-it-works.html","workflow","blue"],
-    ["Industry Hub","/hub/","layers","green"],["Pricing","/pricing.html","credit-card","gold"],
-    ["Demos","/demos.html","play-circle","purple"],["Learning Center","/learning-center/","graduation-cap","blue"],
-    ["Stories","/blog/","book-open","gold"],["About Star69AI","/about.html","orbit","cyan"],
-    ["Managed service","/managed-service.html","sliders","green"],["What it can do","/capabilities.html","sparkles","purple"],["Provider directory","/directory/","globe","purple"],
-    ["Managed AI research","/research/managed-ai-receptionists.html","microscope","blue"],["Industry overview","/industries.html","briefcase","green"],
-    ["FAQ","/faq.html","circle-help","gold"],["AI Challenge","/challenge/","gamepad-2","purple"],
-    ["AI Trust Lab","/trust-lab.html","shield-check","cyan"],["Partner program","/partners/","users","green"],
-    ["Privacy","/privacy.html","lock","blue"],["Terms","/terms.html","file-text","gold"]
+  const groups = [
+    { title: "EXPLORE", subtitle: "Discover the service", links: [
+      ["Home","/","home","cyan"],["How it works","/how-it-works.html","workflow","blue"],
+      ["What it can do","/capabilities.html","sparkles","purple"],["Industry Hub","/hub/","layers","green"],
+      ["Industry overview","/industries.html","briefcase","green"],["Provider directory","/directory/","globe","purple"]
+    ]},
+    { title: "SEE IT IN ACTION", subtitle: "Experience the technology", links: [
+      ["Demos","/demos.html","play-circle","purple"],["AI Challenge","/challenge/","gamepad-2","purple"],
+      ["AI Trust Lab","/trust-lab.html","shield-check","cyan"]
+    ]},
+    { title: "LEARN & SUPPORT", subtitle: "Answers and insights", links: [
+      ["Learning Center","/learning-center/","graduation-cap","blue"],["Stories","/blog/","book-open","gold"],
+      ["FAQ","/faq.html","circle-help","gold"],["Managed AI research","/research/managed-ai-receptionists.html","microscope","blue"]
+    ]},
+    { title: "COMPANY & PLANS", subtitle: "Work with Star69AI", links: [
+      ["About Star69AI","/about.html","orbit","cyan"],["Managed service","/managed-service.html","sliders","green"],
+      ["Pricing","/pricing.html","credit-card","gold"],["Partner program","/partners/","users","green"]
+    ]},
+    { title: "POLICIES", subtitle: "Your information and terms", links: [
+      ["Privacy","/privacy.html","lock","blue"],["Terms","/terms.html","file-text","gold"]
+    ]}
   ];
+  const navIcons = {home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤",sparkles:"✧"};
   const markup = `
     <header class="site-global-header" data-site-global-header>
       <div class="site-global-cover">
@@ -23,7 +35,10 @@
         <nav class="site-global-nav" id="site-global-navigation" aria-label="Star69AI main navigation" inert>
           <div class="site-global-nav-head"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
           <div class="site-global-nav-grid">
-            ${links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${({home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤"})[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}
+            ${groups.map(group => `<section class="site-global-nav-group" aria-label="${group.title}">
+              <div class="site-global-nav-group-head"><h2>${group.title}</h2><p>${group.subtitle}</p></div>
+              <div class="site-global-nav-group-links">${group.links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${navIcons[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}</div>
+            </section>`).join("")}
           </div>
           <div class="site-global-nav-footer"><span>STAR69AI // NAVIGATION ARRAY</span><span>SECURE CONNECTION <i></i></span></div>
         </nav>

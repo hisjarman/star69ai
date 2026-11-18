@@ -1,3 +1,11 @@
+## Capabilities hero refinement — 2026-11-18
+
+- Removed the abstract orb / AI-front-office centerpiece artwork from the capabilities hero.
+- Replaced the right side with a responsive, illustrated 12-item capability dashboard: 24/7 call answering, bookings/reservations, customer recognition, lead qualification, missed-call recovery, SMS/notifications, smart routing, business integrations, Call Shield, multilingual voice, payment workflows and analytics.
+- Kept the left side focused on the value proposition and custom-demo CTA. Added responsive layouts for tablet and mobile and retained the existing dark Star69AI palette.
+- Static checks: prior hero visual/orbit markup absent; key capability tiles present; responsive CSS breakpoints retained. Visual browser QA still required.
+- PR #278 remains the review/merge vehicle. No deployment or backend changes.
+
 ## Public capabilities page — 2026-11-18 — REVIEW REQUIRED
 
 - Added `capabilities.html` and `capabilities.css` on branch `feature/public-capabilities-page-2026-11-18`.

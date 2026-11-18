@@ -781,25 +781,32 @@ async function callShieldCallerHash(secret,value){
 async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,callId){
  const dialed=String(dialedNumber||"").trim(),caller=String(callerNumber||"").trim(),id=String(callId||"").trim();
  // Withheld/invalid caller IDs cannot be safely fingerprinted. Do not block them solely for being private.
- if(!/^\\+[1-9]\\d{6,14}$/.test(caller)||!/^\\+[1-9]\\d{6,14}$/.test(dialed)||!id)return {blocked:false,reason:"caller_id_unavailable"};
- const callerHash=await callShieldCallerHash(env.RETELL_API_KEY,String(customerId)+"|"+dialed+"|"+caller);
- const prior=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
- if(prior)return {blocked:prior.decision==="rejected",duplicate:true,reason:prior.reason||"duplicate_event"};
- const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-10*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+15*60*1000).toISOString();
- const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_call_shield_events(call_id,customer_id,dialed_number,caller_hash,decision,reason,created_at) VALUES(?,?,?,?,'pending','screening',?)").bind(id,customerId,dialed,callerHash,nowIso).run();
- if(!inserted.meta?.changes){
-  const duplicate=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
-  return {blocked:duplicate?.decision==="rejected",duplicate:true,reason:duplicate?.reason||"duplicate_event"};
+ if(!/^\+[1-9]\d{6,14}$/.test(caller)||!/^\+[1-9]\d{6,14}$/.test(dialed)||!id)return {blocked:false,reason:"caller_id_unavailable"};
+ try{
+  // HMAC is scoped to the client and dialed business line; raw caller IDs are never stored in Call Shield tables.
+  const callerHash=await callShieldCallerHash(env.RETELL_API_KEY,String(customerId)+"|"+dialed+"|"+caller);
+  const prior=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
+  if(prior)return {blocked:prior.decision==="rejected",duplicate:true,reason:prior.reason||"duplicate_event"};
+  const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-10*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+15*60*1000).toISOString();
+  const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_call_shield_events(call_id,customer_id,dialed_number,caller_hash,decision,reason,created_at) VALUES(?,?,?,?,'pending','screening',?)").bind(id,customerId,dialed,callerHash,nowIso).run();
+  if(!inserted.meta?.changes){
+   const duplicate=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
+   return {blocked:duplicate?.decision==="rejected",duplicate:true,reason:duplicate?.reason||"duplicate_event"};
+  }
+  const state=await env.DB.prepare("INSERT INTO avr_call_shield_state(customer_id,dialed_number,caller_hash,window_started_at,attempt_count,blocked_until,last_seen_at) VALUES(?,?,?, ?,1,NULL,?) ON CONFLICT(customer_id,dialed_number,caller_hash) DO UPDATE SET attempt_count=CASE WHEN avr_call_shield_state.window_started_at<=? THEN 1 ELSE avr_call_shield_state.attempt_count+1 END,window_started_at=CASE WHEN avr_call_shield_state.window_started_at<=? THEN excluded.window_started_at ELSE avr_call_shield_state.window_started_at END,blocked_until=CASE WHEN avr_call_shield_state.blocked_until>? THEN avr_call_shield_state.blocked_until WHEN avr_call_shield_state.window_started_at<=? THEN NULL WHEN avr_call_shield_state.attempt_count+1>=9 THEN ? ELSE NULL END,last_seen_at=excluded.last_seen_at RETURNING attempt_count,blocked_until")
+   .bind(customerId,dialed,callerHash,nowIso,nowIso,windowStart,windowStart,nowIso,windowStart,blockedUntil).first();
+  const blocked=!!(state&&Number(state.attempt_count)>=9&&state.blocked_until&&state.blocked_until>nowIso);
+  await env.DB.prepare("UPDATE avr_call_shield_events SET decision=?,reason=? WHERE call_id=?").bind(blocked?"rejected":"allowed",blocked?"repeat_caller_burst_limit":"within_screening_limits",id).run();
+  // Keep only a short operational history; caller identities are stored as keyed HMACs, never raw caller numbers.
+  const retention=new Date(now.getTime()-30*24*60*60*1000).toISOString();
+  await env.DB.prepare("DELETE FROM avr_call_shield_events WHERE created_at<?").bind(retention).run();
+  await env.DB.prepare("DELETE FROM avr_call_shield_state WHERE last_seen_at<?").bind(retention).run();
+  return {blocked,reason:blocked?"repeat_caller_burst_limit":"within_screening_limits",attempts:Number(state?.attempt_count||0),cooldownUntil:blocked?state.blocked_until:null};
+ }catch(error){
+  // Screening failure must not disable existing billing reservations or reject every legitimate caller.
+  console.error("call_shield_screening_unavailable",String(error?.message||"screening_unavailable"));
+  return {blocked:false,reason:"screening_unavailable"};
  }
- const state=await env.DB.prepare("INSERT INTO avr_call_shield_state(customer_id,dialed_number,caller_hash,window_started_at,attempt_count,blocked_until,last_seen_at) VALUES(?,?,?, ?,1,NULL,?) ON CONFLICT(customer_id,dialed_number,caller_hash) DO UPDATE SET attempt_count=CASE WHEN avr_call_shield_state.window_started_at<=? THEN 1 ELSE avr_call_shield_state.attempt_count+1 END,window_started_at=CASE WHEN avr_call_shield_state.window_started_at<=? THEN excluded.window_started_at ELSE avr_call_shield_state.window_started_at END,blocked_until=CASE WHEN avr_call_shield_state.blocked_until>? THEN avr_call_shield_state.blocked_until WHEN avr_call_shield_state.window_started_at<=? THEN NULL WHEN avr_call_shield_state.attempt_count+1>=9 THEN ? ELSE NULL END,last_seen_at=excluded.last_seen_at RETURNING attempt_count,blocked_until")
-  .bind(customerId,dialed,callerHash,nowIso,nowIso,windowStart,windowStart,nowIso,windowStart,blockedUntil).first();
- const blocked=!!(state&&Number(state.attempt_count)>=9&&state.blocked_until&&state.blocked_until>nowIso);
- await env.DB.prepare("UPDATE avr_call_shield_events SET decision=?,reason=? WHERE call_id=?").bind(blocked?"rejected":"allowed",blocked?"repeat_caller_burst_limit":"within_screening_limits",id).run();
- // Keep only a short operational history; caller identities are stored as keyed HMACs, never raw caller numbers.
- const retention=new Date(now.getTime()-30*24*60*60*1000).toISOString();
- await env.DB.prepare("DELETE FROM avr_call_shield_events WHERE created_at<?").bind(retention).run();
- await env.DB.prepare("DELETE FROM avr_call_shield_state WHERE last_seen_at<?").bind(retention).run();
- return {blocked,reason:blocked?"repeat_caller_burst_limit":"within_screening_limits",attempts:Number(state?.attempt_count||0),cooldownUntil:blocked?state.blocked_until:null};
 }
 async function retellInboundWebhook(req,env){
  const raw=await req.text();

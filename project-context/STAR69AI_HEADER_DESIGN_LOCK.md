@@ -33,15 +33,13 @@ This is the permanent public-site header/navigation baseline. The owner explicit
 ## Owner-approved homepage banner and visitor-arrival revision — 2026-11-18
 
 - The owner explicitly approved PR #284 to display the complete existing homepage banner artwork proportionally with `object-fit: contain` and add the existing visitor spaceship as a decorative arrival animation.
-- The animation is homepage-only, non-interactive, hidden from assistive technology, shown once per browser session where session storage is available, responsive on mobile, and stationary for reduced-motion users.
+- The animation is homepage-only, non-interactive and hidden from assistive technology. It replays on every homepage refresh with one of four randomized flight routes, explores the banner, lands on the central yin-yang emblem and plants a small decorative flag. Reduced-motion users receive a stationary ship and visible flag without animation.
 - The compact interior-page header, all 19 navigation destinations, grouped menu, utility strip, footer styling, keyboard behavior and existing accessibility protections remain protected and unchanged in intent.
 - This is a narrowly scoped approved presentation revision, not permission for unrelated navigation/header redesign or removal of automated protection.
 
-## Approved source baseline — current main after PR #285
+## Approved source baseline — updated by the social-cover and visitor-flight revision
 
-- `site-header.js` Git blob: `ccba8cb3db382ef1a0421addd360c11b3570865a`
-- `site-header.css` Git blob: `7ef3d5132bb79fdecedf3dacd081b1deae3408f0`
-- These are the current protected source fingerprints on `main`; the protection workflow already pins these exact values.
+- `site-header.js` and `site-header.css` fingerprints are updated in the protection workflow in the same pull request as this revision. The PR must pass the protected-header CI check before merge.
 - PR #284: owner-approved homepage banner and visitor-arrival presentation revision.
 - PR #285: narrow visitor-arrival initialization and responsive banner reliability corrections; preserves PR #284's approved design and existing navigation.
 - Original cinematic restoration: PR #244
@@ -70,3 +68,12 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Updated the protected CSS blob fingerprint in the same reviewed change.
 
 - The once-per-session guard uses a versioned key so a stale flag written by the previous broken initializer cannot suppress the corrected first arrival.
+
+
+## Owner-approved social-cover and visitor-flight revision — 2026-11-18
+
+- Replace the oversized natural-height homepage artwork with a shallow, responsive social-media-style cover: capped desktop height, compact mobile height, and a deliberate centered crop of the existing artwork.
+- Preserve the existing Mission Control menu, all 19 destinations, utility strip, interior-page compact header, footer, keyboard behavior and accessibility protections.
+- Replay the visitor spaceship on every homepage refresh. Select one of four randomized exploration routes, then land on the yin-yang emblem centered on the astronaut and plant a small decorative flag.
+- Keep the flight decorative, pointer-inert and hidden from assistive technology. Reduced-motion users receive a stationary ship and flag without animation.
+- No unrelated site, backend, Worker, D1, Retell, billing, authentication, customer data or deployment changes are authorized by this revision.

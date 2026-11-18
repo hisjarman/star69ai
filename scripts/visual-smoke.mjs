@@ -8,8 +8,7 @@ const routes = [
   "/", "/pricing.html", "/get-started.html", "/how-it-works.html",
   "/managed-service.html", "/industries.html", "/demos.html", "/faq.html",
   "/about.html", "/blog/", "/insights/", "/learning-center/", "/challenge/",
-  "/privacy.html", "/terms.html", "/trust-lab.html",
-  "/receptionist-intelligence.html"
+  "/privacy.html", "/terms.html", "/trust-lab.html", "/receptionist-intelligence.html"
 ];
 const viewports = [
   { name: "mobile", width: 360, height: 800 },
@@ -27,7 +26,7 @@ try {
       const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
       try {
         const response = await page.goto(base + route, { waitUntil: "domcontentloaded", timeout: 30000 });
-        assert(response && response.status() === 200, \`\${route}: expected HTTP 200\`);
+        assert(response && response.status() === 200, route + ": expected HTTP 200");
         await page.locator("h1").first().waitFor({ state: "visible", timeout: 8000 });
         const layout = await page.evaluate(() => ({
           width: window.innerWidth,
@@ -35,8 +34,8 @@ try {
           h1Count: document.querySelectorAll("h1").length
         }));
         assert(layout.documentWidth <= layout.width + 2,
-          \`\${route}: horizontal overflow at \${viewport.width}px (\${layout.documentWidth}px)\`);
-        assert(layout.h1Count >= 1, \`\${route}: missing visible page heading\`);
+          route + ": horizontal overflow at " + viewport.width + "px (" + layout.documentWidth + "px)");
+        assert(layout.h1Count >= 1, route + ": missing visible page heading");
         if (route === "/get-started.html") {
           const required = await page.locator("input[required], select[required], textarea[required]").count();
           const consent = await page.locator('input[type="checkbox"][required]').count();
@@ -45,11 +44,11 @@ try {
         }
         if (screenshotRoutes.has(route)) {
           const name = route === "/" ? "home" : route.replace(/^\//, "").replace(".html", "");
-          await page.screenshot({ path: path.join("artifacts/site-qa", \`\${name}-\${viewport.name}.png\`), fullPage: true });
+          await page.screenshot({ path: path.join("artifacts/site-qa", name + "-" + viewport.name + ".png"), fullPage: true });
         }
-        console.log(\`PASS \${route} @ \${viewport.width}px\`);
+        console.log("PASS " + route + " @ " + viewport.width + "px");
       } catch (error) {
-        failures.push(\`\${route} @ \${viewport.width}px: \${error.message}\`);
+        failures.push(route + " @ " + viewport.width + "px: " + error.message);
       } finally {
         await page.close();
       }

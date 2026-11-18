@@ -13,7 +13,7 @@
  function safeHttps(v){try{const u=new URL(v);return u.protocol==="https:"?u.href:""}catch{return ""}}
  function money(v){return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(v)}
  function showPage(page){
-  const labels={overview:["Mission Control","A clear view of your receptionist and business activity."],intelligence:["Receptionist Intelligence","Call analysis, missed opportunities and receptionist improvements."],"call-shield":["Call Shield","Configure repeat-caller protection and maximum call duration."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Crew Support","Open a channel with our Crew, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
+  const labels={overview:["Mission Control","A clear view of your receptionist and business activity."],integrations:["Integrations","Connect your existing business tools through Star69AI-managed setup."],intelligence:["Receptionist Intelligence","Call analysis, missed opportunities and receptionist improvements."],"call-shield":["Call Shield","Configure repeat-caller protection and maximum call duration."],receptionist:["Your receptionist","Your assigned AI receptionist, configuration and improvement requests."],billing:["Plan & billing","Manage your subscription, usage and business profile."],addons:["Upgrades & add-ons","Extend your receptionist with additional capabilities."],calls:["Call activity","Review recent calls, summaries, transcripts and recordings."],support:["Crew Support","Open a channel with our Crew, request changes and track your support requests."],knowledge:["Knowledge center","Guides to your receptionist, features, usage, billing and support."]};
   document.querySelectorAll("[data-page-panel]").forEach(p=>p.classList.toggle("active",p.dataset.pagePanel===page));
   document.querySelectorAll(".client-nav-item").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   document.querySelectorAll(".cockpit-top-tab").forEach(b=>{const active=b.dataset.page===page;b.classList.toggle("active",active);if(active)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
@@ -241,12 +241,29 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
 function renderAgentRequests(items){
   const root=$("#agent-change-requests");if(!root)return;
   const labels={submitted:"Submitted",reviewing:"Being reviewed",quoted:"Quote ready",approved:"Approved",in_progress:"In progress",completed:"Completed",declined:"Not proceeding"};
+  const hub=$("#integration-request-list");
+  if(hub){
+   const integrations=(items||[]).filter(r=>r.request_type==="workflow"&&/integration request:/i.test(String(r.title||"")));
+   const labels={submitted:"Submitted",reviewing:"Being reviewed",quoted:"Quote ready",approved:"Approved",in_progress:"In progress",completed:"Setup complete",declined:"Not proceeding"};
+   hub.innerHTML=integrations.length?integrations.map(r=>'<article class="resource integration-request-item"><div><b>'+safe(r.title||"Integration request")+'</b><p class="small">'+safe(r.details)+'</p><span class="small">Submitted '+safe(fmtDate(r.created_at))+'</span>'+(r.admin_note?'<p class="small">Crew update: '+safe(r.admin_note)+'</p>':'')+(r.quote_summary?'<p class="small integration-quote">'+safe(r.quote_summary)+'</p>':'')+'</div><span class="status">'+safe(labels[r.status]||r.status)+'</span></article>').join(""):'<div class="empty">No integration requests yet. Choose a system above and our Crew will review the connection path with you.</div>';
+  }
   if(!items?.length){root.innerHTML='<div class="empty">You have not submitted any configuration requests yet.</div>';return}
   root.innerHTML=items.map(r=>'<article class="resource agent-request-item"><div><b>'+safe(r.title||r.request_type)+'</b><p class="small">'+safe(r.details)+'</p><span class="small">Submitted '+safe(fmtDate(r.created_at))+'</span>'+(r.admin_note?'<p class="small">Crew update: '+safe(r.admin_note)+'</p>':'')+(r.quote_summary?'<p class="small agent-quote">'+safe(r.quote_summary)+'</p>':'')+(r.status==="quoted"&&r.quote_summary?'<button type="button" class="btn agent-approve-quote" data-approve-request="'+safe(r.id)+'">Approve this quote</button>':'')+'</div><span class="status">'+safe(labels[r.status]||r.status)+'</span></article>').join("");root.querySelectorAll("[data-approve-request]").forEach(b=>b.addEventListener("click",async()=>{if(!confirm("Approve this written quote? This authorizes our Crew to proceed with the quoted configuration work and any charges explicitly listed in that quote."))return;b.disabled=true;try{await api("/api/client/agent-change-requests/"+encodeURIComponent(b.dataset.approveRequest)+"/approve",{method:"POST",body:"{}"});await loadAgentConfiguration();note("Quote approved. Our Crew can now proceed with the agreed change.")}catch(e){note(e.message,true);b.disabled=false}}));
  }
  async function loadAgentConfiguration(){
   try{const [c,r]=await Promise.all([api("/api/client/agent-configuration"),api("/api/client/agent-change-requests")]);renderAgentConfiguration(c.configuration);renderAgentRequests(r.requests||[])}
   catch(e){const root=$("#agent-configuration");if(root)root.innerHTML='<div class="empty">'+safe(e.message)+'</div>';const req=$("#agent-change-requests");if(req)req.innerHTML='<div class="empty">'+safe(e.message)+'</div>'}
+ }
+ async function requestIntegration(provider,button){
+  if(!provider)return;
+  const original=button.textContent;button.disabled=true;button.textContent="Sending…";
+  try{
+   const details="Integration request: "+provider+". Please review the supported Retell/API connection options for this business. Confirm required permissions, read-only versus write access, setup scope, third-party costs and testing steps with me before activation. I will not provide passwords or API keys in this request.";
+   await api("/api/client/agent-change-requests",{method:"POST",body:JSON.stringify({requestType:"workflow",priority:"normal",details})});
+   note("Integration request submitted. Our Crew will review the supported connection path and contact you before any access or charges are authorized.");
+   await loadAgentConfiguration();
+  }catch(e){note(e.message,true)}
+  finally{button.disabled=false;button.textContent=original}
  }
  async function submitAgentChange(e){
   e.preventDefault();const button=$("#agent-change-submit"),status=$("#agent-change-status");button.disabled=true;status.textContent="Submitting securely…";
@@ -424,7 +441,7 @@ function renderAgentRequests(items){
  }
  eliLauncher?.addEventListener("click",()=>setEliOpen(eliPanel?.hidden!==false));
  eliClose?.addEventListener("click",()=>setEliOpen(false));
- const initialPage=location.hash.slice(1);showPage(["overview","receptionist","billing","addons","calls","support","knowledge","intelligence"].includes(initialPage)?initialPage:"overview");
+ const initialPage=location.hash.slice(1);showPage(["overview","receptionist","integrations","billing","addons","calls","support","knowledge","intelligence","call-shield"].includes(initialPage)?initialPage:"overview");
  $("#sign-in").onclick=()=>clerk?.openSignIn();
  $("#sign-up").onclick=()=>clerk?.openSignUp();
  $("#refresh-dashboard").onclick=()=>load();
@@ -451,6 +468,8 @@ function renderAgentRequests(items){
  $("#refresh-addons")?.addEventListener("click",loadAddons);
  $("#agent-change-form")?.addEventListener("submit",submitAgentChange);$("#agent-change-type")?.addEventListener("change",toggleSmsFields);toggleSmsFields();
  $("#refresh-agent-requests")?.addEventListener("click",loadAgentConfiguration);
+ $("#refresh-integration-requests")?.addEventListener("click",loadAgentConfiguration);
+ document.querySelectorAll(".integration-request").forEach(b=>b.addEventListener("click",()=>requestIntegration(b.dataset.integration,b)));
  $("#billing-portal").onclick=async()=>{try{const d=await api("/api/billing/portal",{method:"POST",body:"{}"});location.href=d.url}catch(e){note(e.message,true)}};
  document.querySelectorAll(".plan-btn").forEach(b=>b.onclick=async()=>{try{b.disabled=true;const d=await api("/api/billing/checkout",{method:"POST",body:JSON.stringify({plan:b.dataset.plan,cadence:$("#billing-cadence")?.value||"monthly",promoCode:$("#billing-promo-code")?.value||""})});location.href=d.url}catch(e){const messages={invalid_promo_code:"That offer code is not valid. Check the code and try again.",challenge_offer_not_configured:"The challenge discount is not active in checkout yet. Please contact Star69AI before paying.",partner_offer_not_configured:"The partner discount is not active in checkout yet. Please contact Star69AI before paying.",prepaid_price_not_configured:"That prepaid billing option is not configured yet. Please contact Star69AI before paying.",prepaid_offer_cannot_be_combined_with_promo:"Prepaid savings cannot be combined with a first-month offer. Clear the code or choose monthly billing."};note(messages[e.message]||e.message,true);b.disabled=false}});
  const params=new URLSearchParams(location.search);

@@ -23,7 +23,7 @@
     ai: {
       title: "The AI receptionist captures the request.",
       copy: "In this example, the configured receptionist greets the caller, asks the approved intake questions and prepares a clear handoff for your team.",
-      items: ["Caller: Jordan (fictional example)", "Need: active leak beneath a kitchen sink", "Captured: callback details, service need and urgency", "Next step: your team reviews the request and follows your business rules."]
+      items: ["Request: active leak beneath a kitchen sink", "Intake: ask for the caller’s name, callback number, service address and urgency", "Next step: your team reviews the information and follows your business rules."]
     }
   };
   function showOutcome(key) {
@@ -47,6 +47,7 @@
     delete result.dataset.outcome;
     choices.forEach(button => { button.disabled = false; });
     reset.hidden = true;
+    if (choices[0]) choices[0].focus();
   }
   choices.forEach(button => button.addEventListener("click", () => showOutcome(button.dataset.crChoice)));
   reset.addEventListener("click", restart);

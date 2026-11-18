@@ -11,9 +11,11 @@ const routes = [
   "/privacy.html", "/terms.html", "/trust-lab.html",
   "/receptionist-intelligence.html"
 ];
-const viewports = [{ name: "mobile", width: 360, height: 800 },
+const viewports = [
+  { name: "mobile", width: 360, height: 800 },
   { name: "tablet", width: 768, height: 1024 },
-  { name: "desktop", width: 1280, height: 900 }];
+  { name: "desktop", width: 1280, height: 900 }
+];
 const screenshotRoutes = new Set(["/", "/pricing.html", "/get-started.html"]);
 const browser = await chromium.launch({ headless: true });
 const failures = [];
@@ -25,7 +27,7 @@ try {
       const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
       try {
         const response = await page.goto(base + route, { waitUntil: "domcontentloaded", timeout: 30000 });
-        assert(response && response.status() === 200, `${route}: expected HTTP 200`);
+        assert(response && response.status() === 200, \`\${route}: expected HTTP 200\`);
         await page.locator("h1").first().waitFor({ state: "visible", timeout: 8000 });
         const layout = await page.evaluate(() => ({
           width: window.innerWidth,
@@ -33,8 +35,8 @@ try {
           h1Count: document.querySelectorAll("h1").length
         }));
         assert(layout.documentWidth <= layout.width + 2,
-          `${route}: horizontal overflow at ${viewport.width}px (${layout.documentWidth}px)`);
-        assert(layout.h1Count >= 1, `${route}: missing visible page heading`);
+          \`\${route}: horizontal overflow at \${viewport.width}px (\${layout.documentWidth}px)\`);
+        assert(layout.h1Count >= 1, \`\${route}: missing visible page heading\`);
         if (route === "/get-started.html") {
           const required = await page.locator("input[required], select[required], textarea[required]").count();
           const consent = await page.locator('input[type="checkbox"][required]').count();
@@ -42,12 +44,12 @@ try {
           assert(consent >= 1, "Discovery form: required privacy consent checkbox missing");
         }
         if (screenshotRoutes.has(route)) {
-          const name = route === "/" ? "home" : route.replace(/^\\//, "").replace(".html", "");
-          await page.screenshot({ path: path.join("artifacts/site-qa", `${name}-${viewport.name}.png`), fullPage: true });
+          const name = route === "/" ? "home" : route.replace(/^\//, "").replace(".html", "");
+          await page.screenshot({ path: path.join("artifacts/site-qa", \`\${name}-\${viewport.name}.png\`), fullPage: true });
         }
-        console.log(`PASS ${route} @ ${viewport.width}px`);
+        console.log(\`PASS \${route} @ \${viewport.width}px\`);
       } catch (error) {
-        failures.push(`${route} @ ${viewport.width}px: ${error.message}`);
+        failures.push(\`\${route} @ \${viewport.width}px: \${error.message}\`);
       } finally {
         await page.close();
       }
@@ -57,7 +59,7 @@ try {
   await browser.close();
 }
 if (failures.length) {
-  console.error("Visual smoke tests failed:\\n- " + failures.join("\\n- "));
+  console.error("Visual smoke tests failed:\n- " + failures.join("\n- "));
   process.exit(1);
 }
 console.log("Responsive browser smoke tests passed at 360px, 768px and 1280px.");

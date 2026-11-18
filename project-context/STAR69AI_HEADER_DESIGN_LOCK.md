@@ -65,3 +65,5 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - The cover container follows the desktop image's natural height; the menu and visitor-arrival overlays remain positioned above the artwork.
 - This is a narrowly scoped banner presentation correction. The menu destinations, utility links, header structure and footer remain protected.
 - Updated the protected CSS blob fingerprint in the same reviewed change.
+
+- The once-per-session guard uses a versioned key so a stale flag written by the previous broken initializer cannot suppress the corrected first arrival.

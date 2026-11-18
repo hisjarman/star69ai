@@ -379,13 +379,13 @@ body :where(.section-kicker,.eyebrow,.plan-eyebrow,.form-title>span,.story-eyebr
 body :where(a:not(.button):not(.btn),.text-link,.story-text-link){color:var(--brand-blue-text)}
 body :where(a:not(.button):not(.btn):hover,.text-link:hover,.story-text-link:hover){color:var(--brand-purple-text)}
 body :where(h1 em,h2 em,h3 em,.accent,.highlight,.brand b){color:var(--brand-purple-text)}
-body :where(.button,.btn,button.button,button.btn){background:var(--brand-green);border-color:var(--brand-green);color:#092414;font-weight:800;box-shadow:0 8px 22px rgba(20,210,81,.18)}
-body :where(.button:hover,.btn:hover,button.button:hover,button.btn:hover){background:#38E875;border-color:#38E875;color:#092414;box-shadow:0 10px 26px rgba(20,210,81,.25)}
+body :where(.button,.btn,button.button,button.btn){background:var(--brand-green);border-color:var(--brand-green);color:#092414;font-weight:800;box-shadow:0 8px 22px rgba(52,253,120,.18)}
+body :where(.button:hover,.btn:hover,button.button:hover,button.btn:hover){background:#38E875;border-color:#38E875;color:#092414;box-shadow:0 10px 26px rgba(52,253,120,.25)}
 body :where(a,button,input,textarea,select,summary):focus-visible{outline:3px solid var(--brand-blue-text)!important;outline-offset:3px!important}
 body :where(.dark-shell,.dark-band,.industry-section,.trust-strip,.footer,.site-footer,.product-stage,.console,.dashboard-preview-window){--brand-text:#F4F7FF}
 body :where(.dark-shell,.dark-band,.industry-section,.trust-strip,.footer,.site-footer,.product-stage,.console,.dashboard-preview-window) :where(a:not(.button):not(.btn),.text-link,.section-kicker,.eyebrow){color:var(--brand-blue)!important}
 body :where(.dark-shell,.dark-band,.industry-section,.trust-strip,.footer,.site-footer,.product-stage,.console,.dashboard-preview-window) :where(h1 em,h2 em,h3 em,.accent,.highlight,.brand b){color:var(--brand-purple)!important}
-::selection{background:rgba(225,86,255,.28);color:#172B40}
+::selection{background:rgba(244,97,254,.28);color:#172B40}
 
 
 /* Star69AI sitewide footer legibility and canonical wordmark scale — 2026-11-17. */

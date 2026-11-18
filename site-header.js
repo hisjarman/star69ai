@@ -59,7 +59,7 @@
     // The shared header (and its banner cover) must exist before the visitor ship is attached.
     if (homePath === "/" && !document.querySelector(".site-global-visitor-ship")) {
       let arrivalSeen = false;
-      try { arrivalSeen = window.sessionStorage.getItem("star69ai-visitor-arrival-seen") === "1"; } catch (_) {}
+      try { arrivalSeen = window.sessionStorage.getItem("star69ai-visitor-arrival-seen-v2") === "1"; } catch (_) {}
       if (!arrivalSeen) {
         const cover = document.querySelector(".site-global-cover");
         if (cover) {
@@ -72,7 +72,7 @@
           visitorShip.draggable = false;
           visitorShip.addEventListener("load", () => {
             visitorShip.classList.add("is-ready");
-            try { window.sessionStorage.setItem("star69ai-visitor-arrival-seen", "1"); } catch (_) {}
+            try { window.sessionStorage.setItem("star69ai-visitor-arrival-seen-v2", "1"); } catch (_) {}
           }, { once: true });
           visitorShip.addEventListener("error", () => visitorShip.remove(), { once: true });
           cover.appendChild(visitorShip);

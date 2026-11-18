@@ -44,7 +44,6 @@ const requiredDisallows = ["/client/", "/admin/", "/partner-portal/", "/partners
 for (const route of requiredDisallows) {
   if (!robots.includes("Disallow: " + route)) problems.push("robots.txt: missing " + route + " exclusion");
 }
-
 for (const url of urls) {
   const pathname = new URL(url).pathname;
   const candidate = pathname.endsWith("/") ? pathname + "index.html" : pathname;
@@ -52,9 +51,8 @@ for (const url of urls) {
   if (!fs.existsSync(path.join(root, file))) problems.push("sitemap.xml: URL has no matching file " + url);
 }
 if (new Set(urls).size !== urls.length) problems.push("sitemap.xml: duplicate URLs");
-
 if (problems.length) {
   console.error("Site SEO checks failed:\n- " + problems.join("\n- "));
   process.exit(1);
 }
-console.log(\`Site SEO checks passed: \${files.filter((f) => !excluded(f)).length} public HTML pages checked; \${urls.length} sitemap URLs validated.\`);
+console.log("Site SEO checks passed: " + files.filter((f) => !excluded(f)).length + " public HTML pages checked; " + urls.length + " sitemap URLs validated.");

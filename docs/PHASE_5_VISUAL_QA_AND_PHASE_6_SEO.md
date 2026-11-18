@@ -35,3 +35,20 @@ The browser checks have not been considered passed until the GitHub Actions run 
 2. Check the live homepage, pricing page, discovery form and mobile navigation on a real phone.
 3. Review Search Console indexing and sitemap processing after the changes are published.
 4. Approve or request changes on the pull request. Do not merge until the founder approves.
+
+
+## Search Console and live on-page audit (2026-11-18)
+
+The connected property is `sc-domain:star69ai.com`, owned and readable in Search Console.
+
+- Performance window `2026-10-19` to `2026-11-15` (settled through `2026-11-16`): 8 clicks, 14 impressions, 57.14% CTR, average position 1.29. The previous 28-day period had no data. The first recorded search activity begins on 2026-11-10, so this is too little history for a meaningful trend or keyword-opportunity verdict.
+- The homepage accounts for the 8 clicks and 12 HTTPS impressions. The HTTP homepage variant has 2 impressions and redirects to HTTPS with a 301.
+- Google Search Console listed `https://star69ai.com/sitemap.xml` as downloaded on 2026-11-18, with 45 submitted URLs and zero warnings/errors. Google Search Console's deprecated `indexed` count is null; sitemap performance showed only one URL with impressions, which is not the same as a complete indexed-page count.
+- Two on-page audit batches checked all 45 existing sitemap URLs. All 45 returned HTTP 200 and were indexable; there were no critical or high-severity issues. The combined issue totals were 16 medium and 80 low. Medium issues were one missing canonical on the Intelligence page and missing Organization logos in structured data on editorial/directory pages; this branch addresses both.
+- Lower-priority items included long/short search snippets, missing descriptive alt text on three icon images, missing recommended Article image fields, thin industry pages and pages without structured data. The branch improves the highest-value snippets, alt text and Organization publisher schema. Article image recommendations and thin-page expansion remain candidates for a later content pass.
+- No query rows were available for a useful opportunity or cannibalization analysis. Anomaly detection could not run because only six calendar days of data existed, below its 21-day minimum. CrUX/Core Web Vitals is not configured for this property.
+
+## CI status
+
+- The SEO/sitemap job passed on the first PR run.
+- The first responsive browser job failed before tests started because the `ubuntu-latest` runner had moved to Ubuntu 26.04, which Playwright 1.56.1 does not support. The workflow is now pinned to `ubuntu-24.04`; the rerun is pending.

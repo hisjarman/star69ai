@@ -1776,3 +1776,14 @@ This section supersedes the earlier activation-status notes above where they des
 - The existing PR remains a request catalog only. It does not implement OAuth or claim any provider is connected. Retell-native OAuth must not be used until independent per-client authorization ownership and revocation are proven; otherwise Star69AI Worker must broker provider access and expose narrowly scoped custom functions.
 - No Worker routes, D1 migrations, OAuth app credentials, provider tokens, Retell settings, customer records, production secrets or deployment configuration changed. No merge or deployment performed.
 - Before implementing live OAuth, select one provider, verify its official endpoints/scopes/review requirements and confirm required Star69AI OAuth app credentials are available as Worker secrets. Test two-tenant isolation, connect/refresh/revoke/disconnect, least privilege and call-time data minimization. Browser QA and signed-in end-to-end tests for PR #276 remain outstanding.
+
+
+## Homepage and public capabilities hero alignment — 2026-11-18
+
+- Working branch: `feature/homepage-capabilities-hero-alignment-2026-11-18`, created from current `main` after reading this handoff and inspecting the homepage and public capabilities page.
+- Replaced the homepage hero's call-intelligence illustration panel and its Earth/glow decoration with the same 12-item capability showcase used on the public Capabilities page: 24/7 answering, bookings/reservations, customer recognition, lead qualification, missed-call recovery, SMS/notifications, smart routing, business integrations, Call Shield, multilingual voice, payment workflows and call analytics.
+- Each tile links to the detailed capability library. The left-side intelligence-led headline, custom-demo CTA, pricing disclosure and managed-service message remain intact.
+- Added a responsive homepage-only style layer in `intelligence-hero.css`; the shared public header, footer, other homepage sections and the separate capabilities page remain untouched.
+- Capability wording remains qualified: connections and actions depend on supported providers, client authorization, plan, configuration and testing. No new integrations or backend functionality are claimed.
+- Source-level checks performed in this change: exact old illustration markup removed from homepage hero; 12 capability tiles and detailed-page links present; responsive 3-column/2-column breakpoints and focus-visible styling included; reduced-motion behavior retained. Browser screenshots/visual QA and live GitHub Pages verification remain to be performed.
+- Source-only change. No Worker, D1, Retell, billing, authentication, customer/prospect records or production configuration changed. Review through PR; do not merge `main` without the founder's explicit approval.

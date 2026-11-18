@@ -109,4 +109,12 @@
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, {once:true});
   else install();
+  // Use the supplied ship artwork as a scaled desktop pointer follower.
+  if (!document.querySelector("[data-star69-cursor-loader]")) {
+    const cursorScript = document.createElement("script");
+    cursorScript.src = "/assets/cursor-follower.js";
+    cursorScript.defer = true;
+    cursorScript.dataset.star69CursorLoader = "true";
+    document.head.appendChild(cursorScript);
+  }
 })();

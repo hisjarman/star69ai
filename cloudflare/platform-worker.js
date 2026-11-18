@@ -778,6 +778,10 @@ async function callShieldCallerHash(secret,value){
  const signature=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(String(value)));
  return Array.from(new Uint8Array(signature),byte=>byte.toString(16).padStart(2,"0")).join("");
 }
+async function getCallShieldSettings(env,customerId){
+ const row=await env.DB.prepare("SELECT protection_mode,max_attempts,window_minutes,cooldown_minutes,max_call_duration_minutes FROM avr_call_shield_settings WHERE customer_id=? LIMIT 1").bind(customerId).first();
+ return {mode:row?.protection_mode||"standard",maxAttempts:Math.max(3,Math.min(20,Number(row?.max_attempts)||8)),windowMinutes:Math.max(1,Math.min(60,Number(row?.window_minutes)||10)),cooldownMinutes:Math.max(1,Math.min(120,Number(row?.cooldown_minutes)||15)),maxCallDurationMinutes:Math.max(1,Math.min(30,Number(row?.max_call_duration_minutes)||20))};
+}
 async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,callId){
  const dialed=String(dialedNumber||"").trim(),caller=String(callerNumber||"").trim(),id=String(callId||"").trim();
  // Withheld/invalid caller IDs cannot be safely fingerprinted. Do not block them solely for being private.
@@ -791,7 +795,7 @@ async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,call
   const callerHash=await callShieldCallerHash(env.RETELL_API_KEY,String(customerId)+"|"+dialed+"|"+caller);
   const prior=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
   if(prior)return {blocked:prior.decision==="rejected",duplicate:true,reason:prior.reason||"duplicate_event"};
-  const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-10*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+15*60*1000).toISOString();
+  const settings=await getCallShieldSettings(env,customerId);\n  const now=new Date(),nowIso=now.toISOString(),windowStart=new Date(now.getTime()-settings.windowMinutes*60*1000).toISOString(),blockedUntil=new Date(now.getTime()+settings.cooldownMinutes*60*1000).toISOString();
   const inserted=await env.DB.prepare("INSERT OR IGNORE INTO avr_call_shield_events(call_id,customer_id,dialed_number,caller_hash,decision,reason,created_at) VALUES(?,?,?,?,'pending','screening',?)").bind(id,customerId,dialed,callerHash,nowIso).run();
   if(!inserted.meta?.changes){
    const duplicate=await env.DB.prepare("SELECT decision,reason FROM avr_call_shield_events WHERE call_id=? LIMIT 1").bind(id).first();
@@ -820,6 +824,7 @@ async function retellInboundWebhook(req,env){
  const agentId=String(incoming.agent_id||number.agent_id||"");if(!agentId)return {call_inbound:{reject:true}};
  const callId=String(incoming.call_id||payload.call_id||"").trim();
  const callerNumber=String(incoming.from_number||incoming.from||payload.from_number||"").trim();
+ const shieldSettings=await getCallShieldSettings(env,customer.id);
  const screening=await screenInboundCaller(env,customer.id,phone,callerNumber,callId);
  if(screening.blocked)return {call_inbound:{reject:true}};
  if(isFlexCustomer(customer)){
@@ -828,7 +833,7 @@ async function retellInboundWebhook(req,env){
   if(env.PAYG_INGRESS_GATE_ENABLED!=="true"||wallet?.status!=="funded"||Number(balance?.balance_cents||0)<=0)return {call_inbound:{reject:true}};
   const reservedMs=await reserveFlexCall(env,customer,Number(balance?.balance_cents||0),callId);
   if(reservedMs<60000)return {call_inbound:{reject:true}};
-  return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:reservedMs}}}};
+  return {call_inbound:{override_agent_id:agentId,agent_override:{agent:{max_call_duration_ms:Math.min(reservedMs,shieldSettings.maxCallDurationMinutes*60000)}}}};
  }
  const prepaid=["six_month","annual"].includes(customer.billing_cadence);
  if(!["active","trialing"].includes(customer.subscription_status)&&!prepaid)return {call_inbound:{reject:true}};
@@ -1061,6 +1066,25 @@ async function route(req,env){
    const gateEnabled=env.PAYG_INGRESS_GATE_ENABLED==="true";const transactions=await env.DB.prepare("SELECT id,amount_cents,entry_type,source_ref,note,created_at FROM avr_payg_wallet_ledger WHERE customer_id=? ORDER BY created_at DESC LIMIT 25").bind(c.id).all();
    const assigned=await env.DB.prepare("SELECT phone_number FROM avr_numbers WHERE customer_id=? AND agent_id IS NOT NULL LIMIT 1").bind(c.id).first();
    return json({plan:"flex",rateCentsPerMinute:65,currency:wallet?.currency||"usd",walletStatus:wallet?.status||"not_funded",balanceCents:Number(balance?.balance_cents||0),canReceiveCalls:c.status==="active"&&!!assigned&&!!wallet&&wallet.status==="funded"&&Number(balance?.balance_cents||0)>=65&&gateEnabled,assignedNumber:assigned?.phone_number||null,ingressGateEnabled:gateEnabled,transactions:transactions.results||[],activationNote:gateEnabled?"Wallet balance and per-call duration limits are enforced before the AI answers. Star69AI must assign a live number and agent before calls can connect.":"Inbound balance enforcement is not yet enabled for the current phone-number routing."},200,origin,env)
+  }
+  if(path==="/api/client/call-shield"&&(req.method==="GET"||req.method==="PUT")){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   if(req.method==="GET"){
+    const settings=await getCallShieldSettings(env,c.id);
+    const events=await env.DB.prepare("SELECT decision,reason,created_at FROM avr_call_shield_events WHERE customer_id=? AND created_at>=? ORDER BY created_at DESC LIMIT 30").bind(c.id,new Date(Date.now()-30*24*60*60*1000).toISOString()).all();
+    const totals=await env.DB.prepare("SELECT COUNT(*) AS screened,SUM(CASE WHEN decision='rejected' THEN 1 ELSE 0 END) AS rejected FROM avr_call_shield_events WHERE customer_id=? AND created_at>=?").bind(c.id,new Date(Date.now()-30*24*60*60*1000).toISOString()).first();
+    return json({settings,events:events.results||[],totals:{screened:Number(totals?.screened||0),rejected:Number(totals?.rejected||0)}},200,origin,env);
+   }
+   const p=await body(req,5000),mode=["standard","strict","business_friendly"].includes(String(p.mode))?String(p.mode):"standard";
+   const presets={standard:{maxAttempts:8,windowMinutes:10,cooldownMinutes:15},strict:{maxAttempts:5,windowMinutes:10,cooldownMinutes:30},business_friendly:{maxAttempts:12,windowMinutes:15,cooldownMinutes:10}};
+   const base=presets[mode];
+   const maxAttempts=Math.max(3,Math.min(20,Math.round(Number(p.maxAttempts)||base.maxAttempts)));
+   const windowMinutes=Math.max(1,Math.min(60,Math.round(Number(p.windowMinutes)||base.windowMinutes)));
+   const cooldownMinutes=Math.max(1,Math.min(120,Math.round(Number(p.cooldownMinutes)||base.cooldownMinutes)));
+   const maxCallDurationMinutes=Math.max(1,Math.min(30,Math.round(Number(p.maxCallDurationMinutes)||20)));
+   const now=new Date().toISOString();
+   await env.DB.prepare("INSERT INTO avr_call_shield_settings(customer_id,protection_mode,max_attempts,window_minutes,cooldown_minutes,max_call_duration_minutes,updated_at,updated_by) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(customer_id) DO UPDATE SET protection_mode=excluded.protection_mode,max_attempts=excluded.max_attempts,window_minutes=excluded.window_minutes,cooldown_minutes=excluded.cooldown_minutes,max_call_duration_minutes=excluded.max_call_duration_minutes,updated_at=excluded.updated_at,updated_by=excluded.updated_by").bind(c.id,mode,maxAttempts,windowMinutes,cooldownMinutes,maxCallDurationMinutes,now,"client:"+String(u.id||"").slice(0,120)).run();
+   return json({saved:true,settings:{mode,maxAttempts,windowMinutes,cooldownMinutes,maxCallDurationMinutes}},200,origin,env);
   }
   if(path==="/api/client/intelligence"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);

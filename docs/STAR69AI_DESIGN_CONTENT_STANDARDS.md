@@ -1,6 +1,6 @@
 # Star69AI Design, Readability & Content Standards
 
-**Status:** Required for all new pages and material edits  
+**Status:** Required for all new pages and material edits; palette updated 2026-11-18 to the latest approved brand colors  
 **Applies to:** Public website, Insights, story blog, challenge, partner pages, client/admin interfaces, forms, legal pages and email-linked web experiences.
 
 These standards are the source of truth for visual consistency. Do not introduce one-off styling or typography decisions that conflict with them. When an existing page differs, bring it into compliance deliberately rather than adding another temporary override.
@@ -8,7 +8,7 @@ These standards are the source of truth for visual consistency. Do not introduce
 ## 1. Brand and visual consistency
 
 - Preserve the Star69AI premium, modern visual identity.
-- Use the approved photo-matched neon palette: purple `#E156FF`, blue `#21B7FF`, and green `#14D251`. Keep the translucent white/glass film over the Earth-at-night hero artwork. Use vivid neon colors for decorative lighting and accents, with darker accessible companions (`#A52AB8`, `#0875A9`, `#167A3D`) for small text on white.
+- Use the current approved neon palette: purple `#F461FE`, blue `#43B4FE`, and green `#34FD78`. Keep the translucent white/glass film over the Earth-at-night hero artwork. Use vivid neon colors for decorative lighting and accents, with darker accessible companions selected and contrast-tested for each light surface for small text on white.
 - Accent colors are for emphasis, links, focus states and actions—not long paragraphs or large blocks of body copy.
 - Use consistent card radii, border treatments, shadows, button styles, section spacing and content widths.
 - A light section must use dark text; a dark section must use light text. Never rely on inherited colors when changing a section background.

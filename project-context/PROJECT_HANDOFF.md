@@ -1859,3 +1859,5 @@ This section supersedes the earlier activation-status notes above where they des
 - Mobile: intentional centered 4:3 crop of the existing artwork. A dedicated mobile source image may replace this CSS crop when provided.
 - Kept menu, utility links, footer, and visitor-arrival overlay behavior intact. Updated design lock and protected CSS fingerprint.
 - Browser screenshots at desktop, large monitor, tablet and mobile remain required before merge; GitHub Pages publication is not yet verified.
+
+- Versioned the once-per-session key to avoid a stale flag from the prior broken initializer suppressing the corrected arrival on first visit after update.

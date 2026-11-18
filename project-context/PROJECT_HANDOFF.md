@@ -1830,3 +1830,13 @@ This section supersedes the earlier activation-status notes above where they des
 - No Worker, D1, Retell, billing, authentication, customer records, forms, promotions, mission progress or reward logic changed.
 - Static source checks required: JavaScript syntax; image-load fallback; absence of global cursor hiding; overlay-host synchronization; pointer-events:none; mobile/reduced-motion behavior; homepage section placement and responsive CSS. Browser QA remains required for standard pages, the Secret Mission map/dialog, popovers, text inputs and pointer exit at desktop widths, plus touch/mobile checks.
 - Review through the PR. Do not merge to `main` without the founder's explicit approval. GitHub Pages deployment and live-site behavior remain unverified until after merge and deployment.
+
+
+## Visitor arrival spaceship and complete header artwork fit — 2026-11-18 — OWNER APPROVED
+
+- Working branch: `design/visitor-arrival-header-fit-2026-11-18`, based on current `main` after reading this handoff and inspecting the shared header implementation and both image assets.
+- Reuses the existing `assets/visitorspaceship.png` as a decorative visitor-arrival overlay on the homepage header. The ship flies in from the right and settles over the banner; it is hidden from assistive technology, cannot intercept clicks, and is shown once per browser session where session storage is available.
+- Changes the homepage banner image from cropped `cover` rendering to proportional `contain` rendering so the complete existing artwork remains visible within the current header space. The header height, menu, utility links, and interior-page compact header are not changed.
+- Reduced-motion users receive a stationary ship instead of the arrival animation. The ship is a separate overlay, not baked into the banner or brand logo.
+- Source-level checks required: verify asset paths exist; JavaScript syntax; exactly one ship overlay on homepage; no overlay on interior pages; image contain behavior; pointer-events:none; responsive and reduced-motion styles; navigation markup unchanged. Browser visual QA at desktop/tablet/mobile and live GitHub Pages verification remain outstanding.
+- No new image upload, Worker, D1, Retell, billing, authentication, customer data or production configuration changes. Review through PR; do not merge without explicit founder approval.

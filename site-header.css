@@ -124,3 +124,36 @@ body.site-home-page .site-global-home-brand{display:none!important}
  .site-global-nav-group .site-global-nav-button{min-height:43px;font-size:10px}
 }
 @media(max-width:360px){.site-global-nav-group .site-global-nav-button{font-size:9px;padding:7px 6px}}
+
+
+/* 2026-11-18: preserve the complete banner artwork and welcome visitors with their ship. */
+body.site-home-page .site-global-cover-image{
+  object-fit:contain!important;
+  object-position:center center!important;
+  background:#030918!important;
+}
+.site-global-visitor-ship{
+  position:absolute;z-index:3;top:56%;left:100%;
+  display:block;width:clamp(112px,12vw,176px);height:auto;max-height:72%;
+  object-fit:contain;object-position:center;pointer-events:none;
+  opacity:0;filter:drop-shadow(0 0 12px rgba(67,180,254,.7));
+  transform:translate3d(0,-50%,0);
+  animation:star69VisitorArrival 2.15s cubic-bezier(.18,.72,.24,1) .18s forwards;
+}
+@keyframes star69VisitorArrival{
+  0%{opacity:0;transform:translate3d(0,-50%,0)}
+  12%{opacity:1}
+  82%{opacity:1;transform:translate3d(-27vw,-50%,0)}
+  100%{opacity:1;transform:translate3d(-27vw,-50%,0)}
+}
+@media(max-width:700px){
+  .site-global-visitor-ship{top:58%;width:clamp(88px,25vw,128px);max-height:64%;animation-duration:1.8s}
+  @keyframes star69VisitorArrival{
+    0%{opacity:0;transform:translate3d(0,-50%,0)}
+    12%{opacity:1}
+    82%,100%{opacity:1;transform:translate3d(-34vw,-50%,0)}
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .site-global-visitor-ship{left:70%;top:56%;opacity:1;animation:none;transform:translate3d(0,-50%,0);width:clamp(88px,10vw,144px)}
+}

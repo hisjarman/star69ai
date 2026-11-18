@@ -1,3 +1,14 @@
+## Sitewide design-system consistency pass — 2026-11-18
+
+- Working branch: `design/phase-1-sitewide-token-consistency-2026-11-18`, based on current `main` after PR #260 was merged and its GitHub Pages deployment succeeded.
+- Standardized remaining legacy accent colors in shared and page-specific CSS to the approved Star69AI palette: purple `#F461FE`, blue `#43B4FE`, green `#34FD78`, and the approved green hover companion `#69FF98`. Updated old RGB glow values to the corresponding approved palette values.
+- Standardized remaining legacy `DM Sans` and `DM Mono` CSS font declarations to Manrope and IBM Plex Mono. The shared `readability.css` layer already supplies the canonical Michroma / Manrope / IBM Plex Mono type system.
+- Replaced the client cockpit's legacy Inter font stack and green palette values with the shared body-font token and approved green accents.
+- Added the shared `/readability.css` layer to `checkout-complete.html`, `newsletter-admin.html`, `partners-admin.html` and `trust-lab-admin.html`, which were the four HTML pages found missing it during the 55-page inventory.
+- Aligned inline accent colors in checkout and pricing pages. No page layout, hero artwork, navigation, form destination, authentication, Worker, D1, Retell, Stripe, PayPal, Resend, or customer/prospect data behavior was intentionally changed.
+- Static source validation on the branch: scanned all 35 CSS files for the audited legacy palette values and DM Sans / DM Mono / Inter declarations; none remained. Checked CSS brace counts for the audited files. Scanned all 55 HTML pages for audited legacy inline palette values and confirmed each loads the shared readability layer.
+- Browser-based visual QA at 360px, 768px and 1280px has not yet been performed. Review the PR and perform visual QA before merge. GitHub Pages deployment will run only after the founder approves merge. Do not merge `main` without explicit approval.
+
 ## Knowledge base and production status correction — 2026-11-18
 
 - Added the Star69AI Knowledge Base for the founder/operator, AI development assistants, Crew and clients. Start at `docs/knowledge-base/README.md`.

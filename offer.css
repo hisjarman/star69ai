@@ -1,5 +1,5 @@
 /* Star69AI offer disclosures and billing choices. Keep terms visible at decision points. */
-.offer-banner,.offer-disclosure{display:flex;flex-direction:column;gap:7px;border:1px solid rgba(20,210,81,.38);border-left:4px solid #14d251;border-radius:12px;background:linear-gradient(110deg,rgba(20,210,81,.12),rgba(33,183,255,.08));color:#f4f8fc;padding:14px 17px;margin:0 0 20px;max-width:100%}
+.offer-banner,.offer-disclosure{display:flex;flex-direction:column;gap:7px;border:1px solid rgba(52,253,120,.38);border-left:4px solid #34FD78;border-radius:12px;background:linear-gradient(110deg,rgba(52,253,120,.12),rgba(67,180,254,.08));color:#f4f8fc;padding:14px 17px;margin:0 0 20px;max-width:100%}
 .offer-banner strong,.offer-disclosure strong{font-size:15px;color:#fff}
 .offer-banner span,.offer-disclosure span{font-size:13px;line-height:1.55;color:#d0deea}
 .offer-banner a,.offer-disclosure a{align-self:flex-start;color:#b8f34b;font-weight:800;font-size:12px;text-decoration:underline;text-underline-offset:3px}
@@ -22,7 +22,7 @@
 .billing-choice .small{margin:0;color:#cbd8e4}
 @media(max-width:640px){.prepay-grid{grid-template-columns:1fr}.offer-banner,.offer-disclosure{padding:12px 13px}}
 
-.prepay-offers{background:radial-gradient(ellipse at 90% 0%,rgba(33,183,255,.13),transparent 42%),linear-gradient(145deg,#0b1521,#101d2a);border:1px solid #2c4355;border-radius:18px;margin:34px auto;padding:clamp(24px,4vw,42px)}
+.prepay-offers{background:radial-gradient(ellipse at 90% 0%,rgba(67,180,254,.13),transparent 42%),linear-gradient(145deg,#0b1521,#101d2a);border:1px solid #2c4355;border-radius:18px;margin:34px auto;padding:clamp(24px,4vw,42px)}
 .form-panel .offer-disclosure{background:#eef8f2;border-color:#b7dfc5;color:#1c3448}
 .form-panel .offer-disclosure strong{color:#17314a}
 .form-panel .offer-disclosure span{color:#40566a}

@@ -388,7 +388,7 @@ main>.section,
 .quiet-link{color:#b8d5d5}
 .section-kicker,.section-label,.eyebrow,.mono,.video-label,.stage-caption,
 .price-label,.dashboard-demo-top,.dashboard-demo-tab{
- font-family:"DM Mono",monospace;letter-spacing:.09em;
+ font-family:"IBM Plex Mono",monospace;letter-spacing:.09em;
 }
 .section-kicker{color:#83d9cb;text-shadow:0 0 18px rgba(112,225,203,.2)}
 /* Raised translucent panels with subtle dimensional edge lighting. */

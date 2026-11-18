@@ -1,6 +1,6 @@
 # Star69AI Approved Header & Navigation — Design Lock
 
-**Status: FROZEN — owner-approved grouped navigation revision on 2026-11-18.**
+**Status: FROZEN — owner-approved grouped navigation and homepage banner/visitor-arrival revision on 2026-11-18.**
 
 This is the permanent public-site header/navigation baseline. The owner explicitly revised the design on 2026-11-17: the full-width cinematic hero artwork appears on the homepage only; interior public pages retain the same compact cinematic Mission Control menu in a short dark header bar.
 
@@ -30,10 +30,17 @@ This is the permanent public-site header/navigation baseline. The owner explicit
 - Added responsive three-column, two-column and single-column group layouts, with clear group descriptions and keyboard focus behavior inherited from the existing links.
 - This is an explicit owner-authorized revision to the previously frozen navigation. The new blob IDs are pinned in the protection workflow.
 
+## Owner-approved homepage banner and visitor-arrival revision — 2026-11-18
+
+- The owner explicitly approved PR #284 to display the complete existing homepage banner artwork proportionally with `object-fit: contain` and add the existing visitor spaceship as a decorative arrival animation.
+- The animation is homepage-only, non-interactive, hidden from assistive technology, shown once per browser session where session storage is available, responsive on mobile, and stationary for reduced-motion users.
+- The compact interior-page header, all 19 navigation destinations, grouped menu, utility strip, footer styling, keyboard behavior and existing accessibility protections remain protected and unchanged in intent.
+- This is a narrowly scoped approved presentation revision, not permission for unrelated navigation/header redesign or removal of automated protection.
+
 ## Approved source baseline
 
-- `site-header.js` Git blob: `6664131e13969a38938c84657db4ec4b9a4df636`
-- `site-header.css` Git blob: `34a920b0f858198d33efc8a2174f21008cd2abc9`
+- `site-header.js` Git blob: `751b88c8ca38c52bde4ab52c97293c64c634e234`
+- `site-header.css` Git blob: `de9b5afd2fedf3a3dc931187c1d050b113f9f011`
 - Original cinematic restoration: PR #244
 - Revised homepage-only hero and compact interior menu: owner-authorized change, 2026-11-17
 - Original approved design reference: PR #215

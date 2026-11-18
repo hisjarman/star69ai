@@ -911,6 +911,7 @@ async function route(req,env){
    const recent=await env.DB.prepare("SELECT COUNT(*) AS total FROM avr_demo_requests WHERE lower(email)=? AND created_at>=?").bind(email,new Date(Date.now()-3600000).toISOString()).first();
    if(Number(recent?.total||0)>=5)throw Error("demo_request_rate_limit_reached_try_again_later");
    const discoveryComplete=p.discoveryComplete===true;
+   if(discoveryComplete&&p.privacyConsent!==true)throw Error("privacy_consent_required");
    const discovery=discoveryComplete?{
     website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),
     callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),

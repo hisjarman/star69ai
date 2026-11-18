@@ -122,6 +122,7 @@ function syncCustomIndustry() {
   if (industryOtherWrap) industryOtherWrap.hidden = !custom;
   if (industryOtherInput) {
     industryOtherInput.disabled = !custom;
+    industryOtherInput.required = custom;
     if (!custom) industryOtherInput.value = "";
   }
 }
@@ -202,7 +203,7 @@ function showStep(index) {
 function validateStep() {
   const controls = [...fields[currentStep].querySelectorAll("input,select,textarea")];
   for (const control of controls) {
-    if (String(control.value || "").trim() && !control.checkValidity()) {
+    if ((control.required || String(control.value || "").trim()) && !control.checkValidity()) {
       control.reportValidity();
       return false;
     }

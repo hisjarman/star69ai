@@ -94,6 +94,7 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 </style>
 
 <link rel="stylesheet" href="/secret-mission.css">
+<link rel="stylesheet" href="/call-rescue-simulator.css?v=20261118-1">
 </head><body class="multi-page" id="top"><section class="s69-nov-promo" aria-label="November promotion"><div><span class="s69-promo-kicker">LIMITED-TIME · NOVEMBER 2026</span><strong>Get your 3rd month free.</strong><span>Pay your first two monthly subscriptions, then receive month three free with code <b>3FORFREE</b>. The $99 setup fee still applies.</span><a href="./checkout.html?promo=3FORFREE">Claim the offer ↗</a></div></section>
 <main>
 <section class="s69-hero s69-hero-rethought" id="home" aria-labelledby="s69-title">
@@ -137,6 +138,44 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
     </div>
   </div>
   <div class="s69-hero-divider"></div>
+</section>
+<section class="call-rescue" id="call-rescue" aria-labelledby="cr-title" data-call-rescue>
+  <div class="cr-inner">
+    <div class="cr-copy">
+      <span class="cr-kicker">INTERACTIVE CALL SIMULATION</span>
+      <h2 id="cr-title">You're on the job.<br><em>Your phone rings.</em></h2>
+      <p>A new customer needs help while your hands are full. Try three possible outcomes and see how a professionally configured AI receptionist can support the way your business works.</p>
+      <ul class="cr-points">
+        <li>See the cost of an unanswered moment.</li>
+        <li>Compare interruption with a managed handoff.</li>
+        <li>Explore what your receptionist could capture.</li>
+      </ul>
+    </div>
+    <div class="cr-card" aria-label="Interactive incoming call scenario">
+      <div class="cr-card-top"><span>INCOMING CALL // SIMULATION 01</span><span class="cr-live">SCENARIO READY</span></div>
+      <div class="cr-caller">
+        <span class="cr-avatar" aria-hidden="true">☎</span>
+        <div><strong>New customer</strong><small>Service inquiry · Example scenario</small></div>
+      </div>
+      <div class="cr-call-summary"><small>CALLER'S FIRST WORDS</small><p>“Hi, I've got water leaking under my kitchen sink. Is there someone who can help?”</p></div>
+      <p class="cr-question">You're in the middle of a job. What happens next?</p>
+      <div class="cr-choices" role="group" aria-label="Choose how to handle the incoming call">
+        <button class="cr-choice" type="button" data-cr-choice="missed"><span>Let it go to voicemail</span><span aria-hidden="true">↗</span></button>
+        <button class="cr-choice" type="button" data-cr-choice="personal"><span>Stop work and answer personally</span><span aria-hidden="true">↗</span></button>
+        <button class="cr-choice" type="button" data-cr-choice="ai"><span>Have my AI receptionist answer</span><span aria-hidden="true">✦</span></button>
+      </div>
+      <div class="cr-result" data-cr-result role="region" aria-live="polite" aria-labelledby="cr-result-title" tabindex="-1" hidden>
+        <h3 data-cr-result-title></h3>
+        <p data-cr-result-copy></p>
+        <ul data-cr-result-details></ul>
+        <div class="cr-result-actions">
+          <a class="cr-cta" href="./get-started.html">Design my custom demo ↗</a>
+          <button class="cr-reset" type="button" data-cr-reset hidden>Try another outcome</button>
+        </div>
+      </div>
+      <p class="cr-note">This is a fictional, interactive example—not a live call, booking, dispatch or guarantee of a business outcome. Actual call handling follows the configuration and rules approved for each client.</p>
+    </div>
+  </div>
 </section>
 <section class="home-industry-proof" aria-labelledby="home-industry-proof-title">
   <div class="home-industry-proof-inner">
@@ -361,5 +400,6 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 </script>
 
 <script defer src="./app.js"></script><script defer src="./story-series.js"></script><script defer src="./experience.js"></script>
+<script defer src="/call-rescue-simulator.js?v=20261118-1"></script>
 <script defer src="/secret-mission.js"></script>
 </body></html>

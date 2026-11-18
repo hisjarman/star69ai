@@ -779,8 +779,10 @@ async function callShieldCallerHash(secret,value){
  return Array.from(new Uint8Array(signature),byte=>byte.toString(16).padStart(2,"0")).join("");
 }
 async function getCallShieldSettings(env,customerId){
- const row=await env.DB.prepare("SELECT protection_mode,max_attempts,window_minutes,cooldown_minutes,max_call_duration_minutes FROM avr_call_shield_settings WHERE customer_id=? LIMIT 1").bind(customerId).first();
- return {mode:row?.protection_mode||"standard",maxAttempts:Math.max(3,Math.min(20,Number(row?.max_attempts)||8)),windowMinutes:Math.max(1,Math.min(60,Number(row?.window_minutes)||10)),cooldownMinutes:Math.max(1,Math.min(120,Number(row?.cooldown_minutes)||15)),maxCallDurationMinutes:Math.max(1,Math.min(30,Number(row?.max_call_duration_minutes)||20))};
+ try{
+  const row=await env.DB.prepare("SELECT protection_mode,max_attempts,window_minutes,cooldown_minutes,max_call_duration_minutes FROM avr_call_shield_settings WHERE customer_id=? LIMIT 1").bind(customerId).first();
+  return {mode:row?.protection_mode||"standard",maxAttempts:Math.max(3,Math.min(20,Number(row?.max_attempts)||8)),windowMinutes:Math.max(1,Math.min(60,Number(row?.window_minutes)||10)),cooldownMinutes:Math.max(1,Math.min(120,Number(row?.cooldown_minutes)||15)),maxCallDurationMinutes:Math.max(1,Math.min(30,Number(row?.max_call_duration_minutes)||20))};
+ }catch(error){console.error("call_shield_settings_unavailable",String(error?.message||"settings_unavailable"));return {mode:"standard",maxAttempts:8,windowMinutes:10,cooldownMinutes:15,maxCallDurationMinutes:20}}
 }
 async function screenInboundCaller(env,customerId,dialedNumber,callerNumber,callId){
  const dialed=String(dialedNumber||"").trim(),caller=String(callerNumber||"").trim(),id=String(callId||"").trim();

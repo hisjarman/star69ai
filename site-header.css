@@ -282,7 +282,7 @@ body.site-home-page .site-global-cover-shade{inset:0!important}
   clip-path:polygon(0 0,100% 0,78% 50%,100% 100%,0 100%);
   filter:drop-shadow(0 0 4px rgba(52,253,120,.7));
 }
-.site-global-arrival.is-ready .site-global-arrival-flag{animation:star69FlagPlant .55s cubic-bezier(.2,.9,.3,1.3) 10.15s both}
+.site-global-arrival.is-ready .site-global-arrival-flag{animation:star69FlagPlant .55s cubic-bezier(.2,.9,.3,1.3) 10.85s both}
 @keyframes star69FlagPlant{0%{opacity:0;height:0;transform:scale(.2)}65%{opacity:1;height:23px;transform:scale(1.15)}100%{opacity:1;height:23px;transform:scale(1)}}
 @media(max-width:700px){
   body.site-home-page .site-global-cover{height:clamp(126px,35vw,150px)!important;aspect-ratio:2.8 / 1}

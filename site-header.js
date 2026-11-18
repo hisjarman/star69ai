@@ -4,7 +4,7 @@
     ["Industry Hub","/hub/","layers","green"],["Pricing","/pricing.html","credit-card","gold"],
     ["Demos","/demos.html","play-circle","purple"],["Learning Center","/learning-center/","graduation-cap","blue"],
     ["Stories","/blog/","book-open","gold"],["About Star69AI","/about.html","orbit","cyan"],
-    ["Managed service","/managed-service.html","sliders","green"],["Provider directory","/directory/","globe","purple"],
+    ["Managed service","/managed-service.html","sliders","green"],["What it can do","/capabilities.html","sparkles","purple"],["Provider directory","/directory/","globe","purple"],
     ["Managed AI research","/research/managed-ai-receptionists.html","microscope","blue"],["Industry overview","/industries.html","briefcase","green"],
     ["FAQ","/faq.html","circle-help","gold"],["AI Challenge","/challenge/","gamepad-2","purple"],
     ["AI Trust Lab","/trust-lab.html","shield-check","cyan"],["Partner program","/partners/","users","green"],

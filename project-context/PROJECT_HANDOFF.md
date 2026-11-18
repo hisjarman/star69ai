@@ -1,3 +1,21 @@
+## Capabilities hero refinement — 2026-11-18
+
+- Removed the abstract orb / AI-front-office centerpiece artwork from the capabilities hero.
+- Replaced the right side with a responsive, illustrated 12-item capability dashboard: 24/7 call answering, bookings/reservations, customer recognition, lead qualification, missed-call recovery, SMS/notifications, smart routing, business integrations, Call Shield, multilingual voice, payment workflows and analytics.
+- Kept the left side focused on the value proposition and custom-demo CTA. Added responsive layouts for tablet and mobile and retained the existing dark Star69AI palette.
+- Static checks: prior hero visual/orbit markup absent; key capability tiles present; responsive CSS breakpoints retained. Visual browser QA still required.
+- PR #278 remains the review/merge vehicle. No deployment or backend changes.
+
+## Public capabilities page — 2026-11-18 — REVIEW REQUIRED
+
+- Added `capabilities.html` and `capabilities.css` on branch `feature/public-capabilities-page-2026-11-18`.
+- The page presents Star69AI as a managed AI front office and groups capabilities into answering/understanding, booking/coordination, follow-up/recovery, and protection/improvement. It includes industry examples, secure integration expectations, a clear capabilities disclaimer, and custom-demo calls to action.
+- Added the page to the global Mission Control navigation in `site-header.js` and to `sitemap.xml`.
+- Content is intentionally qualified: appointment and restaurant booking require a supported connected booking system; CRM/customer recognition, messaging, payments and other workflows depend on provider support, customer permissions, plan and testing. The page does not claim every feature is active for every customer.
+- No homepage conversion sections, Worker routes, D1 schema/data, Retell configuration, billing, auth or customer records were changed. No merge or deployment performed.
+- Static source assertions: pageTitle:PASS, canonical:PASS, capabilitySections:PASS, caveats:PASS, demoCTA:PASS, sharedReadability:PASS, responsiveCss:PASS, cssBraces:PASS, navLink:PASS, sitemapLink:PASS.
+- Browser visual/accessibility QA at 360px, 768px and 1280px, link checks and GitHub Pages deployment verification remain outstanding. Review via PR; do not merge to `main` without the founder's explicit approval.
+
 ## Client Integrations Hub — 2026-11-18 — REVIEW REQUIRED
 
 - Added an Integrations page to client Mission Control with a responsive catalog of CRM, field-service, calendar, Google Workspace, automation and custom-system connection requests.

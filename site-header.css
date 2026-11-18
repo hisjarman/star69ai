@@ -101,3 +101,26 @@ body.site-home-page .site-global-home-brand{display:none!important}
   .site-global-home-brand img{max-height:46px}
   body.site-interior-page .site-global-toggle{right:12px}
 }
+
+
+/* Owner-approved navigation grouping: keep all destinations, make their purpose obvious. */
+.site-global-nav{max-height:min(78vh,760px)}
+.site-global-nav-grid{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:12px;margin:16px 0}
+.site-global-nav-group{min-width:0;padding:12px;border:1px solid rgba(67,180,254,.2);border-radius:9px;background:linear-gradient(145deg,rgba(10,27,52,.76),rgba(3,12,29,.62))}
+.site-global-nav-group-head{min-height:46px;margin:0 0 10px;padding:0 1px 9px;border-bottom:1px solid rgba(67,180,254,.2)}
+.site-global-nav-group-head h2{margin:0 0 4px;color:#bce9ff;font:800 9px/1.3 'IBM Plex Mono',monospace;letter-spacing:1.15px}
+.site-global-nav-group-head p{margin:0;color:#7896b5;font:400 9px/1.35 'Manrope',Arial,sans-serif}
+.site-global-nav-group-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.site-global-nav-group .site-global-nav-button{min-height:45px;padding:7px 8px;gap:7px;font-size:10px}
+.site-global-nav-group .site-global-nav-symbol{width:23px;height:23px;flex-basis:23px;font-size:15px}
+.site-global-nav-group .site-global-nav-button>b{font-size:11px}
+@media(max-width:1100px){.site-global-nav-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+ .site-global-nav{max-height:calc(100svh - 125px)}
+ .site-global-nav-grid{grid-template-columns:1fr;gap:9px}
+ .site-global-nav-group{padding:10px}
+ .site-global-nav-group-head{min-height:0;margin-bottom:8px}
+ .site-global-nav-group-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .site-global-nav-group .site-global-nav-button{min-height:43px;font-size:10px}
+}
+@media(max-width:360px){.site-global-nav-group .site-global-nav-button{font-size:9px;padding:7px 6px}}

@@ -107,3 +107,10 @@
 .story-next{margin-top:30px;padding:26px 0;border-top:1px solid rgba(190,220,220,.12);display:flex;justify-content:space-between;align-items:center;gap:25px}
 .story-next p{font-size:13px;margin:0}
 @media(max-width:700px){.story-episode-card{grid-template-columns:1fr}.story-episode-card-art{min-height:160px}.story-episode-card-copy{padding:22px}.story-episode-hero{padding:48px 0 35px}.story-episode-deck{font-size:14px}.story-scene{padding:23px 0}.story-scene p,.story-takeaway p{font-size:14px}.story-takeaway{padding:22px}.story-next{align-items:flex-start;flex-direction:column}}
+
+
+/* Prevent decorative hero artwork from expanding the mobile grid's min-content width. */
+.story-hero-grid>*{min-width:0}
+.story-hero-art{min-width:0;max-width:100%;box-sizing:border-box}
+
+@media(max-width:600px){.story-hero h1{font-size:clamp(36px,11.5vw,42px)}}

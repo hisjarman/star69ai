@@ -1,3 +1,37 @@
+# Latest handoff update — Phase 5 Visual QA and Phase 6 SEO (2026-11-18)
+
+- PR #264: https://github.com/hisjarman/star69ai/pull/264
+- Branch: `qa/phase-5-visual-phase-6-seo-2026-11-18`
+- Base: `main` at `4323f28d1de86e7d80c69584dcdd0795eebc7315`
+- PR is **open and unmerged**. Do not merge without explicit founder approval.
+
+## Phase 5 — responsive visual QA
+
+- Added `.github/workflows/site-quality.yml`, `scripts/visual-smoke.mjs` and responsive Playwright smoke tests.
+- Final run [44323161349](https://github.com/hisjarman/star69ai/actions/runs/44323161349) passed both SEO and responsive jobs.
+- Browser-tested 17 public routes at 360px, 768px and 1280px (51 route/viewport combinations). All returned HTTP 200, had a visible H1 and passed horizontal-overflow checks. Discovery required fields/privacy consent and mobile navigation open/close were also tested.
+- Screenshots artifact: https://github.com/hisjarman/star69ai/actions/runs/44323161349/artifacts/14434703926
+- Browser QA fixes: `intelligence-hub.css` keeps calculator inputs within grid tracks; `story-series.css` prevents story hero content from expanding narrow mobile layouts.
+- Frozen `site-header.js` and `site-header.css` were not modified.
+
+## Phase 6 — SEO and conversion
+
+- Added `scripts/check-site-seo.mjs`; the final CI run validates 47 public HTML pages, 47 sitemap URLs, metadata lengths, canonicals, H1s, JSON-LD syntax, crawler exclusions and noindex directives.
+- Added the public Receptionist Intelligence and “Call That Crossed the Signal Nebula” URLs to `sitemap.xml`; it now contains 47 URLs.
+- Added crawler exclusions for partner portal and admin pages; checkout/admin pages receive noindex directives.
+- Added missing Intelligence canonical/social metadata; revised Intelligence messaging to make call analysis configuration-dependent and to state that AI findings require human review before live changes.
+- Tightened titles/descriptions on key commercial, legal, editorial and learning pages; added descriptive alt text for three icons; completed Organization logo fields in editorial/directory JSON-LD.
+- Search Console `sc-domain:star69ai.com`: 8 clicks / 14 impressions in 2026-10-19 through 2026-11-15; data first appears on 2026-11-10. Too little history for trend or query analysis. Existing submitted sitemap had 45 URLs, zero warnings/errors, last downloaded 2026-11-18. Live on-page audit checked all 45 existing sitemap URLs: all HTTP 200/indexable, no critical/high issues; 16 medium and 80 low issues before branch fixes.
+- Core Web Vitals/CrUX data is not configured. After merge and Pages deployment, recheck the live sitemap in Search Console. Do not claim that Google has processed the two new URLs until verified.
+
+## Scope and remaining manual checks
+
+- No Worker, D1, Clerk, Retell, Stripe, PayPal, Resend, billing, customer data or production backend changes.
+- Physical-device visual QA, authenticated client/admin dashboard QA, Lighthouse/PageSpeed and Core Web Vitals remain outstanding.
+- Phase 5/6 changes are not live until PR #264 is approved, merged and GitHub Pages deployment succeeds.
+
+---
+
 ## Single discovery intake and corrected prepaid pricing — 2026-11-18
 
 - Consolidated homepage demo lead capture into the existing three-step `get-started.html` discovery form. Removed the separate homepage Formspree quick-lead form and its dedicated `demo-request.js` handler; the homepage now links to the canonical discovery brief. The weekly story newsletter form remains separate because it is an email subscription, not a sales lead form.

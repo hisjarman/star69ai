@@ -204,7 +204,7 @@ document.addEventListener("click",e=>{const link=e.target.closest(".knowledge-ca
  async function loadTickets(){const root=$("#support-ticket-list");if(!root)return;root.innerHTML='<div class="empty">Loading support requests…</div>';try{const d=await api("/api/client/support-tickets");renderTickets(d.tickets||[])}catch(e){root.innerHTML='<div class="empty">'+safe(e.message)+'</div>'}}
  async function submitTicket(e){e.preventDefault();const form=e.currentTarget,button=$("#support-submit"),status=$("#support-form-status");button.disabled=true;status.textContent="Submitting securely…";try{const p=Object.fromEntries(new FormData(form).entries());await api("/api/client/support-tickets",{method:"POST",body:JSON.stringify(p)});form.reset();status.textContent="Your request has been submitted. You can track it below.";await loadTickets()}catch(err){status.textContent=err.message}finally{button.disabled=false}}
 
- const addonNames={voice_cloning:"Custom Voice Cloning",sms_messaging:"SMS Messaging",extra_numbers:"Additional Phone Numbers",advanced_analytics:"Advanced Analytics",calendar_booking:"Calendar & Appointment Booking",crm_integration:"CRM Integration",extra_languages:"Additional Language Configuration",priority_support:"Priority Support"};
+ const addonNames={custom_ai_workflow:"Custom AI Workflow",custom_integration:"Custom Business Integration",directory_operator:"Intelligent Directory Operator"};
  function addonStatus(v){return ({requested:"Request received",approved:"Approved",in_progress:"In progress",active:"Active",declined:"Not approved",cancelled:"Cancelled"})[v]||v}
  async function loadAddons(){
   const root=$("#addon-orders");if(!root)return;

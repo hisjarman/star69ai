@@ -1,3 +1,32 @@
+## Star69AI pricing policy — standard features included; custom work quoted — 2026-11-18 — REVIEW REQUIRED
+
+- Founder clarified the customer-facing pricing strategy: avoid a confusing list of fixed add-on prices and avoid giving prospects a reason to shop individual feature line-items against another agency.
+- All standard Retell/voice-platform features and supported capabilities used for the ordinary AI receptionist are included in the plan's premium per-minute pricing. Do not advertise or charge separate add-on fees for ordinary voice features, voice options, language capabilities, knowledge, standard call handling, analytics or supported platform features.
+- External third-party provider charges not already covered by the plan and greater than $2 are passed through at the exact verified cost, with no markup. Incidental provider costs of $2 or less are absorbed by Star69AI. Never separately bill a Retell/voice-platform feature or usage already covered by the premium per-minute price. Verify the actual provider invoice/configuration and disclose the charge before activation; obtain customer approval. Do not expose Retell as the customer-facing service brand.
+- Charge separately only for optional work that creates incremental Star69AI labor or additional resource consumption, such as custom Cloudflare AI Worker workflows, specialized AI processing, custom integrations, advanced private-directory synchronization/maintenance, dedicated compute or ongoing custom development.
+- Custom work is quote-only, not a public fixed-price catalogue. Itemize one-time labor, recurring maintenance, dedicated AI/Worker/compute resources and any third-party pass-through costs separately. Get written customer approval before starting, enabling or billing.
+- Basic configured call routing remains included. Intelligent Directory Operator is a requestable custom workflow only when the requested scope requires extra development, AI resources, directory synchronization or ongoing maintenance; no fixed public price.
+- Public Pricing page and client Upgrades portal now use a short inclusion/quote explanation and only three custom-work request categories: Custom AI Workflow, Custom Business Integration and Intelligent Directory Operator.
+- Worker add-on catalog is request metadata only, with quote-type entries for those three categories. It does not create prices, activate features, provision resources or charge customers. No Stripe/PayPal products/prices or automatic billing changed.
+- Updated PR #295 remains draft and unmerged. Browser QA, JS syntax checks, safe test-account request workflow, admin fulfillment review and GitHub Pages publication verification remain outstanding. Do not merge or deploy without founder approval.
+- Supersedes the previous 25%-below-competitor fixed-price add-on catalog and all nine published prices.
+- Branch: `feature/intelligent-directory-operator-capability-2026-11-18`; PR #295.
+
+
+---
+
+## Intelligent Directory Operator capability positioning — 2026-11-18 — REVIEW REQUIRED
+
+- Added a dedicated premium Directory Operator section to the public Capabilities page on branch `feature/intelligent-directory-operator-capability-2026-11-18`.
+- Content includes four illustrative call examples (purpose-based billing lookup, expertise/department discovery, multi-location routing and no-answer fallback), natural-language directory search, role/skill/department matching, location-aware routing, supported-language requests, contextual transfers, approved private-directory imports/maintenance, and search/routing-gap review.
+- Packaging distinction: basic configured call routing remains part of standard receptionist workflows where supported; the advanced Directory Operator is a separately scoped premium managed add-on. Public page directs prospects to request a written quote based on directory size, locations, integrations, routing complexity and maintenance. No fixed add-on price is advertised until provider and delivery costs are validated.
+- Accuracy boundaries: the section labels conversations as illustrative; private approved directory is the initial scope; public internet-wide business discovery is explicitly excluded. The feature is not represented as live or automatically included. Activation requires compatible voice workflow/functions, approved directory source, verified transfer destinations and end-to-end tests.
+- Changes are limited to `capabilities.html`, `capabilities.css` and this handoff. No pricing/checkout, backend, Worker, D1, Retell agent, billing, auth, CRM connection or customer data behavior was changed. No public deployment or production activation performed.
+- Required validation: source assertions for all four examples and pricing/availability caveats; HTML structure/IDs and CSS brace balance; responsive browser QA at 360px, 768px and 1280px; link checks; SEO metadata and GitHub Pages publication check.
+- PR review required. Do not merge to `main` without the founder's explicit approval.
+
+---
+
 ## Homepage hero true-banner fill correction — 2026-11-19 — REVIEW REQUIRED
 
 - Owner reports the hero still does not behave visually like a site banner. Changed only the homepage hero image presentation from letterboxed `object-fit:contain` to a full-bleed, fixed-height banner using `object-fit:cover`; the image retains its natural proportions and excess image area is cropped instead of leaving side/top/bottom gaps.

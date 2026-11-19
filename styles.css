@@ -452,3 +452,24 @@ body.site-home-page .site-global-cover-shade{z-index:1}
 body.site-home-page .site-global-cover-topline{z-index:2}
 body.site-home-page .site-global-toggle{z-index:4}
 body.site-home-page .site-global-nav{z-index:5}
+
+
+/* Public add-on pricing and competitor benchmark disclosure. */
+.addon-price-section{padding-top:clamp(42px,6vw,72px);padding-bottom:clamp(42px,6vw,72px)}
+.addon-price-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:28px 0 20px}
+.addon-price-card{min-width:0;padding:20px;border:1px solid rgba(67,180,254,.22);border-radius:13px;background:linear-gradient(145deg,rgba(12,29,54,.96),rgba(5,13,29,.98));box-shadow:0 12px 28px rgba(0,0,0,.12)}
+.addon-price-name{display:block;min-height:38px;color:#d8e8f8;font-size:13px;font-weight:750;line-height:1.45}
+.addon-price-card>strong{display:block;margin:12px 0;color:#34fd78;font-size:30px;font-weight:850;letter-spacing:-.04em}
+.addon-price-card>strong small{margin-left:4px;color:#a8bdd2;font-size:11px;font-weight:650;letter-spacing:0}
+.addon-price-card p{margin:0;color:#a8bdd2;font-size:11px;line-height:1.6}
+.addon-price-notes{padding:16px 18px;border:1px solid rgba(244,97,254,.2);border-radius:11px;background:rgba(244,97,254,.035)}
+.addon-price-notes p{margin:0;color:#b8c9dc;font-size:11px;line-height:1.75}
+.addon-price-notes p+p{margin-top:9px}
+.addon-price-notes strong{color:#f2f7ff}
+.addon-benchmark-disclosure{margin-top:15px;padding:14px 16px;border:1px solid rgba(67,180,254,.2);border-radius:10px;background:rgba(67,180,254,.035);color:#b8c9dc;font-size:11px;line-height:1.7}
+.addon-benchmark-disclosure summary{color:#e7f2ff;font-weight:750;cursor:pointer}
+.addon-benchmark-disclosure ul{margin:10px 0;padding-left:20px}
+.addon-benchmark-disclosure a{color:#43b4fe;text-decoration:underline;text-underline-offset:3px}
+.addon-benchmark-disclosure p{margin:9px 0 0}
+@media(max-width:850px){.addon-price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.addon-price-grid{grid-template-columns:1fr;gap:10px}.addon-price-card{padding:17px}.addon-price-name{min-height:0}.addon-price-card>strong{font-size:27px}}

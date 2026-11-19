@@ -1150,14 +1150,9 @@ async function route(req,env){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
    const p=await body(req,3000),key=String(p.addonKey||"");
    const catalog={
-    voice_cloning:["Custom Voice Cloning","one_time"],
-    sms_messaging:["SMS Messaging","usage"],
-    extra_numbers:["Additional Phone Numbers","monthly"],
-    advanced_analytics:["Advanced Analytics","monthly"],
-    calendar_booking:["Calendar & Appointment Booking","one_time"],
-    crm_integration:["CRM Integration","one_time"],
-    extra_languages:["Additional Language Configuration","one_time"],
-    priority_support:["Priority Support","monthly"]
+    custom_ai_workflow:["Custom AI Workflow","quote"],
+    custom_integration:["Custom Business Integration","quote"],
+    directory_operator:["Intelligent Directory Operator","quote"]
    };
    if(!catalog[key])throw Error("invalid_addon");
    const duplicate=await env.DB.prepare("SELECT id FROM avr_addon_orders WHERE customer_id=? AND addon_key=? AND status IN ('requested','approved','in_progress','active') LIMIT 1").bind(c.id,key).first();

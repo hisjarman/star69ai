@@ -25,7 +25,7 @@
   const markup = `
     <header class="site-global-header" data-site-global-header>
       <div class="site-global-cover">
-        <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI over a cinematic space horizon" fetchpriority="high" decoding="async">
+        <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI — Communications Evolved" width="3840" height="1645" fetchpriority="high" decoding="async">
         <div class="site-global-cover-shade" aria-hidden="true"></div>
         <a class="site-global-home-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI"></a>
         <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span></div>

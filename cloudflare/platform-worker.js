@@ -381,6 +381,8 @@ async function recordCheckoutAcceptance(env,req,p,d,human){
  return {eventId,agreementSha};
 }
 async function recordCheckoutPaymentEvent(env,onboardingId,provider,reference){
+ const duplicate=await env.DB.prepare("SELECT event_id FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? AND provider=? AND provider_reference=? LIMIT 1").bind(onboardingId,"payment_confirmed",String(provider||""),String(reference||"")).first();
+ if(duplicate)return false;
  const accepted=await env.DB.prepare("SELECT * FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? ORDER BY server_timestamp DESC LIMIT 1").bind(onboardingId,"purchase_terms_accepted").first();
  if(!accepted)return false;
  await env.DB.prepare("INSERT INTO avr_checkout_evidence_events(event_id,customer_id,onboarding_id,event_type,email,business_name,plan_key,billing_cadence,terms_version,privacy_version,service_disclosure_version,plan_snapshot_json,acceptance_json,agreement_sha256,turnstile_hostname,turnstile_action,ip_address,user_agent,provider,provider_reference,server_timestamp) VALUES(?,?,?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?)")

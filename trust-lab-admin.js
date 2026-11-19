@@ -1,5 +1,5 @@
 (() => {
-  const API_BASE = window.AVR_CONFIG?.apiBase || "https://avr-trust-lab-api.hisjarman.workers.dev";
+  const API_BASE = window.AVR_CONFIG?.apiBase || "https://trust.star69ai.com";
   const $ = selector => document.querySelector(selector);
   const auth = $("#ta-auth"), dashboard = $("#ta-dashboard"), locked = $("#ta-locked");
   const authTitle = $("#ta-auth-title"), authCopy = $("#ta-auth-copy"), authActions = $("#ta-auth-actions");

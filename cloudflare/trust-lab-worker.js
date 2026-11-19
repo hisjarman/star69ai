@@ -202,7 +202,7 @@ async function handleNewsletterSubscribe(request,env,origin){
     if(Number(count?.total||0)>=5)return json({error:"signup_rate_limit"},429,origin,env);
     const token=crypto.randomUUID()+crypto.randomUUID().replace(/-/g,"");
     await env.DB.prepare("INSERT INTO newsletter_subscribers (id,email,first_name,consent_text,unsubscribe_token,ip_hash) VALUES (?,?,?,?,?,?) ON CONFLICT(email) DO UPDATE SET first_name=COALESCE(excluded.first_name,newsletter_subscribers.first_name),consent_text=excluded.consent_text,status='subscribed',unsubscribe_token=excluded.unsubscribe_token,ip_hash=excluded.ip_hash,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')").bind(crypto.randomUUID(),email,firstName,"I agree to receive the free weekly Saved by the AI Receptionist story email. I can unsubscribe at any time.",token,ipHash).run();
-    const unsubscribeUrl="https://avr-trust-lab-api.hisjarman.workers.dev/api/newsletter/unsubscribe?token="+encodeURIComponent(token);
+    const unsubscribeUrl="https://trust.star69ai.com/api/newsletter/unsubscribe?token="+encodeURIComponent(token);
     const confirmationSent=await sendResend(env,{to:email,subject:"Your weekly AI receptionist story signup",text:"You are subscribed to the weekly Saved by the AI Receptionist story email. Unsubscribe any time: "+unsubscribeUrl,html:"<p>You are subscribed to the weekly <b>Saved by the AI Receptionist</b> story email.</p><p><a href=\""+unsubscribeUrl+"\">Unsubscribe</a> at any time.</p>"});
     return json({subscribed:true,confirmationSent,message:"Your email subscription has been saved."},201,origin,env);
   }catch(e){console.error("newsletter_subscribe_failed",e?.message||e);return json({error:"newsletter_unavailable"},503,origin,env);}
@@ -269,7 +269,7 @@ async function handleAdmin(request,env,origin,path){
       const statusFilter=new URL(request.url).searchParams.get("status")==="all"?"all":"subscribed";
       const q=statusFilter==="all"?"SELECT email,first_name AS firstName,status,created_at AS createdAt,updated_at AS updatedAt,unsubscribe_token AS unsubscribeToken FROM newsletter_subscribers ORDER BY created_at DESC LIMIT 1000":"SELECT email,first_name AS firstName,status,created_at AS createdAt,updated_at AS updatedAt,unsubscribe_token AS unsubscribeToken FROM newsletter_subscribers WHERE status='subscribed' ORDER BY created_at DESC LIMIT 1000";
       const r=await env.DB.prepare(q).all();
-      const subscribers=(r.results||[]).map(s=>({...s,unsubscribeUrl:"https://avr-trust-lab-api.hisjarman.workers.dev/api/newsletter/unsubscribe?token="+encodeURIComponent(s.unsubscribeToken)}));
+      const subscribers=(r.results||[]).map(s=>({...s,unsubscribeUrl:"https://trust.star69ai.com/api/newsletter/unsubscribe?token="+encodeURIComponent(s.unsubscribeToken)}));
       return json({subscribers,count:subscribers.length},200,origin,env);
     }
     if(request.method==="GET"&&path==="/api/admin/trust-lab/pending"){

@@ -1,5 +1,5 @@
 (() => {
-const API_BASE=window.AVR_CONFIG?.apiBase||"https://avr-trust-lab-api.hisjarman.workers.dev";
+const API_BASE=window.AVR_CONFIG?.apiBase||"https://trust.star69ai.com";
 const $=s=>document.querySelector(s);
 const labels={challenge:"Challenge",question:"Hard question",stress_test:"Stress test"};
 let posts=[];

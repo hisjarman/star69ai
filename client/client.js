@@ -436,7 +436,7 @@ function renderAgentRequests(items){
   eliPanel.hidden=!open;eliPanel.setAttribute("aria-hidden",String(!open));
   eliLauncher.setAttribute("aria-expanded",String(open));
   eliLauncher.classList.toggle("is-open",open);
-  if(open&&eliFrame&&!eliFrame.hasAttribute("src"))eliFrame.src=eliFrame.dataset.src||"https://star69ai-concierge.hisjarman.workers.dev/";
+  if(open&&eliFrame&&!eliFrame.hasAttribute("src"))eliFrame.src=eliFrame.dataset.src||"https://concierge.star69ai.com/";
   if(!open)eliLauncher.focus();
  }
  eliLauncher?.addEventListener("click",()=>setEliOpen(eliPanel?.hidden!==false));

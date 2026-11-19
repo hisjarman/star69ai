@@ -1,5 +1,5 @@
 (() => {
-  const API="https://avr-trust-lab-api.hisjarman.workers.dev";
+  const API="https://trust.star69ai.com";
   const $=s=>document.querySelector(s);
   let clerk=null,mounted=false,subscribers=[];
   const auth=$("#na-auth"),dashboard=$("#na-dashboard"),locked=$("#na-locked"),rows=$("#na-rows");

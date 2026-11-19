@@ -1,5 +1,5 @@
 (() => {
- const API="https://avr-trust-lab-api.hisjarman.workers.dev", $=s=>document.querySelector(s);
+ const API="https://trust.star69ai.com", $=s=>document.querySelector(s);
  const auth=$("#pa-auth"),dashboard=$("#pa-dashboard"),locked=$("#pa-locked"),actions=$("#pa-auth-actions"),userButton=$("#pa-user-button"),list=$("#pa-list"),message=$("#pa-message");
  let clerk=null,mounted=false,applications=[];
  function say(text,error=false){message.textContent=text;message.classList.toggle("error",error);message.hidden=false;}

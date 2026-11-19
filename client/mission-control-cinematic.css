@@ -365,7 +365,7 @@ body:after{opacity:.10!important}
 .top.cockpit-banner-header{
   position:sticky!important;top:8px!important;z-index:60!important;
   display:flex!important;align-items:center!important;justify-content:space-between!important;
-  min-height:56px!important;height:56px!important;padding:6px 13px!important;
+  min-height:54px!important;height:54px!important;padding:6px 13px!important;
   overflow:visible!important;border:1px solid rgba(93,174,245,.32)!important;
   border-radius:14px!important;
   background:linear-gradient(105deg,rgba(3,11,29,.94),rgba(8,19,43,.88) 58%,rgba(20,12,43,.9))!important;

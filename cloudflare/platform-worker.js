@@ -1321,7 +1321,7 @@ async function route(req,env){
     return json({requests:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
-    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.phone_number,p.industry,p.notes,p.status,p.created_at,p.last_contacted_at,ah.result_status AS after_hours_status,ah.check_method AS after_hours_method,ah.evidence AS after_hours_evidence,ah.phone_number AS after_hours_phone,ah.checked_at AS after_hours_checked_at,ah.checked_by AS after_hours_checked_by,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p LEFT JOIN avr_marketing_after_hours_checks ah ON ah.check_id=(SELECT c.check_id FROM avr_marketing_after_hours_checks c WHERE c.prospect_id=p.id ORDER BY c.checked_at DESC LIMIT 1) ORDER BY p.created_at DESC LIMIT 500").all();
+    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.phone_number,p.industry,p.notes,p.status,p.call_number_type,p.call_permission_confirmed,p.call_permission_evidence,p.call_permission_checked_at,p.call_opted_out_at,p.created_at,p.last_contacted_at,ah.result_status AS after_hours_status,ah.check_method AS after_hours_method,ah.evidence AS after_hours_evidence,ah.phone_number AS after_hours_phone,ah.checked_at AS after_hours_checked_at,ah.checked_by AS after_hours_checked_by,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p LEFT JOIN avr_marketing_after_hours_checks ah ON ah.check_id=(SELECT c.check_id FROM avr_marketing_after_hours_checks c WHERE c.prospect_id=p.id ORDER BY c.checked_at DESC LIMIT 1) ORDER BY p.created_at DESC LIMIT 500").all();
     return json({prospects:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
@@ -1355,7 +1355,7 @@ async function route(req,env){
     const rows=await env.DB.prepare("SELECT c.id,c.prospect_id,c.to_number,c.from_number,c.call_status,c.initiated_by,c.created_at,c.started_at,c.ended_at,c.duration_ms,c.call_summary,c.recording_url,p.business_name FROM avr_marketing_ai_calls c LEFT JOIN avr_marketing_prospects p ON p.id=c.prospect_id ORDER BY c.created_at DESC LIMIT 100").all();
     return json({configured:!!(env.SALES_RETELL_AGENT_ID&&env.SALES_RETELL_FROM_NUMBER),agentConfigured:!!env.SALES_RETELL_AGENT_ID,callerConfigured:!!env.SALES_RETELL_FROM_NUMBER,calls:rows.results||[]},200,origin,env);
    }
-   const salesEligibility=path.match(/^\\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/call-eligibility\\/?$/i);
+   const salesEligibility=path.match(/^\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/call-eligibility\\/?$/i);
    if(salesEligibility&&req.method==="POST"){
     const id=salesEligibility[1],p=await body(req,5000),numberType=String(p.numberType||"unknown"),evidence=String(p.evidence||"").trim().slice(0,1200),permission=p.permissionConfirmed===true,doNotCall=p.doNotCall===true;
     if(!["unknown","verified_business_landline","wireless_mobile","residential","other"].includes(numberType))throw Error("valid_sales_call_number_type_required");
@@ -1370,7 +1370,7 @@ async function route(req,env){
     await audit(env,u,"marketing_ai_call_eligibility_updated",null,{prospectId:id,numberType,permissionConfirmed:permission,doNotCall});
     return json({saved:true,eligible:permission&&numberType==="verified_business_landline"&&!doNotCall},200,origin,env);
    }
-   const salesCall=path.match(/^\\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/call\\/?$/i);
+   const salesCall=path.match(/^\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/call\\/?$/i);
    if(salesCall&&req.method==="POST"){
     if(!env.RETELL_API_KEY||!env.SALES_RETELL_AGENT_ID||!env.SALES_RETELL_FROM_NUMBER)throw Error("sales_retell_agent_and_caller_number_must_be_configured");
     const id=salesCall[1],p=await body(req,2000),confirmed=p.confirmed===true;
@@ -1379,8 +1379,8 @@ async function route(req,env){
     if(!prospect)throw Error("marketing_prospect_not_found");
     if(prospect.status!=="active"||prospect.call_opted_out_at)throw Error("prospect_is_suppressed_or_opted_out");
     if(prospect.call_permission_confirmed!==1||prospect.call_number_type!=="verified_business_landline"||String(prospect.call_permission_evidence||"").trim().length<10)throw Error("documented_permission_and_verified_business_landline_required");
-    const toNumber="+"+String(prospect.phone_number||"").replace(/\\D/g,"");
-    if(!/^\\+[1-9]\\d{7,14}$/.test(toNumber))throw Error("prospect_phone_must_be_valid_e164");
+    const toNumber="+"+String(prospect.phone_number||"").replace(/\D/g,"");
+    if(!/^\+[1-9]\d{7,14}$/.test(toNumber))throw Error("prospect_phone_must_be_valid_e164");
     const recent=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_ai_calls WHERE created_at>=? AND call_status NOT IN ('failed','rejected')").bind(new Date(Date.now()-86400000).toISOString()).first();
     if(Number(recent?.n||0)>=5)throw Error("daily_ai_sales_call_limit_reached");
     const prior=await env.DB.prepare("SELECT id FROM avr_marketing_ai_calls WHERE prospect_id=? AND created_at>=? AND call_status NOT IN ('failed','rejected') LIMIT 1").bind(id,new Date(Date.now()-30*86400000).toISOString()).first();

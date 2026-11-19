@@ -2050,3 +2050,12 @@ This section supersedes the earlier activation-status notes above where they des
 - The directional rotation is layered with the existing perspective pitch, yaw and banking, so the spacecraft keeps its 3D flight effect while changing heading. Small sub-pixel movements do not cause heading jitter.
 - Assumes the neutral `cursor.png` artwork faces right; if visual QA shows a different native facing direction, adjust the heading offset rather than modifying or redrawing the image.
 - Validation required: JavaScript syntax check, static heading-direction assertions, and browser QA for all four cardinal directions plus diagonals. Confirm the image's native facing direction visually before merge. No Worker, D1, billing, authentication, customer data or production configuration changed. No merge or deployment performed.
+
+
+## Calm optional cursor and persistent header toggle — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `ux/calm-cursor-toggle-2026-11-19`, based on current main at `831743141535fd7552d5574892b7b43f419b5e0b`.
+- Replaced the oversized, high-motion pointer spacecraft with a small 34–42px decorative follower. It eases gently toward the pointer and no longer rotates, banks, pitches, yaws, flashes on click or reacts to tiny hand movements. The native text cursor remains available over text-entry fields.
+- Added a keyboard-accessible **CURSOR FX ON/OFF** control at the far-right end of the shared utility row. The preference is saved locally across page loads; switching OFF immediately restores the native pointer. The control is available on mouse/pen desktop layouts; the decorative effect remains unavailable for touch-only devices and reduced-motion preferences.
+- No change to the homepage visitor-arrival animation, navigation destinations, footer, Worker, D1, Retell, authentication, billing or customer records.
+- Required validation: JavaScript syntax checks for cursor/header scripts; source assertions for size, absence of rotation/3D transforms, smooth interpolation, persistent preference, toggle accessibility and native cursor restoration; run the protected-header workflow. Browser QA at desktop/mobile and live GitHub Pages verification remain outstanding. No merge or deployment performed.

@@ -970,8 +970,8 @@ async function retellWebhook(req,env){
  const salesMeta=call.metadata||{};
  if(salesMeta.purpose==="star69ai_sales"&&salesMeta.prospect_id){
   const salesStatus=call.call_status||(event==="call_ended"?"ended":event==="call_analyzed"?"analyzed":event);
-  await env.DB.prepare("UPDATE avr_marketing_ai_calls SET call_status=?,duration_ms=COALESCE(?,duration_ms),started_at=COALESCE(?,started_at),ended_at=COALESCE(?,ended_at),transcript=COALESCE(?,transcript),recording_url=COALESCE(?,recording_url),call_summary=COALESCE(?,call_summary),updated_at=? WHERE retell_call_id=?")
-   .bind(salesStatus,duration,start,end,call.transcript||null,call.recording_url||null,analysis.call_summary||null,new Date().toISOString(),id).run();
+  await env.DB.prepare("UPDATE avr_marketing_ai_calls SET call_status=?,duration_ms=COALESCE(?,duration_ms),started_at=COALESCE(?,started_at),ended_at=COALESCE(?,ended_at),transcript=COALESCE(?,transcript),recording_url=COALESCE(?,recording_url),call_summary=COALESCE(?,call_summary),updated_at=? WHERE id=? OR retell_call_id=?")
+   .bind(salesStatus,duration,start,end,call.transcript||null,call.recording_url||null,analysis.call_summary||null,new Date().toISOString(),String(salesMeta.sales_call_id||""),id).run();
  }
 
  if(cid&&event==="call_analyzed"){

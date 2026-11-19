@@ -1381,6 +1381,11 @@ async function route(req,env){
     if(prospect.call_permission_confirmed!==1||prospect.call_number_type!=="verified_business_landline"||String(prospect.call_permission_evidence||"").trim().length<10)throw Error("documented_permission_and_verified_business_landline_required");
     const toNumber="+"+String(prospect.phone_number||"").replace(/\D/g,"");
     if(!/^\+[1-9]\d{7,14}$/.test(toNumber))throw Error("prospect_phone_must_be_valid_e164");
+    const fromNumber=String(env.SALES_RETELL_FROM_NUMBER||"").trim();
+    if(!/^\+[1-9]\d{7,14}$/.test(fromNumber)||fromNumber===toNumber)throw Error("dedicated_star69ai_caller_number_must_be_valid_e164");
+    const assignedCaller=await env.DB.prepare("SELECT customer_id FROM avr_numbers WHERE phone_number=? AND customer_id IS NOT NULL LIMIT 1").bind(fromNumber).first();
+    if(assignedCaller)throw Error("sales_caller_number_must_not_be_assigned_to_a_customer");
+
     const recent=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_ai_calls WHERE created_at>=? AND call_status NOT IN ('failed','rejected')").bind(new Date(Date.now()-86400000).toISOString()).first();
     if(Number(recent?.n||0)>=5)throw Error("daily_ai_sales_call_limit_reached");
     const prior=await env.DB.prepare("SELECT id FROM avr_marketing_ai_calls WHERE prospect_id=? AND created_at>=? AND call_status NOT IN ('failed','rejected') LIMIT 1").bind(id,new Date(Date.now()-30*86400000).toISOString()).first();

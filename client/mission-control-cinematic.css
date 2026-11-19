@@ -335,3 +335,176 @@ body:after{
 .integration-quote{padding:10px 12px;border-left:3px solid #43b4fe;background:rgba(67,180,254,.08);border-radius:5px}
 @media(max-width:900px){.integration-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.integration-hub-grid{grid-template-columns:1fr}.integration-request-item{flex-direction:column}.integration-request-item .status{align-self:flex-start}}
+
+/* 2026-11-19 Mission Control cinematic hierarchy refresh.
+   One authoritative final layer: no new framework, no data/API/auth changes.
+   The public hero artwork is reused as a restrained workspace horizon, not a second hero banner. */
+:root{
+  --mc-void:#020611;
+  --mc-blue:#43B4FE;
+  --mc-purple:#F461FE;
+  --mc-green:#34FD78;
+  --mc-panel:rgba(7,17,39,.78);
+  --mc-panel-strong:rgba(8,19,45,.94);
+  --mc-edge:rgba(111,183,255,.24);
+}
+html,body{background-color:var(--mc-void)!important}
+body{
+  background-image:
+    radial-gradient(ellipse 54% 38% at 9% 7%,rgba(35,117,199,.25),transparent 72%),
+    radial-gradient(ellipse 48% 42% at 94% 19%,rgba(153,65,190,.19),transparent 72%),
+    radial-gradient(ellipse 58% 38% at 54% 96%,rgba(25,87,158,.14),transparent 74%),
+    linear-gradient(180deg,#030817 0%,#050a1b 52%,#020611 100%)!important;
+  background-attachment:fixed!important;
+}
+body:before{opacity:.62!important;mix-blend-mode:screen}
+body:after{opacity:.10!important}
+.shell{max-width:1740px!important;padding:12px clamp(12px,2vw,28px) 30px!important}
+
+/* Compact brand/navigation rail: logo lives here, not a second time in the sidebar. */
+.top.cockpit-banner-header{
+  position:sticky!important;top:8px!important;z-index:60!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  min-height:54px!important;height:54px!important;padding:6px 13px!important;
+  overflow:visible!important;border:1px solid rgba(93,174,245,.32)!important;
+  border-radius:14px!important;
+  background:linear-gradient(105deg,rgba(3,11,29,.94),rgba(8,19,43,.88) 58%,rgba(20,12,43,.9))!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.07),0 0 24px rgba(67,180,254,.07)!important;
+  backdrop-filter:blur(20px) saturate(135%)!important;
+}
+.top.cockpit-banner-header:before{
+  content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--mc-blue),var(--mc-purple),var(--mc-green));
+  box-shadow:0 0 14px rgba(67,180,254,.5);pointer-events:none;
+}
+.top.cockpit-banner-header:after{display:none!important;content:none!important}
+.top.cockpit-banner-header .brand{display:flex!important;align-items:center!important;min-width:0}
+.top.cockpit-banner-header .brand img{
+  display:block!important;width:38px!important;height:38px!important;
+  max-width:38px!important;max-height:38px!important;object-fit:contain!important;
+  filter:drop-shadow(0 0 12px rgba(67,180,254,.22));
+}
+.top-right{display:flex!important;align-items:center!important;gap:10px!important}
+#session-pill{font:600 9px/1 "IBM Plex Mono",monospace!important;letter-spacing:.1em!important}
+#user-button{min-height:36px}
+
+/* Remove duplicated brand lockup; the compact top rail is the single brand anchor. */
+.cockpit-sidebar-brand{display:none!important}
+.client-workspace-layout{
+  grid-template-columns:236px minmax(0,1fr)!important;
+  gap:16px!important;margin-top:14px!important;
+}
+.client-sidebar{
+  top:76px!important;min-height:calc(100svh - 90px)!important;
+  max-height:calc(100svh - 90px)!important;padding:15px 12px!important;
+  border:1px solid rgba(85,157,225,.28)!important;border-radius:16px!important;
+  background:linear-gradient(180deg,rgba(8,21,49,.9),rgba(3,10,29,.94))!important;
+  box-shadow:0 20px 52px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.055)!important;
+  backdrop-filter:blur(18px) saturate(125%)!important;
+}
+.sidebar-caption{padding:5px 10px 10px!important;color:#91cfff!important}
+.client-nav{gap:5px!important}
+.client-nav-item{min-height:42px!important;border-radius:9px!important}
+.client-nav-item.active{
+  border-color:rgba(103,181,255,.48)!important;
+  background:linear-gradient(105deg,rgba(27,119,197,.29),rgba(111,54,170,.23))!important;
+  color:#f6fbff!important;box-shadow:inset 2px 0 var(--mc-blue),0 0 20px rgba(67,180,254,.08)!important;
+}
+.client-nav-item.active:before{background:var(--mc-blue)!important;box-shadow:0 0 10px var(--mc-blue)!important}
+.client-nav-item.active .nav-icon{border-color:rgba(103,181,255,.42)!important;background:rgba(67,180,254,.12)!important;color:#a9ddff!important}
+.cockpit-managed-card,.sidebar-help{
+  border-color:rgba(244,97,254,.2)!important;
+  background:linear-gradient(145deg,rgba(19,20,55,.7),rgba(5,15,36,.82))!important;
+}
+
+/* Compact cinematic identity strip. Reuses the hero horizon without repeating the homepage hero. */
+.client-workspace-header{
+  min-height:104px!important;margin:0 0 14px!important;padding:17px 20px!important;
+  gap:14px!important;border:1px solid rgba(100,180,250,.42)!important;
+  border-radius:16px!important;isolation:isolate!important;overflow:hidden!important;
+  background:linear-gradient(100deg,rgba(3,11,29,.96) 0%,rgba(4,15,38,.82) 48%,rgba(7,14,37,.7) 100%)!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.32),0 0 30px rgba(38,125,208,.09),inset 0 1px rgba(255,255,255,.07)!important;
+}
+.client-workspace-header:before{
+  z-index:-2!important;inset:0!important;right:auto!important;top:0!important;
+  width:100%!important;height:100%!important;transform:none!important;border:0!important;border-radius:0!important;
+  background-image:url('/assets/image_hero.webp')!important;background-position:center 48%!important;
+  background-size:cover!important;background-repeat:no-repeat!important;opacity:.25!important;
+  box-shadow:none!important;
+}
+.client-workspace-header:after{
+  z-index:-1!important;inset:0!important;right:auto!important;top:0!important;
+  width:100%!important;height:100%!important;transform:none!important;border:0!important;border-radius:0!important;
+  background:linear-gradient(90deg,rgba(2,8,24,.96),rgba(3,12,31,.76) 55%,rgba(3,9,25,.55)),linear-gradient(0deg,rgba(2,7,20,.42),transparent 70%)!important;
+  opacity:1!important;box-shadow:none!important;
+}
+.client-workspace-header>*{position:relative!important;z-index:1!important}
+.client-workspace-header h1{font-size:clamp(21px,2.2vw,29px)!important;letter-spacing:-.035em!important}
+.client-workspace-header p{max-width:58ch!important;color:#c0d2e8!important}
+.client-workspace-header .eyebrow{color:#8bd2ff!important}
+.client-workspace-header .row{gap:7px!important;flex-wrap:wrap!important}
+.client-workspace-header .status{font-size:9px!important}
+.client-page-heading{
+  min-height:58px!important;margin:0 0 14px!important;padding:10px 14px!important;
+  border:1px solid rgba(91,158,226,.2)!important;border-radius:12px!important;
+  background:linear-gradient(105deg,rgba(8,20,46,.76),rgba(15,16,46,.64))!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.035)!important;
+}
+.client-page-heading h2{font-size:clamp(17px,1.7vw,22px)!important}
+.client-page-heading p{font-size:11px!important}
+
+/* Cohesive glass panels with a readable content-first hierarchy. */
+.card,.panel,.client-page .panel{
+  border:1px solid rgba(100,166,231,.22)!important;border-radius:15px!important;
+  background:linear-gradient(145deg,rgba(11,25,55,.88),rgba(4,13,33,.92))!important;
+  box-shadow:0 13px 34px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.045)!important;
+  backdrop-filter:blur(12px) saturate(120%);
+}
+.metric{min-height:124px!important}
+.metric small,.performance-kpi small,.performance-subhead{font-family:"IBM Plex Mono",monospace!important;letter-spacing:.08em}
+.metric strong{font-size:clamp(23px,2.3vw,31px)!important}
+.performance-panel,.usage-panel{background:linear-gradient(145deg,rgba(8,21,47,.92),rgba(3,11,29,.94))!important}
+.performance-kpi,.performance-chart-card,.performance-lower-grid>section{
+  border-color:rgba(86,157,224,.2)!important;background:rgba(3,11,29,.54)!important;
+}
+.usage-track,.progress-track{background:rgba(67,180,254,.13)!important}
+.usage-fill{background:linear-gradient(90deg,#278fdc,#43b4fe)!important;box-shadow:0 0 14px rgba(67,180,254,.28)!important}
+.btn,.button,.client-page button.btn:not(.secondary):not(.danger),#auth .btn:not(.secondary){
+  border:1px solid rgba(133,190,255,.62)!important;
+  background:linear-gradient(112deg,#176fbd 0%,#365fc0 55%,#7136b8 100%)!important;
+  color:#fff!important;box-shadow:0 7px 20px rgba(28,103,190,.2),inset 0 1px rgba(255,255,255,.16)!important;
+}
+.btn.secondary{border-color:rgba(95,166,235,.42)!important;background:rgba(31,83,139,.14)!important;color:#e5f3ff!important}
+.status.active,.client-workspace-header .status[data-state="live"],.cockpit-managed-dot,.sidebar-status-dot{color:var(--mc-green)!important}
+
+/* Responsive layout: keep the slim command rail and let the existing drawer own mobile navigation. */
+@media(max-width:900px){
+  .client-workspace-layout{grid-template-columns:220px minmax(0,1fr)!important;gap:12px!important}
+  .client-sidebar{top:72px!important}
+}
+@media(max-width:700px){
+  .shell{padding:8px 10px 22px!important}
+  .top.cockpit-banner-header{top:5px!important;height:50px!important;min-height:50px!important;padding:5px 9px!important;border-radius:12px!important}
+  .top.cockpit-banner-header .brand img{width:34px!important;height:34px!important;max-width:34px!important;max-height:34px!important}
+  .top-right{gap:6px!important}
+  #session-pill{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px!important}
+  .client-workspace-layout{display:block!important;margin-top:10px!important}
+  .client-sidebar{top:0!important;max-height:calc(100svh - 20px)!important;min-height:0!important}
+  .client-workspace-header{min-height:0!important;padding:13px 12px!important;align-items:flex-start!important;flex-wrap:wrap!important}
+  .client-workspace-header>div:first-of-type{min-width:0;flex:1}
+  .client-workspace-header h1{font-size:20px!important}
+  .client-workspace-header p{font-size:11px!important}
+  .client-workspace-header .row{width:100%;justify-content:flex-start}
+  .client-page-heading{padding:9px 11px!important}
+  .card,.panel,.client-page .panel{border-radius:13px!important}
+}
+@media(max-width:420px){
+  .client-workspace-header .status{font-size:8px!important}
+  .client-workspace-header .btn{min-height:34px;padding:7px 10px;font-size:10px}
+  .client-page-label{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .client-page.active,.client-nav-item.active{animation:none!important}
+  .card,.panel,.client-nav-item,.btn{transition:none!important}
+}
+

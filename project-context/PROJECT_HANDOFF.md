@@ -1,3 +1,13 @@
+## Mission Control cinematic hierarchy refresh — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `design/mission-control-cinematic-refresh-2026-11-19`, created from current `main`.
+- Audited `client/index.html`, `cockpit.css`, `client/mission-control-cinematic.css`, and the project handoff. The portal already had a cinematic layer, but the original Cockpit styles and multiple subsequent visual-correction blocks competed in the cascade; prior changes were source-validated without completed browser QA.
+- Added one explicit final presentation layer to the existing `client/mission-control-cinematic.css`: 54px desktop / 50px mobile compact logo rail, single visible logo placement, reduced duplicate sidebar branding, a compact 104px customer identity strip using the existing Earth-at-night hero artwork as a subdued horizon, deeper glass panels, unified blue/purple action styling, and responsive/reduced-motion handling.
+- Reuses the current static HTML/CSS/JavaScript, GitHub Pages, Clerk and Cloudflare Worker/API architecture. No framework or new technology introduced.
+- Presentation-only. No HTML/JS, API endpoints, authentication, billing, usage enforcement, customer data, Worker, D1, Retell, Stripe, PayPal, DNS or production configuration changed.
+- Validation still required: CSS parser/brace check, inspect the full cascade against portal.css and cockpit.css, verify the 50/56px rail and responsive drawer at 360px, 768px and 1280px, check all dashboard tabs and auth states, and verify GitHub Pages publication. Browser visual QA is not available from the repository source inspection alone.
+- Review through PR. Do not merge to `main` or claim deployment until founder approval and visual verification.
+
 
 ## Owner-requested slim global header — 2026-11-19 — REVIEW REQUIRED
 

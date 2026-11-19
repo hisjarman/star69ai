@@ -170,3 +170,17 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - The utility bar is the single shared site identity/navigation bar. Legal pages must not add a duplicate local legal-navigation header above their content.
 - This owner request explicitly revises the earlier interior-page compact-cover and logo placement rules above. The homepage cinematic artwork and visitor arrival remain homepage-only.
 - PR validation must update this document and the protected-header workflow fingerprints alongside the changed header source.
+
+
+## Owner-approved compact header revision — 2026-11-19 (supersedes prior banner rules)
+
+The owner clarified that the header remained too large after PR #315. This revision supersedes all earlier rules that retained the cinematic banner in the homepage header or reserved a blank cover area on interior pages.
+
+- No cinematic/banner/cover region in the shared header on any page, including the homepage.
+- Homepage hero content remains part of the homepage body and is not removed by this header change.
+- Every page uses one slim, single-row navigation strip, targeted at 54px desktop height and 50px mobile height.
+- The Star69AI wordmark sits at the left of the row, constrained to approximately 132px desktop / 112px mobile width and 30px / 26px image height.
+- MENU sits beside the wordmark; desktop retains Partner Login, Client Console, Initiate Contact and cursor toggle in the same row. Mobile keeps the wordmark, MENU and Client Console in the row; Partner Login and Contact remain accessible in the grouped menu, while the cursor toggle is hidden on narrow screens.
+- Existing grouped destinations, legal links, footer, menu open/close, Escape/outside-click behavior, active-page state and accessibility semantics are retained.
+- The old header-banner visitor ship animation is retired with the banner. Other homepage hero content and page-level interactions are unchanged.
+- This is an explicit owner-requested design revision. Update the protected-header fingerprints in the same reviewed change.

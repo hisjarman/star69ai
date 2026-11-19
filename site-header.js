@@ -15,7 +15,7 @@
     ]},
     { title: "COMPANY & PLANS", subtitle: "Work with Star69AI", links: [
       ["About Star69AI","/about.html","orbit","cyan"],["Managed service","/managed-service.html","sliders","green"],
-      ["Pricing","/pricing.html","credit-card","gold"],["Partner program","/partners/","users","green"]
+      ["Pricing","/pricing.html","credit-card","gold"],["Partner program","/partners/","users","green"],["Partner Login","/partner-portal/","users","purple"],["Contact","/get-started.html","orbit","cyan"]
     ]},
     { title: "POLICIES", subtitle: "Your information and terms", links: [
       ["Privacy","/privacy.html","lock","blue"],["Terms","/terms.html","file-text","gold"]
@@ -24,11 +24,6 @@
   const navIcons = {home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤",sparkles:"✧"};
   const markup = `
     <header class="site-global-header" data-site-global-header>
-      <div class="site-global-cover">
-        <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI — Communications Evolved" width="3840" height="1645" fetchpriority="high" decoding="async">
-        <div class="site-global-cover-shade" aria-hidden="true"></div>
-        <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span></div>
-      </div>
       <div class="site-global-utility">
         <a class="site-global-utility-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI — Communications, Evolved."></a>
         <button class="site-global-toggle" type="button" aria-label="Open Star69AI navigation" aria-expanded="false" aria-controls="site-global-navigation">
@@ -94,35 +89,6 @@
     document.body.classList.toggle("site-interior-page", homePath !== "/");
     document.querySelectorAll(".reference-topbar,.s69-header,header.topbar,header.site-header,[data-legacy-site-header]").forEach(node => node.remove());
     if (!document.querySelector("[data-site-global-header]")) document.body.insertAdjacentHTML("afterbegin", markup);
-    // Replay a decorative visitor flight on every homepage load, choosing a different route.
-    if (homePath === "/" && !document.querySelector(".site-global-arrival")) {
-      const cover = document.querySelector(".site-global-cover");
-      if (cover) {
-        const route = 1 + Math.floor(Math.random() * 4);
-        const arrival = document.createElement("div");
-        arrival.className = "site-global-arrival route-" + route;
-        arrival.setAttribute("aria-hidden", "true");
-        const visitorShip = document.createElement("img");
-        visitorShip.className = "site-global-visitor-ship";
-        visitorShip.src = "/assets/visitorspaceship.png";
-        visitorShip.alt = "";
-        visitorShip.decoding = "async";
-        visitorShip.draggable = false;
-        const flag = document.createElement("span");
-        flag.className = "site-global-arrival-flag";
-        visitorShip.addEventListener("load", () => arrival.classList.add("is-ready"), { once: true });
-        visitorShip.addEventListener("error", () => arrival.remove(), { once: true });
-        arrival.append(visitorShip, flag);
-        cover.appendChild(arrival);
-      }
-      if (!document.querySelector("[data-star69-visitor-welcome-loader]")) {
-        const welcomeScript = document.createElement("script");
-        welcomeScript.src = "/assets/visitor-welcome.js";
-        welcomeScript.defer = true;
-        welcomeScript.dataset.star69VisitorWelcomeLoader = "true";
-        document.head.appendChild(welcomeScript);
-      }
-    }
     document.querySelectorAll("[data-site-global-header]").forEach((node,index) => { if (index > 0) node.remove(); });
     const header = document.querySelector("[data-site-global-header]");
     if (!header || header.dataset.navigationReady === "true") return;

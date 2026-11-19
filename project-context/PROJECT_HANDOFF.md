@@ -1,3 +1,16 @@
+
+## Owner-requested slim global header — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/slim-global-header-all-pages-2026-11-19`, based on current `main`.
+- Follow-up to PR #315 after owner reported the header was still too large. Root causes: homepage retained the large cinematic header banner, and the utility strip could wrap into multiple rows; the interior pages also reserved blank cover space.
+- Removed the banner/cover markup from the shared header on every page, including homepage. The homepage's actual hero content remains in the page body.
+- Rebuilt the shared utility strip as one compact row: 54px desktop target / 50px mobile target, reduced logo dimensions, compact MENU and utility controls. Mobile retains logo, MENU and Client Console; Partner Login and Contact are available from the grouped menu.
+- Added Partner Login and Contact destinations to the grouped menu. Preserved the remaining 19 destination links, menu interactions, cursor toggle on wider screens, footer, cookie consent and accessibility behavior.
+- Retired the banner-only visitor ship animation/loader; no page hero content or visitor-facing service functionality is removed.
+- Updated `STAR69AI_HEADER_DESIGN_LOCK.md` and the protected-header workflow fingerprints in this branch.
+- Required validation: JavaScript syntax; source assertions for no shared banner markup, compact row breakpoints, complete nav destinations and workflow fingerprints; run GitHub Actions. Browser QA at desktop/tablet/mobile and live GitHub Pages verification remain outstanding.
+- Website source only. No Worker, D1, Retell, billing, authentication, DNS, email, customer or production configuration changed. Do not merge without explicit founder approval.
+
 ## Owner-requested shared header cleanup — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `fix/compact-global-header-logo-bar-2026-11-19`, based on current `main`.

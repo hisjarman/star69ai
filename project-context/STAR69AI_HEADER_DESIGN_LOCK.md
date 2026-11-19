@@ -152,3 +152,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - The optional decorative cursor is deliberately restrained: approximately 34–42px wide, gently eased pointer following, no rotation, pitch, yaw, banking, click flashes or other attention-grabbing movement. It remains hidden over text-entry controls.
 - The effect is limited to mouse/pen devices and is not enabled when the operating system requests reduced motion. The toggle does not affect the homepage visitor-arrival animation.
 - This is an explicit owner-requested additive header control and cursor comfort revision. The updated source fingerprints are pinned in the protection workflow in the same PR. Preserve all other protected header, navigation, utility links and footer behavior.
+
+
+## Owner-approved header banner image sizing — 2026-11-19
+
+- Use the existing `/assets/image_hero.webp` artwork in the shared header banner. The filename in the supplied snippet contained a typo (`image_herp.webp`); do not create or reference that nonexistent asset.
+- Keep the image's native 3840:1645 proportions using width/height intrinsic attributes and a matching responsive banner aspect ratio. Render the entire image with `object-fit: contain`; do not crop, stretch, redraw or replace it.
+- Preserve the existing menu, brand, status, visitor ship, utility controls, navigation and footer behavior.
+- This owner-approved sizing revision supersedes earlier fixed-height/cropped banner sizing rules where they conflict.

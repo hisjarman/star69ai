@@ -14,7 +14,7 @@
     return String.fromCodePoint(...Array.from(code.toUpperCase(), char => 127397 + char.charCodeAt(0)));
   };
   const show = data => {
-    const greeting = String(data?.greeting || "Welcome aboard! Your next great connection starts here.").replace(/[\\r\\n]+/g, " ").trim().slice(0, 180);
+    const greeting = String(data?.greeting || "Welcome aboard! Your next great connection starts here.").replace(/[\r\n]+/g, " ").trim().slice(0, 180);
     bubble.textContent = greeting;
     bubble.hidden = false;
     requestAnimationFrame(() => bubble.classList.add("is-visible"));

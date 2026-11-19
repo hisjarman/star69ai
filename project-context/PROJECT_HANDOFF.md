@@ -1,3 +1,11 @@
+## Standard vs. discounted partner referral wording — 2026-11-19
+- Clarified the public Partner Program page, Partner Terms and authenticated Partner Center: a standard referral gives the customer no discount, so commission is calculated on the full advertised subscription-plan amount actually collected; an eligible discounted referral gives 15% off monthly subscription payments for the first 12 months, so commission is calculated on the discounted amount actually collected.
+- Added a concrete $249 example ($249 standard / $211.65 discounted) and reiterated that the $99 setup fee is never commissionable.
+- Presentation/legal-copy only. No commission rates, referral tracking, discount eligibility, payment calculations, Stripe/PayPal behavior, Worker, D1 or customer records changed.
+- Branch: `fix/clarify-standard-vs-discounted-referrals-2026-11-19`. Static copy assertions and HTML checks required before merge. No merge or deployment performed without founder approval.
+
+---
+
 ## Partner commission cap and eligibility update — 2026-11-19 — REVIEW REQUIRED
 - Added a public `partner-terms.html` agreement page covering the commission cap, tier-count timing, qualifying subscription receipts, explicit exclusions, customer-discount restrictions, 90-day attribution, validation/payout rules, partner conduct, independent status and prospective program changes. Linked it from the partner application consent and Partner Center navigation. Existing application consent storage remains the current boolean/creation record; it is not a separately versioned legal-evidence ledger.
 

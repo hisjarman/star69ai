@@ -379,6 +379,13 @@ async function recordCheckoutAcceptance(env,req,p,d,human){
  .bind(eventId,d.customerId,d.onboardingId||null,"purchase_terms_accepted",d.email,d.businessName,d.planKey,d.cadence,CHECKOUT_TERMS_VERSION,CHECKOUT_PRIVACY_VERSION,CHECKOUT_SERVICE_VERSION,JSON.stringify(snapshot),JSON.stringify(acceptance),agreementSha,human?.hostname||null,human?.action||null,req.headers.get("CF-Connecting-IP")||null,String(req.headers.get("User-Agent")||"").slice(0,500),now).run();
  return {eventId,agreementSha};
 }
+async function recordCheckoutPaymentEvent(env,onboardingId,provider,reference){
+ const accepted=await env.DB.prepare("SELECT * FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? ORDER BY server_timestamp DESC LIMIT 1").bind(onboardingId,"purchase_terms_accepted").first();
+ if(!accepted)return false;
+ await env.DB.prepare("INSERT INTO avr_checkout_evidence_events(event_id,customer_id,onboarding_id,event_type,email,business_name,plan_key,billing_cadence,terms_version,privacy_version,service_disclosure_version,plan_snapshot_json,acceptance_json,agreement_sha256,turnstile_hostname,turnstile_action,ip_address,user_agent,provider,provider_reference,server_timestamp) VALUES(?,?,?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?)")
+ .bind(crypto.randomUUID(),accepted.customer_id,onboardingId,"payment_confirmed",accepted.email,accepted.business_name,accepted.plan_key,accepted.billing_cadence,accepted.terms_version,accepted.privacy_version,accepted.service_disclosure_version,accepted.plan_snapshot_json,accepted.acceptance_json,accepted.agreement_sha256,accepted.turnstile_hostname,accepted.turnstile_action,accepted.ip_address,accepted.user_agent,String(provider||"").slice(0,20),String(reference||"").slice(0,200),new Date().toISOString()).run();
+ return true;
+}
 async function assertCurrentCheckoutAcceptance(env,ob,customer){
  const row=await env.DB.prepare("SELECT * FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? ORDER BY server_timestamp DESC LIMIT 1").bind(ob.id,"purchase_terms_accepted").first();
  if(!row||row.terms_version!==CHECKOUT_TERMS_VERSION||row.privacy_version!==CHECKOUT_PRIVACY_VERSION||row.service_disclosure_version!==CHECKOUT_SERVICE_VERSION||row.plan_key!==ob.plan_key||row.billing_cadence!==ob.billing_cadence||row.customer_id!==customer.id)throw Error("current_checkout_acceptance_required_contact_support");
@@ -496,6 +503,7 @@ async function capturePublicSetup(req,env,origin){
   const purchase=(order.purchase_units||[])[0]||{},capture=purchase.payments?.captures?.[0],amount=capture?.amount||purchase.amount;
   const expectedCents=purpose==="setup_fee"?Number(ob.setup_amount_cents):Number(ob.prepaid_amount_cents);
   if(order.status!=="COMPLETED"||purchase.reference_id!==ob.id||purchase.custom_id!==ob.customer_id||capture?.status!=="COMPLETED"||amount?.currency_code!=="USD"||Number(amount?.value)!==expectedCents/100)throw Error("paypal_payment_not_confirmed");
+  await recordCheckoutPaymentEvent(env,ob.id,"paypal",String(capture.id||orderId));
   const now=new Date().toISOString();
   if(purpose==="setup_fee"){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_status='paid',paypal_capture_id=?,status='awaiting_subscription',updated_at=? WHERE id=? AND setup_status='pending'").bind(capture.id||null,now,ob.id).run();
@@ -563,6 +571,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   const onboardingId=o.metadata?.avr_paid_onboarding_id;
   if(onboardingId&&(o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded")){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET plan_payment_status='paid',stripe_session_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),onboardingId).run();
+   await recordCheckoutPaymentEvent(env,onboardingId,"stripe",String(o.id||o.payment_intent||""));
    await maybeProvisionPaidOnboarding(env,onboardingId);
   }
  }
@@ -1062,6 +1071,7 @@ async function route(req,env){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
    const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
    if(!ob||Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+   await assertCurrentCheckoutAcceptance(env,ob,c);
    if(ob.plan_payment_status!=="paid")throw Error("subscription_payment_required_first");
    if(ob.setup_status!=="pending"||Number(ob.setup_amount_cents||0)<1)throw Error("setup_payment_not_required");
    const statusToken=crypto.randomUUID()+crypto.randomUUID();

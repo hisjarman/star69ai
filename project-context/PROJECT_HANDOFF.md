@@ -1,3 +1,18 @@
+## Pricing catalog and custom-work quote workflow — 2026-11-19 — FEATURE BRANCH; REVIEW REQUIRED
+
+- Working branch: `feature/pricing-catalog-commercial-completion-2026-11-19`, based on current `main`. PRs #295 and #296 are already merged; do not merge them again.
+- Public pricing now separates Custom AI Workflow, Custom Business Integration and Intelligent Directory Operator. Standard receptionist features and basic configured routing remain included.
+- Custom work must be scoped and quoted in writing before work begins. Third-party monthly charges above $2 are passed through at verified cost without markup; charges of $2 or less are absorbed. One-time provider charges are itemized and approved before activation.
+- Internal custom-work labor guide: $20/hour for approved custom engineering. Keep internal wholesale rates and vendor invoices confidential. Itemize one-time labor, recurring maintenance, dedicated resources and third-party pass-throughs separately.
+- Custom request workflow now supports client-visible written quotes, quote state, internal notes, and explicit client quote acceptance. Quote acceptance is not payment authorization and does not automatically activate or charge for work.
+- New D1 migration `20261119_addon_quotes.sql` adds `quote_summary`, `quote_status` and `quote_updated_at` to `avr_addon_orders`. Do not apply to production until migration review and PR approval.
+- Worker adds admin-only quote/status updates and customer-owned quote-acceptance routes. Production deploy requires the migration first.
+- Current Worker code already enforces the $99 monthly setup fee (9,900 cents); current admin UI and public checkout also show $99. Historical handoff references to a $49.50 partner setup fee are obsolete. Preserve historical invoice records.
+- Required validation: JavaScript syntax checks, SQL migration smoke test, authenticated admin/client API tests, quote ownership/state tests, browser QA, Pages workflow and Worker staging/production verification. Do not merge or deploy until checks pass and the founder approves.
+- Legal review remains recommended; recorded acceptance is evidence, not a guarantee of enforceability.
+
+---
+
 ## Legal checkout acceptance, Turnstile and cookie-choice prompt — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `feature/legal-purchase-acceptance-turnstile-cookies-2026-11-19`, based on PR #295 head commit `099e643e83e68301b9d4ae5628ae8b51d6b0fb18`. PR #295 remains separate and unmerged.

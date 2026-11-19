@@ -1,3 +1,8 @@
+## Compact cover navigation overflow safeguard — 2026-11-18
+
+- Follow-up CSS safeguard: the homepage cover container keeps `overflow:visible` so the Mission Control dropdown panel is never clipped by the shallow banner. The decorative visitor-flight overlay clips the ship within the artwork area independently.
+- No navigation links, menu behavior, banner dimensions or flight timing changed.
+
 ## Owner-approved compact homepage cover and visitor flight — 2026-11-18
 
 - Founder reported the previous full-width natural-height banner was too tall and the two-second visitor arrival ended before it felt like an exploration.

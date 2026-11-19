@@ -290,7 +290,7 @@ async function createPublicStripeSession(env,onboarding,customer,statusToken){
  const is3forfree=customer.promo_code==="3FORFREE";
  if(is3forfree)await reserve3forfreeSlot(env,customer.id);
  const expiresAt=is3forfree?Math.floor(Date.now()/1000)+3600:null;
- const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),expiresAt,metadata:{avr_paid_onboarding_id:onboarding.id,promo_code:customer.promo_code||"",idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)}};
+ const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),expiresAt,metadata:{avr_paid_onboarding_id:onboarding.id,promo_code:customer.promo_code||""},idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)};
  try{
   const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,customer.promo_code||"",urls);
   await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,stripe_attempts=stripe_attempts+1,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();

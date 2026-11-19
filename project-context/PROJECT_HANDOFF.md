@@ -2069,3 +2069,12 @@ This section supersedes the earlier activation-status notes above where they des
 - The protected-header workflow fingerprints are updated for the approved header JS/CSS source.
 - Validation required: syntax check of header JS, inspect resulting HTML/CSS and workflow, desktop/mobile browser QA and live GitHub Pages verification. Source changes alone do not prove visual rendering or deployment.
 - Website-only change; no Worker, D1, Retell, billing, authentication or customer data changed. PR review required; do not merge without explicit founder approval.
+
+
+## Branded platform API hostname in website frontend — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/branded-platform-api-domain-2026-11-19`, based on `main`.
+- Replaced the platform API base URL `https://avr-platform-api.hisjarman.workers.dev` with the verified custom hostname `https://api.star69ai.com` in `app.js` (demo request API), `admin/admin.js` (admin console), `client/client.js` (client portal), and `checkout.js` (checkout).
+- Preserved the separate Trust Lab API base URL `https://avr-trust-lab-api.hisjarman.workers.dev` and the separate Concierge Worker URL. No Retell webhook URL, backend Worker source, Cloudflare configuration, D1 data, secrets, billing logic, or customer data was changed.
+- The custom hostname's `/health` endpoint was verified by the founder in a browser and returned `ok: true`, service `avr-platform-api`, version `1.0.0`, and enabled Stripe, PayPal, Retell and Flex wallet protection indicators. Windows default DNS was corrected to Cloudflare DNS after the ISP resolver returned NXDOMAIN.
+- Required before merge: run JavaScript syntax checks for all four changed scripts; search remaining frontend sources for any other direct platform Worker URL references; verify admin/client/checkout/demo flows in a production-like browser session; confirm CORS and Clerk authorization against `https://api.star69ai.com`. No merge to `main` or production publication performed; founder approval is required.

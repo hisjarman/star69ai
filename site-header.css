@@ -436,3 +436,28 @@ body.site-home-page .site-global-cover-image{
 .star69-cookie-copy{max-width:680px}.star69-cookie-copy strong{font-size:15px;letter-spacing:.02em}.star69-cookie-copy p{margin:6px 0 0;color:#c2d0df;font-size:12px;line-height:1.55}.star69-cookie-copy a{color:#7ed5ff;text-decoration:underline}
 .star69-cookie-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.star69-cookie-actions button{min-height:38px;padding:9px 12px;border:1px solid #42617e;border-radius:7px;background:#081a32;color:#edf6ff;font:700 11px Manrope,Arial,sans-serif;cursor:pointer}.star69-cookie-actions [data-cookie-accept]{border-color:#34fd78;background:rgba(52,253,120,.12);color:#a4ffc3}.star69-cookie-custom{display:grid;gap:7px;margin-top:10px;font-size:11px}.star69-cookie-custom label{display:flex;gap:8px;align-items:center}
 @media(max-width:700px){.star69-cookie-banner{left:10px;right:10px;bottom:10px;display:block;padding:15px}.star69-cookie-actions{justify-content:stretch;margin-top:12px}.star69-cookie-actions button{flex:1;min-width:0;padding:9px 7px;font-size:10px}}
+
+
+/* Location-aware visitor greeting and authentic country flag on the landing marker. */
+.site-global-welcome-bubble{
+  position:absolute;z-index:5;left:clamp(12px,2.4vw,32px);bottom:clamp(10px,1.8vw,22px);
+  width:max-content;max-width:min(430px,calc(100% - 24px));padding:9px 13px;
+  border:1px solid rgba(67,180,254,.62);border-radius:12px 12px 12px 3px;
+  background:rgba(3,12,31,.84);color:#f2f8ff;box-shadow:0 8px 28px rgba(0,0,0,.38),0 0 18px rgba(67,180,254,.12);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  font:600 clamp(10px,1.1vw,13px)/1.4 'Manrope',Arial,sans-serif;
+  text-shadow:0 1px 3px #000;pointer-events:none;opacity:0;transform:translateY(6px);
+  transition:opacity .35s ease,transform .35s ease;
+}
+.site-global-welcome-bubble.is-visible{opacity:1;transform:translateY(0)}
+.site-global-welcome-bubble[hidden]{display:none}
+.site-global-arrival-flag[data-flag]::after{
+  content:attr(data-flag);position:absolute;left:2px;top:-3px;width:auto;height:auto;
+  background:none;clip-path:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.8));
+  font:18px/1 system-ui,sans-serif;white-space:nowrap;
+}
+@media(max-width:700px){
+  .site-global-welcome-bubble{left:9px;bottom:8px;max-width:calc(100% - 18px);padding:6px 9px;font-size:10px}
+  .site-global-arrival-flag[data-flag]::after{font-size:15px;top:-2px}
+}
+@media(prefers-reduced-motion:reduce){.site-global-welcome-bubble{transition:none;transform:none}}

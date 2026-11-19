@@ -6,6 +6,13 @@
   if (!finePointer || !finePointer.matches || (reducedMotion && reducedMotion.matches)) return;
   if (document.querySelector(".star69-cursor-follower")) return;
 
+  const preferenceKey = "star69ai-cursor-effects-v1";
+  const readPreference = () => {
+    try { return localStorage.getItem(preferenceKey) !== "off"; }
+    catch { return true; }
+  };
+  let enabled = readPreference();
+
   const style = document.createElement("style");
   style.textContent = `
     @media (hover: hover) and (pointer: fine) {
@@ -28,34 +35,21 @@
         top: 0;
         z-index: 2147483647;
         display: block;
-        width: clamp(82px, 7vw, 112px);
+        width: clamp(34px, 3vw, 42px);
         height: auto;
         max-width: none;
         max-height: none;
         object-fit: contain;
-        object-position: center;
-        overflow: visible;
         pointer-events: none;
         opacity: 0;
         visibility: hidden;
-        transform-origin: 46% 52%;
-        transform: translate3d(-10px,-9px,0) perspective(700px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
-        filter:
-          drop-shadow(0 3px 5px rgba(0,0,0,.72))
-          drop-shadow(0 0 4px rgba(67,180,254,.7))
-          drop-shadow(0 0 10px rgba(255,111,25,.38));
-        transition: opacity .12s ease, filter .18s ease;
+        transform: translate3d(-21px,-14px,0);
+        filter: drop-shadow(0 2px 3px rgba(0,0,0,.72)) drop-shadow(0 0 4px rgba(67,180,254,.38));
+        transition: opacity .14s ease;
         will-change: transform;
-        backface-visibility: visible;
       }
-      .star69-cursor-follower.is-visible { opacity: 1; visibility: visible; }
+      .star69-cursor-follower.is-visible { opacity: .94; visibility: visible; }
       .star69-cursor-follower.is-text-target { opacity: 0 !important; visibility: hidden !important; }
-      .star69-cursor-follower.is-clicking {
-        filter:
-          drop-shadow(0 0 8px #43b4fe)
-          drop-shadow(0 0 8px rgba(255,132,32,.9))
-          brightness(1.12);
-      }
     }`;
   document.head.appendChild(style);
 
@@ -68,47 +62,38 @@
 
   let imageReady = false;
   let pointerActive = false;
-  let lastX = null;
-  let lastY = null;
-  let lastTime = 0;
-  let tiltX = 0;
-  let tiltY = 0;
-  let bank = 0;
-  // The artwork's nose points right at neutral; rotate it to follow pointer travel.
-  let heading = 0;
   let frame = 0;
+  let currentX = 0;
+  let currentY = 0;
   let targetX = 0;
   let targetY = 0;
 
   function deactivate() {
     pointerActive = false;
-    lastX = lastY = null;
-    ship.classList.remove("is-visible", "is-clicking", "is-text-target");
+    ship.classList.remove("is-visible", "is-text-target");
     document.documentElement.classList.remove("star69-custom-cursor-active");
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
   }
 
-  function syncOverlayHost() {
-    const layers = document.querySelectorAll('dialog[open], [popover]:popover-open');
-    const host = layers.length ? layers[layers.length - 1] : document.body;
-    if (host && ship.parentNode !== host) host.appendChild(ship);
-  }
-
-  function renderFlight() {
+  function render() {
     frame = 0;
-    const currentX = tiltX;
-    const currentY = tiltY;
-    const currentBank = bank;
-    ship.style.transform =
-      "translate3d(" + (targetX - 10) + "px," + (targetY - 9) + "px,0) " +
-      "perspective(700px) rotateZ(" + heading.toFixed(2) + "deg) " +
-      "rotateX(" + currentX.toFixed(2) + "deg) rotateY(" + currentY.toFixed(2) + "deg) " +
-      "rotateZ(" + currentBank.toFixed(2) + "deg) scale(1.08)";
+    // A restrained ease keeps the small decorative ship from snapping around.
+    currentX += (targetX - currentX) * 0.34;
+    currentY += (targetY - currentY) * 0.34;
+    ship.style.transform = "translate3d(" + (currentX - 21) + "px," + (currentY - 14) + "px,0)";
+    if (Math.abs(targetX - currentX) + Math.abs(targetY - currentY) > 0.6) {
+      frame = requestAnimationFrame(render);
+    }
   }
 
   function scheduleRender() {
-    if (!frame) frame = requestAnimationFrame(renderFlight);
+    if (!frame) frame = requestAnimationFrame(render);
+  }
+
+  function setEnabled(next) {
+    enabled = !!next;
+    if (!enabled) deactivate();
   }
 
   ship.addEventListener("load", () => { imageReady = true; });
@@ -121,46 +106,16 @@
   ship.src = "/assets/cursor.png";
   document.body.appendChild(ship);
 
-  const overlayObserver = new MutationObserver(syncOverlayHost);
-  overlayObserver.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["open", "popover"]
+  window.addEventListener("star69ai:cursor-toggle", event => {
+    setEnabled(!!(event.detail && event.detail.enabled));
   });
 
   window.addEventListener("pointermove", event => {
+    if (!enabled || !imageReady) return;
     if (event.pointerType !== "mouse" && event.pointerType !== "pen") return;
-    if (!imageReady) return;
 
-    syncOverlayHost();
     targetX = event.clientX;
     targetY = event.clientY;
-
-    const now = performance.now();
-    if (lastX !== null && lastY !== null && lastTime) {
-      const elapsed = Math.max(8, now - lastTime);
-      const deltaX = event.clientX - lastX;
-      const deltaY = event.clientY - lastY;
-      const velocityX = deltaX / elapsed;
-      const velocityY = deltaY / elapsed;
-
-      // Point the ship's nose in its actual direction of travel:
-      // right = 0°, down = 90°, left = 180°, up = -90°.
-      if (Math.hypot(deltaX, deltaY) > 1.5) {
-        heading = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-      }
-
-      // Keep the existing 3D pitch and banking layered over the heading.
-      tiltY = Math.max(-24, Math.min(24, velocityX * 115));
-      tiltX = Math.max(-18, Math.min(18, -velocityY * 95));
-      bank = Math.max(-17, Math.min(17, velocityX * 78));
-    }
-
-    lastX = event.clientX;
-    lastY = event.clientY;
-    lastTime = now;
-
     const target = event.target;
     const textEntry = target && target.closest &&
       target.closest('input,textarea,select,[contenteditable="true"],[role="textbox"]');
@@ -168,44 +123,25 @@
 
     if (!pointerActive) {
       pointerActive = true;
+      currentX = targetX;
+      currentY = targetY;
       document.documentElement.classList.add("star69-custom-cursor-active");
     }
     ship.classList.add("is-visible");
     scheduleRender();
   }, { passive: true });
 
-  // Smoothly settle the ship when the pointer stops, without a CSS transform fighting JS.
-  let settleFrame = 0;
-  function settleFlight() {
-    if (!pointerActive) return;
-    tiltX *= 0.78;
-    tiltY *= 0.78;
-    bank *= 0.76;
-    scheduleRender();
-    if (Math.abs(tiltX) + Math.abs(tiltY) + Math.abs(bank) > 0.35) {
-      settleFrame = requestAnimationFrame(settleFlight);
-    } else {
-      tiltX = tiltY = bank = 0;
-      scheduleRender();
-      settleFrame = 0;
-    }
-  }
-  window.addEventListener("pointermove", () => {
-    if (settleFrame) cancelAnimationFrame(settleFrame);
-    settleFrame = requestAnimationFrame(settleFlight);
+  window.addEventListener("pointerout", event => {
+    if (!event.relatedTarget) deactivate();
   }, { passive: true });
-
-  window.addEventListener("pointerdown", () => ship.classList.add("is-clicking"), { passive: true });
-  window.addEventListener("pointerup", () => ship.classList.remove("is-clicking"), { passive: true });
-  window.addEventListener("pointercancel", () => ship.classList.remove("is-clicking"), { passive: true });
-  window.addEventListener("pointerout", event => { if (!event.relatedTarget) deactivate(); }, { passive: true });
   window.addEventListener("blur", deactivate);
-  document.addEventListener("visibilitychange", () => { if (document.hidden) deactivate(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) deactivate();
+  });
 
   const stopWhenUnsupported = () => {
     if (!finePointer.matches || (reducedMotion && reducedMotion.matches)) {
       deactivate();
-      overlayObserver.disconnect();
       ship.remove();
       style.remove();
     }

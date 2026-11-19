@@ -48,6 +48,7 @@
         <a class="site-global-partner" href="/partner-portal/">PARTNER LOGIN <span>↗</span></a>
         <a class="site-global-login" href="/client/">CLIENT CONSOLE <span>↗</span></a>
         <a class="site-global-start" href="/get-started.html">INITIATE CONTACT <span>↗</span></a>
+        <button class="site-global-cursor-toggle" type="button" data-cursor-toggle aria-pressed="true" aria-label="Turn cursor effects off"><span class="site-global-cursor-label">CURSOR FX</span><span class="site-global-cursor-state" data-cursor-state>ON</span><i aria-hidden="true"></i></button>
 
       </div>
     </header>`;
@@ -137,6 +138,23 @@
     };
     toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
     nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+    const cursorToggle = header.querySelector("[data-cursor-toggle]");
+    const cursorPreferenceKey = "star69ai-cursor-effects-v1";
+    let cursorEnabled = true;
+    try { cursorEnabled = localStorage.getItem(cursorPreferenceKey) !== "off"; } catch {}
+    const syncCursorToggle = () => {
+      cursorToggle.setAttribute("aria-pressed", String(cursorEnabled));
+      cursorToggle.setAttribute("aria-label", cursorEnabled ? "Turn cursor effects off" : "Turn cursor effects on");
+      cursorToggle.querySelector("[data-cursor-state]").textContent = cursorEnabled ? "ON" : "OFF";
+      cursorToggle.dataset.enabled = String(cursorEnabled);
+    };
+    syncCursorToggle();
+    cursorToggle.addEventListener("click", () => {
+      cursorEnabled = !cursorEnabled;
+      try { localStorage.setItem(cursorPreferenceKey, cursorEnabled ? "on" : "off"); } catch {}
+      syncCursorToggle();
+      window.dispatchEvent(new CustomEvent("star69ai:cursor-toggle", { detail: { enabled: cursorEnabled } }));
+    });
     document.addEventListener('click', event => { if (!header.contains(event.target)) setMenu(false); });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { setMenu(false); toggle.focus(); }

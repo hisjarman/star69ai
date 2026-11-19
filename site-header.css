@@ -461,3 +461,31 @@ body.site-home-page .site-global-cover-image{
   .site-global-arrival-flag[data-flag]::after{font-size:15px;top:-2px}
 }
 @media(prefers-reduced-motion:reduce){.site-global-welcome-bubble{transition:none;transform:none}}
+
+/* Calm, optional spacecraft cursor control — separate from Mission Control navigation. */
+.site-global-cursor-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;
+  padding:7px 10px;border:1px solid rgba(67,180,254,.42);border-radius:7px;
+  background:rgba(3,12,31,.72);color:#dceeff;cursor:pointer;
+  font:700 9px/1 'IBM Plex Mono',monospace;letter-spacing:.8px;white-space:nowrap;
+  transition:border-color .18s,background .18s,color .18s;
+}
+.site-global-cursor-toggle:hover,.site-global-cursor-toggle:focus-visible{
+  border-color:#43b4fe;background:rgba(67,180,254,.12);outline:2px solid transparent;
+}
+.site-global-cursor-state{color:#34fd78}
+.site-global-cursor-toggle[data-enabled="false"] .site-global-cursor-state{color:#b8c5d4}
+.site-global-cursor-toggle i{position:relative;width:25px;height:14px;border:1px solid #34fd78;border-radius:20px;background:rgba(52,253,120,.14)}
+.site-global-cursor-toggle i:after{
+  content:"";position:absolute;top:2px;left:12px;width:8px;height:8px;border-radius:50%;
+  background:#34fd78;transition:left .18s,background .18s;
+}
+.site-global-cursor-toggle[data-enabled="false"] i{border-color:#718096;background:rgba(113,128,150,.12)}
+.site-global-cursor-toggle[data-enabled="false"] i:after{left:3px;background:#9aa9bb}
+@media(max-width:700px){
+  .site-global-cursor-toggle{min-height:32px;padding:6px 8px;gap:5px;font-size:8px}
+  .site-global-cursor-toggle i{width:22px}
+  .site-global-cursor-toggle i:after{left:10px}
+  .site-global-cursor-toggle[data-enabled="false"] i:after{left:3px}
+}
+@media(prefers-reduced-motion:reduce){.site-global-cursor-toggle,.site-global-cursor-toggle i:after{transition:none}}

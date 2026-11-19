@@ -143,3 +143,12 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Preserve the four randomized 10.8-second spaceship routes and replay on every homepage refresh. The existing header/menu/footer structure, route destinations and reduced-motion behavior remain intact.
 - New frontend helper: assets/visitor-welcome.js. New Worker GET route: /api/welcome on the existing star69ai-concierge Worker. This requires a separate reviewed Worker deployment after merge; GitHub Pages merge alone does not activate the endpoint.
 - Header source fingerprints in .github/workflows/protect-approved-header.yml are updated in the same reviewed pull request. No merge or Worker deployment without founder approval.
+
+
+## Owner-requested calm cursor control — 2026-11-19
+
+- Add a compact, keyboard-accessible **CURSOR FX** on/off toggle at the far-right end of the shared utility row, visible across public pages without changing any navigation destinations or menu behavior.
+- The visitor's choice is saved locally and persists across page navigation/reloads. OFF restores the native system cursor immediately.
+- The optional decorative cursor is deliberately restrained: approximately 34–42px wide, gently eased pointer following, no rotation, pitch, yaw, banking, click flashes or other attention-grabbing movement. It remains hidden over text-entry controls.
+- The effect is limited to mouse/pen devices and is not enabled when the operating system requests reduced motion. The toggle does not affect the homepage visitor-arrival animation.
+- This is an explicit owner-requested additive header control and cursor comfort revision. The updated source fingerprints are pinned in the protection workflow in the same PR. Preserve all other protected header, navigation, utility links and footer behavior.

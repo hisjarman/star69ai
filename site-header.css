@@ -216,7 +216,7 @@ body.site-home-page .site-global-cover{
   height:clamp(138px,16vw,184px)!important;
   min-height:0!important;
   aspect-ratio:3.15 / 1;
-  overflow:hidden!important;
+  overflow:visible!important; /* Mission Control dropdown must extend beyond the cover. */
 }
 body.site-home-page .site-global-cover-image{
   position:absolute!important;inset:0!important;width:100%!important;height:100%!important;

@@ -343,3 +343,32 @@ body.site-home-page .site-global-cover-image{
   84%{left:42%;top:18%;transform:translate(-50%,-50%) scaleX(-1) scale(.7) rotate(8deg)}
   100%{left:50%;top:42%;opacity:1;transform:translate(-50%,-50%) scaleX(-1) scale(.43) rotate(0)}
 }
+
+
+/* Owner correction — make the homepage artwork behave as a true edge-to-edge site banner.
+   Fill the shallow cover without distortion; object-fit:cover preserves proportions and crops excess image area. */
+body.site-home-page .site-global-cover{
+  width:100%!important;
+  height:clamp(138px,16vw,184px)!important;
+  min-height:0!important;
+  aspect-ratio:3.15 / 1;
+  overflow:visible!important;
+}
+body.site-home-page .site-global-cover-image{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:cover!important;
+  object-position:center 48%!important;
+  background:#030918!important;
+}
+@media(max-width:700px){
+  body.site-home-page .site-global-cover{
+    height:clamp(126px,35vw,150px)!important;
+    aspect-ratio:2.8 / 1;
+  }
+  body.site-home-page .site-global-cover-image{object-position:center 50%!important}
+}

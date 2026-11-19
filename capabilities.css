@@ -128,3 +128,79 @@
     padding-inline: 20px;
   }
 }
+
+/* 2026-11-18: restore a clear, deliberate hierarchy inside capability cards.
+   Keep the icon and category on one compact metadata row; give the title and
+   supporting copy their own full-width lines. */
+.cap-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-rows: 42px auto 1fr;
+  column-gap: 13px;
+  align-content: start;
+  row-gap: 0;
+  padding: 22px 20px 24px;
+}
+.cap-card-icon {
+  grid-column: 1;
+  grid-row: 1;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  align-self: center;
+  border-radius: 11px;
+  font-size: 21px;
+}
+.cap-card-tag {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 26px;
+  margin: 0;
+  padding: 5px 9px;
+  border: 1px solid rgba(67,180,254,.22);
+  border-radius: 999px;
+  background: rgba(67,180,254,.075);
+  color: #a9dfff;
+  font: 600 9px/1.35 'IBM Plex Mono',monospace;
+  letter-spacing: .09em;
+  overflow-wrap: anywhere;
+}
+.cap-card h4 {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 17px 0 9px;
+  color: #f5f8ff;
+  font: 750 clamp(17px,1.45vw,19px)/1.35 Manrope,sans-serif;
+  letter-spacing: -.025em;
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.cap-card p {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin: 0;
+  color: #b9cce0;
+  font: 400 13px/1.7 Manrope,sans-serif;
+  max-width: 42ch;
+  overflow-wrap: break-word;
+}
+@media (max-width: 1050px) {
+  .cap-card { padding: 21px 19px 23px; }
+  .cap-card h4 { font-size: 18px; }
+}
+@media (max-width: 700px) {
+  .cap-card {
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: 42px auto auto;
+    width: 100%;
+    padding: 20px;
+  }
+  .cap-card h4 { margin-top: 15px; font-size: 18px; }
+  .cap-card p { max-width: 65ch; font-size: 14px; line-height: 1.7; }
+}

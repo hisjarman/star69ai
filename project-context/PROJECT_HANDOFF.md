@@ -1,3 +1,10 @@
+## Capability card typography hierarchy — 2026-11-18 — REVIEW REQUIRED
+
+- Follow-up to the prior card overflow correction: the remaining issue was visual hierarchy, not only wrapping. Updated the public Capabilities page cards so the icon and category sit together in a compact metadata row, followed by a full-width prominent title and a separately styled readable description.
+- Category labels now use a restrained blue technical pill; headings use clear Manrope weight/scale; descriptions use consistent 13–14px reading text and 1.7 line-height. Responsive grid placement remains intact, including the single-column mobile layout.
+- Scoped runtime change to capabilities.css. No card copy, links, integrations, Worker, D1, Retell, billing, authentication, forms or customer data changed.
+- Source assertions and CSS brace-balance checks are required. Browser visual QA at 360px, 768px and 1280px remains outstanding. Review through a separate PR; do not merge or deploy without the founder's explicit approval.
+
 ## Owner correction: full homepage hero image fit and visitor ship direction — 2026-11-18
 
 - Supersedes the earlier note describing a deliberate crop of the homepage hero artwork.

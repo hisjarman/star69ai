@@ -2,7 +2,7 @@
 // 1) Create a form at https://formspree.io/
 // 2) Replace the value below with your form endpoint, e.g. https://formspree.io/f/abcdwxyz
 // 3) Commit and publish this file. Do not put API keys or private credentials here.
-const API_BASE = "https://avr-trust-lab-api.hisjarman.workers.dev";
+const API_BASE = "https://trust.star69ai.com";
 const DEMO_API_BASE = "https://api.star69ai.com";
 const PARTNER_COOKIE = "star69ai_partner_ref";
 function readPartnerAttribution() {
@@ -157,7 +157,7 @@ function sendAssistantContext(activeControl) {
   if (!assistantFrame?.contentWindow) return;
   assistantFrame.contentWindow.postMessage(
     {type:"star69ai-form-context",context:buildAssistantContext(activeControl)},
-    "https://star69ai-concierge.hisjarman.workers.dev"
+    "https://concierge.star69ai.com"
   );
 }
 assistantFrame?.addEventListener("load", () => sendAssistantContext(lastAssistantField));
@@ -170,7 +170,7 @@ sendAssistantContext(lastAssistantField);
 // The coach may suggest text for an allowlisted business field. Nothing is applied
 // until the visitor explicitly clicks "Use this suggestion" inside the coach.
 window.addEventListener("message", event => {
-  if (event.origin !== "https://star69ai-concierge.hisjarman.workers.dev") return;
+  if (event.origin !== "https://concierge.star69ai.com") return;
   const data = event.data;
   if (data?.type !== "star69ai-form-suggestion" || !data.suggestion) return;
   const name = String(data.suggestion.field || "");

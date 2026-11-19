@@ -35,21 +35,35 @@
         top: 0;
         z-index: 2147483647;
         display: block;
-        width: clamp(34px, 3vw, 42px);
+        width: clamp(82px, 7vw, 112px);
         height: auto;
         max-width: none;
         max-height: none;
         object-fit: contain;
+        object-position: center;
+        overflow: visible;
         pointer-events: none;
         opacity: 0;
         visibility: hidden;
-        transform: translate3d(-21px,-14px,0);
-        filter: drop-shadow(0 2px 3px rgba(0,0,0,.72)) drop-shadow(0 0 4px rgba(67,180,254,.38));
-        transition: opacity .14s ease;
+        transform-origin: 46% 52%;
+        transform: translate3d(-10px,-9px,0);
+        filter:
+          drop-shadow(0 3px 5px rgba(0,0,0,.72))
+          drop-shadow(0 0 4px rgba(67,180,254,.62))
+          drop-shadow(0 0 8px rgba(255,111,25,.24));
+        transition: opacity .16s ease, filter .18s ease;
         will-change: transform;
+        backface-visibility: visible;
       }
-      .star69-cursor-follower.is-visible { opacity: .94; visibility: visible; }
+      .star69-cursor-follower.is-visible { opacity: 1; visibility: visible; }
       .star69-cursor-follower.is-text-target { opacity: 0 !important; visibility: hidden !important; }
+      .star69-cursor-follower.is-clicking {
+        filter:
+          drop-shadow(0 3px 5px rgba(0,0,0,.72))
+          drop-shadow(0 0 7px rgba(67,180,254,.82))
+          drop-shadow(0 0 9px rgba(255,132,32,.38))
+          brightness(1.04);
+      }
     }`;
   document.head.appendChild(style);
 
@@ -70,19 +84,36 @@
 
   function deactivate() {
     pointerActive = false;
-    ship.classList.remove("is-visible", "is-text-target");
+    ship.classList.remove("is-visible", "is-clicking", "is-text-target");
     document.documentElement.classList.remove("star69-custom-cursor-active");
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
   }
 
+  function syncOverlayHost() {
+    const layers = document.querySelectorAll('dialog[open], [popover]:popover-open');
+    const host = layers.length ? layers[layers.length - 1] : document.body;
+    if (host && ship.parentNode !== host) host.appendChild(ship);
+  }
+
   function render() {
     frame = 0;
-    // A restrained ease keeps the small decorative ship from snapping around.
-    currentX += (targetX - currentX) * 0.34;
-    currentY += (targetY - currentY) * 0.34;
-    ship.style.transform = "translate3d(" + (currentX - 21) + "px," + (currentY - 14) + "px,0)";
-    if (Math.abs(targetX - currentX) + Math.abs(targetY - currentY) > 0.6) {
+    // A slower, capped spring makes the detailed ship feel deliberate rather than twitchy.
+    const dx = targetX - currentX;
+    const dy = targetY - currentY;
+    const distance = Math.hypot(dx, dy);
+    if (distance > 0.8) {
+      const step = Math.min(distance * 0.18, 24);
+      currentX += (dx / distance) * step;
+      currentY += (dy / distance) * step;
+    } else {
+      currentX = targetX;
+      currentY = targetY;
+    }
+
+    // Keep the ship on a fixed, level horizon: position eases, artwork never rotates or banks.
+    ship.style.transform = "translate3d(" + (currentX - 10) + "px," + (currentY - 9) + "px,0)";
+    if (Math.abs(targetX - currentX) + Math.abs(targetY - currentY) > 0.8) {
       frame = requestAnimationFrame(render);
     }
   }
@@ -100,11 +131,20 @@
   ship.addEventListener("error", () => {
     imageReady = false;
     deactivate();
+    overlayObserver.disconnect();
     ship.remove();
     style.remove();
   }, { once: true });
   ship.src = "/assets/cursor.png";
   document.body.appendChild(ship);
+
+  const overlayObserver = new MutationObserver(syncOverlayHost);
+  overlayObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["open", "popover"]
+  });
 
   window.addEventListener("star69ai:cursor-toggle", event => {
     setEnabled(!!(event.detail && event.detail.enabled));
@@ -114,6 +154,7 @@
     if (!enabled || !imageReady) return;
     if (event.pointerType !== "mouse" && event.pointerType !== "pen") return;
 
+    syncOverlayHost();
     targetX = event.clientX;
     targetY = event.clientY;
     const target = event.target;
@@ -131,6 +172,10 @@
     scheduleRender();
   }, { passive: true });
 
+  window.addEventListener("pointerdown", () => ship.classList.add("is-clicking"), { passive: true });
+  window.addEventListener("pointerup", () => ship.classList.remove("is-clicking"), { passive: true });
+  window.addEventListener("pointercancel", () => ship.classList.remove("is-clicking"), { passive: true });
+
   window.addEventListener("pointerout", event => {
     if (!event.relatedTarget) deactivate();
   }, { passive: true });
@@ -142,6 +187,7 @@
   const stopWhenUnsupported = () => {
     if (!finePointer.matches || (reducedMotion && reducedMotion.matches)) {
       deactivate();
+      overlayObserver.disconnect();
       ship.remove();
       style.remove();
     }

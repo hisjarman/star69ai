@@ -114,6 +114,13 @@
         arrival.append(visitorShip, flag);
         cover.appendChild(arrival);
       }
+      if (!document.querySelector("[data-star69-visitor-welcome-loader]")) {
+        const welcomeScript = document.createElement("script");
+        welcomeScript.src = "/assets/visitor-welcome.js";
+        welcomeScript.defer = true;
+        welcomeScript.dataset.star69VisitorWelcomeLoader = "true";
+        document.head.appendChild(welcomeScript);
+      }
     }
     document.querySelectorAll("[data-site-global-header]").forEach((node,index) => { if (index > 0) node.remove(); });
     const header = document.querySelector("[data-site-global-header]");

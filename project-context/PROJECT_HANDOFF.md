@@ -1999,3 +1999,14 @@ This section supersedes the earlier activation-status notes above where they des
 - Mission Control menu remains in the persistent utility row; spaceship animation, navigation, footer, interior headers and all backend systems are unchanged.
 - Updated header design lock and protected CSS fingerprint in this branch. Static CSS/source checks and protected-header CI are required; browser QA and Pages deployment verification remain outstanding.
 - Branch: `fix/compact-full-artwork-banner-2026-11-18`. Do not merge without explicit founder approval.
+
+
+## Intelligent local spaceship welcome — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: feature/intelligent-local-space-greetings-2026-11-19.
+- Owner approved a single country flag (no U.S. state flags) and intelligent local greetings such as a Dallas/Cowboys reference when appropriate. Added a homepage welcome bubble and a small frontend helper that requests the visitor greeting from the existing Concierge Worker.
+- Added Worker GET /api/welcome, using Cloudflare request country/city/region metadata and Workers AI. The greeting is cached for 24 hours by normalized location and site origin. It does not store visitor IP addresses, exact addresses, identity or chat messages. If location/model data is unavailable, the Worker uses a generic Star69AI welcome; unknown country retains the existing generic flag.
+- The existing four randomized 10.8-second spaceship routes continue to replay on every homepage refresh. Existing menu, navigation, footer, hero artwork, and reduced-motion behavior are preserved.
+- Updated the protected-header fingerprint and design-lock documentation in the same branch because the approved homepage header script now loads the welcome helper.
+- Required validation: JavaScript syntax checks for header/helper/Worker; static assertions for country-only flag, city/country personalization, 24-hour cache, no IP persistence, Dallas example prompt, no session guard, and preservation of the four routes; protected-header workflow must pass. Browser QA at 360px/768px/1280px and live GitHub Pages verification remain outstanding.
+- Worker code is source-only until separately deployed to the existing star69ai-concierge Worker. No Worker deployment or production activation performed. Do not merge this PR or deploy the Worker without founder approval.

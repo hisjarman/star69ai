@@ -1,4 +1,4 @@
-const ALLOWED = new Set(["https://star69ai.com","https://www.star69ai.com","https://star69ai-concierge.hisjarman.workers.dev"]);
+const ALLOWED = new Set(["https://star69ai.com","https://www.star69ai.com","https://concierge.star69ai.com"]);
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const WINDOW_MS = 600000;
 const MAX_REQUESTS = 8;

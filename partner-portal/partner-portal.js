@@ -9,6 +9,9 @@
  function render(data){
   $("#pp-status").textContent="PARTNER ACCOUNT · PRIVATE CONSOLE";
   $("#pp-code").textContent=data.partner.partnerCode;
+  const currentRate=Number(data.partner.currentRate||0.10);
+  const activeCount=Number(data.stats.customers||0);
+  $("#pp-tier").textContent=Math.round(currentRate*100)+"% · "+(activeCount>=15?"PREMIER TIER":activeCount>=5?"GROWTH TIER":"PARTNER TIER")+" · "+activeCount+" ACTIVE PAYING";
   $("#pp-payout-method").value=data.partner.payoutMethod||"paypal";
   $("#pp-paypal-email").value=data.partner.paypalEmail||"";
   $("#pp-payout-status").textContent=data.partner.paypalEmail?"PAYPAL DETAILS SAVED":"PAYPAL SETUP NEEDED";

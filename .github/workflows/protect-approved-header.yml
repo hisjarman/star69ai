@@ -31,8 +31,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected_js="f22ebc704a7e6c026f0dd2c553ecab173e5b4417"
-          expected_css="2e467ef07191c08172c7ca6d04d53e15e81b017c"
+          expected_js="bd017e230eb0ed429babde6a1cbbc1c5693e7ca1"
+          expected_css="06854f5c5622933436b7a807d86007ef31ea21a1"
           actual_js="$(git rev-parse HEAD:site-header.js)"
           actual_css="$(git rev-parse HEAD:site-header.css)"
 

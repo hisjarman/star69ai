@@ -405,3 +405,28 @@ body.site-home-page .site-global-cover-topline{top:clamp(12px,1.5vw,22px)!import
   .site-global-utility .site-global-nav{top:calc(100% + 7px)!important;left:9px!important;right:9px!important;max-height:calc(100svh - 150px)!important}
   body.site-home-page .site-global-cover-image{object-fit:contain!important}
 }
+
+
+/* Final desktop banner correction: compact social-cover height, complete artwork visible. */
+body.site-home-page .site-global-cover{
+  width:100%!important;
+  height:clamp(138px,16vw,184px)!important;
+  min-height:0!important;
+  aspect-ratio:3.15 / 1!important;
+  overflow:visible!important;
+}
+body.site-home-page .site-global-cover-image{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:#030918!important;
+}
+@media(max-width:700px){
+  body.site-home-page .site-global-cover{height:clamp(126px,35vw,150px)!important;aspect-ratio:2.8 / 1!important}
+  body.site-home-page .site-global-cover-image{object-fit:contain!important;object-position:center!important}
+}

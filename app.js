@@ -3,7 +3,7 @@
 // 2) Replace the value below with your form endpoint, e.g. https://formspree.io/f/abcdwxyz
 // 3) Commit and publish this file. Do not put API keys or private credentials here.
 const API_BASE = "https://avr-trust-lab-api.hisjarman.workers.dev";
-const DEMO_API_BASE = "https://avr-platform-api.hisjarman.workers.dev";
+const DEMO_API_BASE = "https://api.star69ai.com";
 const PARTNER_COOKIE = "star69ai_partner_ref";
 function readPartnerAttribution() {
   const entry = document.cookie.split("; ").find(item => item.startsWith(PARTNER_COOKIE + "="));

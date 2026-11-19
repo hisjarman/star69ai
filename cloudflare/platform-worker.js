@@ -1314,18 +1314,34 @@ async function route(req,env){
     return json({requests:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
-    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.industry,p.notes,p.status,p.created_at,p.last_contacted_at,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p ORDER BY p.created_at DESC LIMIT 500").all();
+    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.phone_number,p.industry,p.notes,p.status,p.created_at,p.last_contacted_at,ah.result_status AS after_hours_status,ah.check_method AS after_hours_method,ah.evidence AS after_hours_evidence,ah.phone_number AS after_hours_phone,ah.checked_at AS after_hours_checked_at,ah.checked_by AS after_hours_checked_by,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p LEFT JOIN avr_marketing_after_hours_checks ah ON ah.check_id=(SELECT c.check_id FROM avr_marketing_after_hours_checks c WHERE c.prospect_id=p.id ORDER BY c.checked_at DESC LIMIT 1) ORDER BY p.created_at DESC LIMIT 500").all();
     return json({prospects:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
-    const p=await body(req,16000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,12000);
-    if(business.length<2||!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
+    const p=await body(req,16000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),phone=String(p.phone||"").trim().slice(0,32),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,12000);
+    if(business.length<2||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
+    if(phone&&!/^[+0-9(). \\-]{5,32}$/.test(phone))throw Error("valid_business_phone_required");
     const existing=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE normalized_email=?").bind(email).first();
     if(existing){if(existing.status==="unsubscribed")throw Error("prospect_has_unsubscribed_do_not_contact");return json({created:false,alreadyExists:true,id:existing.id},200,origin,env)}
     const id=crypto.randomUUID(),now=new Date().toISOString();
-    await env.DB.prepare("INSERT INTO avr_marketing_prospects(id,business_name,contact_name,email,normalized_email,industry,notes,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'active',?,?)").bind(id,business,contact,email,email,industry,notes,now,now).run();
-    await audit(env,u,"marketing_prospect_created",null,{prospectId:id,industry});
+    await env.DB.prepare("INSERT INTO avr_marketing_prospects(id,business_name,contact_name,email,normalized_email,phone_number,industry,notes,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?, 'active',?,?)").bind(id,business,contact,email,email,phone||null,industry,notes,now,now).run();
+    await audit(env,u,"marketing_prospect_created",null,{prospectId:id,industry,phoneProvided:!!phone});
     return json({created:true,id},201,origin,env);
+   }
+   const afterHoursCheck=path.match(/^\\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/after-hours-check\\/?$/i);
+   if(afterHoursCheck&&req.method==="POST"){
+    const id=afterHoursCheck[1],p=await body(req,5000),phone=String(p.phoneNumber||"").trim().slice(0,32),resultStatus=String(p.resultStatus||"").trim(),checkMethod=String(p.checkMethod||"").trim(),evidence=String(p.evidence||"").trim().slice(0,1200);
+    if(!["ai_receptionist","human_answering_service","voicemail","no_answer","inconclusive"].includes(resultStatus))throw Error("valid_after_hours_result_required");
+    if(!["manual_call","public_website","business_listing","other"].includes(checkMethod))throw Error("valid_after_hours_check_method_required");
+    if(!/^[+0-9(). \\-]{5,32}$/.test(phone))throw Error("valid_business_phone_required");
+    if(evidence.length<3)throw Error("after_hours_evidence_required");
+    const prospect=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE id=?").bind(id).first();
+    if(!prospect)throw Error("marketing_prospect_not_found");
+    const now=new Date().toISOString(),checkId=crypto.randomUUID();
+    await env.DB.prepare("INSERT INTO avr_marketing_after_hours_checks(check_id,prospect_id,phone_number,result_status,check_method,evidence,checked_at,checked_by) VALUES(?,?,?,?,?,?,?,?)").bind(checkId,id,phone,resultStatus,checkMethod,evidence,now,String(u.email||u.sub||"admin").slice(0,254)).run();
+    await env.DB.prepare("UPDATE avr_marketing_prospects SET phone_number=?,updated_at=? WHERE id=?").bind(phone,now,id).run();
+    await audit(env,u,"marketing_after_hours_check_recorded",null,{prospectId:id,resultStatus,checkMethod});
+    return json({saved:true,checkId,checkedAt:now},201,origin,env);
    }
    const marketingSend=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/send\/?$/i);
    const marketingSendFixed=path==="/api/admin/marketing/send";

@@ -1320,7 +1320,7 @@ async function route(req,env){
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
     const p=await body(req,16000),business=String(p.businessName||"").trim(),email=String(p.email||"").trim().toLowerCase(),contact=String(p.contactName||"").trim().slice(0,100),phone=String(p.phone||"").trim().slice(0,32),industry=String(p.industry||"other").trim().slice(0,80),notes=String(p.notes||"").trim().slice(0,12000);
     if(business.length<2||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email))throw Error("valid_business_and_email_required");
-    if(phone&&!/^[+0-9(). \\-]{5,32}$/.test(phone))throw Error("valid_business_phone_required");
+    if(phone&&!/^[+0-9(). -]{5,32}$/.test(phone))throw Error("valid_business_phone_required");
     const existing=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE normalized_email=?").bind(email).first();
     if(existing){if(existing.status==="unsubscribed")throw Error("prospect_has_unsubscribed_do_not_contact");return json({created:false,alreadyExists:true,id:existing.id},200,origin,env)}
     const id=crypto.randomUUID(),now=new Date().toISOString();
@@ -1328,12 +1328,12 @@ async function route(req,env){
     await audit(env,u,"marketing_prospect_created",null,{prospectId:id,industry,phoneProvided:!!phone});
     return json({created:true,id},201,origin,env);
    }
-   const afterHoursCheck=path.match(/^\\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/after-hours-check\\/?$/i);
+   const afterHoursCheck=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/after-hours-check\/?$/i);
    if(afterHoursCheck&&req.method==="POST"){
     const id=afterHoursCheck[1],p=await body(req,5000),phone=String(p.phoneNumber||"").trim().slice(0,32),resultStatus=String(p.resultStatus||"").trim(),checkMethod=String(p.checkMethod||"").trim(),evidence=String(p.evidence||"").trim().slice(0,1200);
     if(!["ai_receptionist","human_answering_service","voicemail","no_answer","inconclusive"].includes(resultStatus))throw Error("valid_after_hours_result_required");
     if(!["manual_call","public_website","business_listing","other"].includes(checkMethod))throw Error("valid_after_hours_check_method_required");
-    if(!/^[+0-9(). \\-]{5,32}$/.test(phone))throw Error("valid_business_phone_required");
+    if(!/^[+0-9(). -]{5,32}$/.test(phone))throw Error("valid_business_phone_required");
     if(evidence.length<3)throw Error("after_hours_evidence_required");
     const prospect=await env.DB.prepare("SELECT id,status FROM avr_marketing_prospects WHERE id=?").bind(id).first();
     if(!prospect)throw Error("marketing_prospect_not_found");

@@ -7,6 +7,7 @@ on:
       - "client/client.js"
       - "admin/admin.js"
       - "cloudflare/migrations/20261119_addon_quotes.sql"
+      - "cloudflare/migrations/20261119_internal_cost_knowledge.sql"
       - ".github/workflows/custom-quote-validation.yml"
   push:
     branches: [main]
@@ -83,5 +84,8 @@ jobs:
             raise AssertionError("Invalid quote state unexpectedly accepted")
           except sqlite3.IntegrityError:
             pass
-          print("Passed: quote columns, default state, presentation, acceptance timestamp/actor, and quote-state constraint.")
+          db.executescript(Path("cloudflare/migrations/20261119_internal_cost_knowledge.sql").read_text())
+          catalog_columns = {row[1] for row in db.execute("PRAGMA table_info(avr_internal_cost_knowledge)")}
+          assert {"id", "title", "content", "source_reviewed_at", "updated_at", "updated_by"} <= catalog_columns, catalog_columns
+          print("Passed: quote columns, default state, presentation, acceptance timestamp/actor, quote-state constraint, and internal cost knowledge schema.")
           PY

@@ -2059,3 +2059,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Added a keyboard-accessible **CURSOR FX ON/OFF** control at the far-right end of the shared utility row. The preference is saved locally across page loads; switching OFF immediately restores the native pointer. The control is available on mouse/pen desktop layouts; the decorative effect remains unavailable for touch-only devices and reduced-motion preferences.
 - No change to the homepage visitor-arrival animation, navigation destinations, footer, Worker, D1, Retell, authentication, billing or customer records.
 - Required validation: JavaScript syntax checks for cursor/header scripts; source assertions for size, absence of rotation/3D transforms, smooth interpolation, persistent preference, toggle accessibility and native cursor restoration; run the protected-header workflow. Browser QA at desktop/mobile and live GitHub Pages verification remain outstanding. No merge or deployment performed.
+
+
+## Native-ratio header banner image — 2026-11-19 — REVIEW REQUIRED
+
+- Updated the shared header banner image markup to use the existing repository asset `/assets/image_hero.webp` and the supplied intrinsic dimensions `width="3840" height="1645"`. The user's snippet spelled the filename `image_herp.webp`; that file does not exist, so the actual existing `image_hero.webp` asset is used.
+- The banner container now follows the image's exact 3840:1645 aspect ratio at every viewport width. The image is rendered proportionally with `object-fit: contain`; no crop, stretch, redraw, replacement or generated image is used.
+- Existing brand, menu, status, visitor ship, utility controls, navigation and footer behavior are retained.
+- The protected-header workflow fingerprints are updated for the approved header JS/CSS source.
+- Validation required: syntax check of header JS, inspect resulting HTML/CSS and workflow, desktop/mobile browser QA and live GitHub Pages verification. Source changes alone do not prove visual rendering or deployment.
+- Website-only change; no Worker, D1, Retell, billing, authentication or customer data changed. PR review required; do not merge without explicit founder approval.

@@ -1,5 +1,5 @@
 (() => {
- const API="https://avr-trust-lab-api.hisjarman.workers.dev", $=s=>document.querySelector(s);
+ const API="https://trust.star69ai.com", $=s=>document.querySelector(s);
  const auth=$("#pp-auth"),dashboard=$("#pp-dashboard"),notApproved=$("#pp-not-approved"),actions=$("#pp-auth-actions"),userButton=$("#pp-user-button");
  let clerk=null,mounted=false;
  async function api(path,options={}){const token=await clerk.session?.getToken();if(!token)throw new Error("Your session expired. Please sign in again.");const r=await fetch(API+path,{...options,headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{}),"Authorization":"Bearer "+token,...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"Request failed ("+r.status+")");return d;}

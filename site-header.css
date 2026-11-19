@@ -297,3 +297,50 @@ body.site-home-page .site-global-cover-shade{inset:0!important}
   .site-global-arrival-flag{height:23px;opacity:1;transform:none}
   .site-global-arrival-flag::before{height:23px}
 }
+
+
+/* Owner correction — keep the complete homepage hero artwork visible inside the compact cover.
+   The source artwork is scaled proportionally; it is never stretched or cropped. */
+body.site-home-page .site-global-cover-image{
+  object-fit:contain!important;
+  object-position:center center!important;
+  background-color:#030918!important;
+}
+
+/* The ship artwork faces left by default. Mirror it only on rightward flight segments. */
+@keyframes star69FlightRouteOne{
+  0%{left:-12%;top:18%;opacity:0;transform:translate(-50%,-50%) scaleX(-1) scale(.55) rotate(-12deg)}
+  9%{opacity:1}
+  22%{left:18%;top:22%;transform:translate(-50%,-50%) scaleX(-1) scale(.78) rotate(8deg)}
+  43%{left:78%;top:17%;transform:translate(-50%,-50%) scaleX(-1) scale(.9) rotate(-5deg)}
+  63%{left:84%;top:72%;transform:translate(-50%,-50%) scale(.72) rotate(16deg)}
+  82%{left:34%;top:78%;transform:translate(-50%,-50%) scaleX(-1) scale(.7) rotate(-8deg)}
+  100%{left:50%;top:42%;opacity:1;transform:translate(-50%,-50%) scaleX(-1) scale(.43) rotate(0)}
+}
+@keyframes star69FlightRouteTwo{
+  0%{left:108%;top:16%;opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(12deg)}
+  9%{opacity:1}
+  23%{left:76%;top:30%;transform:translate(-50%,-50%) scale(.82) rotate(-14deg)}
+  45%{left:20%;top:16%;transform:translate(-50%,-50%) scale(.9) rotate(9deg)}
+  66%{left:12%;top:78%;transform:translate(-50%,-50%) scaleX(-1) scale(.72) rotate(-18deg)}
+  84%{left:68%;top:72%;transform:translate(-50%,-50%) scale(.7) rotate(8deg)}
+  100%{left:50%;top:42%;opacity:1;transform:translate(-50%,-50%) scale(.43) rotate(0)}
+}
+@keyframes star69FlightRouteThree{
+  0%{left:50%;top:-16%;opacity:0;transform:translate(-50%,-50%) scale(.5) rotate(0)}
+  9%{opacity:1}
+  24%{left:18%;top:30%;transform:translate(-50%,-50%) scaleX(-1) scale(.82) rotate(-20deg)}
+  46%{left:80%;top:42%;transform:translate(-50%,-50%) scale(.9) rotate(14deg)}
+  66%{left:62%;top:78%;transform:translate(-50%,-50%) scale(.72) rotate(-12deg)}
+  84%{left:24%;top:66%;transform:translate(-50%,-50%) scaleX(-1) scale(.7) rotate(12deg)}
+  100%{left:50%;top:42%;opacity:1;transform:translate(-50%,-50%) scaleX(-1) scale(.43) rotate(0)}
+}
+@keyframes star69FlightRouteFour{
+  0%{left:-12%;top:78%;opacity:0;transform:translate(-50%,-50%) scaleX(-1) scale(.52) rotate(18deg)}
+  9%{opacity:1}
+  23%{left:24%;top:22%;transform:translate(-50%,-50%) scaleX(-1) scale(.82) rotate(-12deg)}
+  45%{left:70%;top:76%;transform:translate(-50%,-50%) scaleX(-1) scale(.9) rotate(16deg)}
+  65%{left:90%;top:28%;transform:translate(-50%,-50%) scale(.72) rotate(-10deg)}
+  84%{left:42%;top:18%;transform:translate(-50%,-50%) scaleX(-1) scale(.7) rotate(8deg)}
+  100%{left:50%;top:42%;opacity:1;transform:translate(-50%,-50%) scaleX(-1) scale(.43) rotate(0)}
+}

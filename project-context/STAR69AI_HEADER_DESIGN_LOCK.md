@@ -83,3 +83,12 @@ This lock protects the approved source implementation. It cannot guarantee that 
 
 - The compact homepage cover must retain `overflow:visible` so the existing Mission Control dropdown can extend below the banner without clipping. The visitor-flight overlay itself clips its animated ship within the artwork bounds.
 - This preserves the existing navigation interaction and does not change the cover dimensions or visitor flight.
+
+
+## Owner correction — complete hero image fit and direction-aware visitor ship — 2026-11-18
+
+- The homepage cover remains compact: desktop height is capped at 184px and mobile height at 150px. Do not let the source image's natural dimensions expand the header.
+- Show the entire `/assets/image_hero.webp` artwork proportionally inside the cover using `object-fit: contain`. No crop, stretching, or distortion. Any unused space remains the existing deep-space background.
+- The visitor ship is a separate decorative overlay. Its source artwork points left, so mirror it horizontally on each left-to-right flight segment and leave it unmirrored on each right-to-left segment. Do not rotate the ship 180 degrees or alter its artwork.
+- Preserve the four randomized exploration routes, flight timing, landing/flag sequence, reduced-motion behavior, Mission Control dropdown overflow, navigation, utility links, and interior-page header.
+- This owner correction supersedes the earlier social-cover note that called for a deliberate crop of the hero artwork. It does not authorize changes to unrelated site features.

@@ -1,3 +1,12 @@
+## Owner correction: full homepage hero image fit and visitor ship direction — 2026-11-18
+
+- Supersedes the earlier note describing a deliberate crop of the homepage hero artwork.
+- Keep the homepage cover shallow and responsive (184px desktop maximum; 150px mobile maximum). The header must not expand to the artwork's natural height.
+- Scale the complete `/assets/image_hero.webp` proportionally into the cover with `object-fit: contain`; do not crop, stretch, or distort it. Unused space shows the existing deep-space background.
+- The visitor ship artwork points left by default. Mirror it horizontally on left-to-right flight segments; leave it unmirrored on right-to-left segments. Do not rotate the artwork 180 degrees.
+- Preserve randomized route selection, the 10.8-second exploration flight, landing and flag animation, reduced-motion behavior, menu overflow, all navigation/utility links, and interior header behavior.
+- The CSS protection fingerprint and design-lock document are updated in the same PR. Browser visual QA at desktop/tablet/mobile and live GitHub Pages verification remain outstanding until actually performed.
+
 ## Compact cover navigation overflow safeguard — 2026-11-18
 
 - Follow-up CSS safeguard: the homepage cover container keeps `overflow:visible` so the Mission Control dropdown panel is never clipped by the shallow banner. The decorative visitor-flight overlay clips the ship within the artwork area independently.

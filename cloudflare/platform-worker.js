@@ -281,8 +281,8 @@ async function recordPrepaidPartnerCommission(env,customer,captureId,amountCents
  if(!partner)return;
  const paidAt=new Date().toISOString(),externalId="paypal_"+String(captureId);
  await env.DB.prepare("UPDATE partner_referrals SET lead_status='converted',customer_id=?,converted_at=COALESCE(converted_at,?) WHERE affiliate_application_id=? AND lower(lead_email)=lower(?)").bind(customer.id,paidAt,partnerId,customer.email).run();
- const active=await env.DB.prepare("SELECT COUNT(DISTINCT r.customer_id) AS total FROM partner_referrals r JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=? AND r.lead_status='converted' AND c.subscription_status IN ('active','trialing')").bind(partnerId).first();
- const activeCount=Number(active?.total||0),rate=activeCount>=15?0.30:activeCount>=5?0.25:0.20;
+ const active=await env.DB.prepare("SELECT COUNT(DISTINCT r.customer_id) AS total FROM partner_referrals r JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=? AND r.lead_status='converted' AND c.subscription_status='active'").bind(partnerId).first();
+ const activeCount=Number(active?.total||0),rate=activeCount>=15?0.20:activeCount>=5?0.15:0.10;
  const commissionCents=Math.round(Number(amountCents)*rate),validationUntil=new Date(Date.parse(paidAt)+30*86400000).toISOString();
  await env.DB.prepare("INSERT OR IGNORE INTO partner_commissions(id,affiliate_application_id,customer_id,stripe_invoice_id,stripe_subscription_id,invoice_amount_cents,commission_rate,commission_amount_cents,currency,status,invoice_paid_at,validation_until,payment_provider,payment_reference,admin_note) VALUES(?,?,?, ?,NULL,?,?,?,'usd','pending',?,?,'paypal',?,?)").bind(crypto.randomUUID(),partnerId,customer.id,externalId,Number(amountCents),rate,commissionCents,paidAt,validationUntil,String(captureId),"Prepaid subscription paid through PayPal; commission is based on the collected subscription amount, excluding the waived setup fee.").run();
 }
@@ -659,9 +659,9 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
    await env.DB.prepare("UPDATE partner_referrals SET lead_status='converted',customer_id=?,converted_at=COALESCE(converted_at,?) WHERE affiliate_application_id=? AND lower(lead_email)=lower(?)").bind(customer.id,paidAt,partnerId,customer.email).run();
    const partner=await env.DB.prepare("SELECT commission_tier FROM affiliate_applications WHERE id=? AND application_status='approved'").bind(partnerId).first();
    if(partner){
-    const active=await env.DB.prepare("SELECT COUNT(DISTINCT r.customer_id) AS total FROM partner_referrals r JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=? AND r.lead_status='converted' AND c.subscription_status IN ('active','trialing')").bind(partnerId).first();
+    const active=await env.DB.prepare("SELECT COUNT(DISTINCT r.customer_id) AS total FROM partner_referrals r JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=? AND r.lead_status='converted' AND c.subscription_status='active'").bind(partnerId).first();
     const activeCount=Number(active?.total||0);
-    const rate=activeCount>=15?0.30:activeCount>=5?0.25:0.20;
+    const rate=activeCount>=15?0.20:activeCount>=5?0.15:0.10;
     const commissionCents=Math.round(commissionableCents*rate);
     const subscriptionId=o.subscription||o.parent?.subscription_details?.subscription||null;
     const validationUntil=new Date(Date.parse(paidAt)+30*86400000).toISOString();

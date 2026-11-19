@@ -1,7 +1,7 @@
 (() => {
  const form=document.getElementById("partner-form"),status=document.getElementById("partner-status"),success=document.getElementById("partner-success");
  if(!form)return;
- const API="https://avr-trust-lab-api.hisjarman.workers.dev";
+ const API="https://trust.star69ai.com";
  form.addEventListener("submit",async event=>{
   event.preventDefault();status.classList.remove("error");status.textContent="";
   if(!form.reportValidity())return;

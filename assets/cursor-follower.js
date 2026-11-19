@@ -74,6 +74,8 @@
   let tiltX = 0;
   let tiltY = 0;
   let bank = 0;
+  // The artwork's nose points right at neutral; rotate it to follow pointer travel.
+  let heading = 0;
   let frame = 0;
   let targetX = 0;
   let targetY = 0;
@@ -100,8 +102,9 @@
     const currentBank = bank;
     ship.style.transform =
       "translate3d(" + (targetX - 10) + "px," + (targetY - 9) + "px,0) " +
-      "perspective(700px) rotateX(" + currentX.toFixed(2) + "deg) " +
-      "rotateY(" + currentY.toFixed(2) + "deg) rotateZ(" + currentBank.toFixed(2) + "deg) scale(1.08)";
+      "perspective(700px) rotateZ(" + heading.toFixed(2) + "deg) " +
+      "rotateX(" + currentX.toFixed(2) + "deg) rotateY(" + currentY.toFixed(2) + "deg) " +
+      "rotateZ(" + currentBank.toFixed(2) + "deg) scale(1.08)";
   }
 
   function scheduleRender() {
@@ -137,10 +140,18 @@
     const now = performance.now();
     if (lastX !== null && lastY !== null && lastTime) {
       const elapsed = Math.max(8, now - lastTime);
-      const velocityX = (event.clientX - lastX) / elapsed;
-      const velocityY = (event.clientY - lastY) / elapsed;
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+      const velocityX = deltaX / elapsed;
+      const velocityY = deltaY / elapsed;
 
-      // Bank into turns and pitch with movement, echoing the homepage visitor ship's flight.
+      // Point the ship's nose in its actual direction of travel:
+      // right = 0°, down = 90°, left = 180°, up = -90°.
+      if (Math.hypot(deltaX, deltaY) > 1.5) {
+        heading = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+      }
+
+      // Keep the existing 3D pitch and banking layered over the heading.
       tiltY = Math.max(-24, Math.min(24, velocityX * 115));
       tiltX = Math.max(-18, Math.min(18, -velocityY * 95));
       bank = Math.max(-17, Math.min(17, velocityX * 78));

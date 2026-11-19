@@ -2041,3 +2041,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserves mouse/pen-only activation, text-input cursor behavior, click-through pointer-events, native dialog/popover overlay support, image-load fallback, reduced-motion and mobile/touch behavior.
 - Source checks required: JavaScript syntax, image path, no forced image dimensions/cropping, transform/perspective banking, settle behavior, pointer-events and fallback guards. Browser visual QA at desktop, dialogs/popovers and text inputs remains outstanding.
 - Source-only change; no Worker, D1, Retell, billing, authentication, customer records or production configuration changed. PR review required; do not merge without explicit founder approval.
+
+
+## Cursor nose follows pointer travel direction — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/cursor-heading-follows-pointer-2026-11-19`, based on current `main`.
+- The existing cursor artwork is kept intact. Its nose now rotates to follow the pointer's direction of travel: right = 0°, down = 90°, left = 180°, and up = -90°. Diagonal movement follows the corresponding diagonal heading.
+- The directional rotation is layered with the existing perspective pitch, yaw and banking, so the spacecraft keeps its 3D flight effect while changing heading. Small sub-pixel movements do not cause heading jitter.
+- Assumes the neutral `cursor.png` artwork faces right; if visual QA shows a different native facing direction, adjust the heading offset rather than modifying or redrawing the image.
+- Validation required: JavaScript syntax check, static heading-direction assertions, and browser QA for all four cardinal directions plus diagonals. Confirm the image's native facing direction visually before merge. No Worker, D1, billing, authentication, customer data or production configuration changed. No merge or deployment performed.

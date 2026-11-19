@@ -2031,3 +2031,13 @@ This section supersedes the earlier activation-status notes above where they des
 - The concierge Worker now returns a deterministic, locally relevant Cancún greeting: “¡Qué onda, Cancún! From the Caribbean coast, welcome—let’s make every business connection count.” This avoids a generic AI-generated fallback for Cancún visitors and always reports `countryCode: MX` for that city. Other locations retain the existing AI-assisted greeting behavior.
 - Changed files: `assets/visitor-welcome.js`, `cloudflare/concierge-worker.js`, and this handoff.
 - Static source assertions passed for the Cancún normalization, exact greeting and Mexico flag override. Runtime/browser QA and live Worker verification remain outstanding. GitHub Pages and the concierge Worker deploy separately; merging the website script does not deploy the Worker. Do not merge or deploy the Worker without explicit founder approval.
+
+
+## Cursor spaceship detail preservation and 3D flight motion — 2026-11-19 — REVIEW REQUIRED
+
+- Branch: `fix/cursor-3d-flight-and-full-artwork-2026-11-19`, based on current `main`.
+- Keeps the existing `/assets/cursor.png` image. No image replacement, redrawing, cropping, or CSS flame overlay is introduced; the image is rendered proportionally with automatic height and no max-height cap so the original jet flame and fine artwork remain visible.
+- Increases the pointer render size to a responsive 82–112px range. Adds perspective-based pitch, yaw and banking driven by pointer movement, with a smooth return to neutral when movement stops, echoing the visitor spacecraft's 3D flight behavior.
+- Preserves mouse/pen-only activation, text-input cursor behavior, click-through pointer-events, native dialog/popover overlay support, image-load fallback, reduced-motion and mobile/touch behavior.
+- Source checks required: JavaScript syntax, image path, no forced image dimensions/cropping, transform/perspective banking, settle behavior, pointer-events and fallback guards. Browser visual QA at desktop, dialogs/popovers and text inputs remains outstanding.
+- Source-only change; no Worker, D1, Retell, billing, authentication, customer records or production configuration changed. PR review required; do not merge without explicit founder approval.

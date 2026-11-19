@@ -1,3 +1,16 @@
+## Approved AI sales-call foundation — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: \`feature/approved-ai-sales-calls-2026-11-19\`, stacked on PR #318's \`feature/marketing-after-hours-intelligence-2026-11-19\` branch. PR #318 remains open and unmerged; merge PR #318 first, then retarget/rebase this follow-up as needed.
+- Adds administrator-only, one-prospect-at-a-time outbound calls through the existing Retell API and Agency Admin. It uses a dedicated sales agent override and dedicated Star69AI Retell caller number; it never reuses a customer's receptionist agent or customer-assigned caller ID.
+- Adds prospect call-eligibility fields and an auditable \`avr_marketing_ai_calls\` history table. A call is blocked unless the prospect is active, not opted out, the number is recorded as a verified business landline, documented written permission is recorded for that exact number, the phone is valid E.164, and the founder explicitly confirms the individual call.
+- Safety limits: maximum five accepted/attempted calls per rolling 24 hours; one call per prospect per 30 days; a permanent do-not-call flag; no batch dialer, scheduler or unattended campaign. Retell webhooks update the call status, transcript, recording link and summary.
+- Required Worker secrets: \`SALES_RETELL_AGENT_ID\` (dedicated Star69AI sales agent) and \`SALES_RETELL_FROM_NUMBER\` (dedicated Star69AI-owned Retell number in E.164 format, not assigned to a customer). Existing \`RETELL_API_KEY\` is reused. Do not put API keys in the repository or browser.
+- Configure the Retell agent using \`project-context/STAR69AI_SALES_AGENT_SETUP.md\`. The agent must identify itself as an AI sales assistant, identify Star69AI and the commercial purpose of the call, ask permission to continue, avoid misleading claims, and immediately honor requests not to be called again.
+- Migration order: apply PR #318's \`20261119_marketing_after_hours_checks.sql\` first, then \`20261119_marketing_ai_sales_calls.sql\`, to the existing \`avr-trust-lab\` D1 database. Deploy the Worker only after both migrations succeed; publish the Admin UI through GitHub Pages after the PRs are merged.
+- No live calls, migrations, Worker deployments, GitHub Pages deployments, Retell agent creation or Cloudflare secret changes were performed by this source-only PR.
+- Legal safeguard: this is not a legal compliance determination. AI-generated telemarketing calls can trigger TCPA and other federal/state requirements; number classification, consent, do-not-call screening and local calling hours must be reviewed before each call. This version deliberately blocks mobile, residential, unknown and other number types. Do not expand those rules without legal review.
+- Validation still required: JS/module syntax, SQL migration execution against a test D1 database after PR #318's migration, Worker route tests, Retell sandbox/test-number call, webhook update verification, browser QA, and confirmation that the configured sales agent and caller ID are dedicated to Star69AI.
+
 
 ## Marketing prospect after-hours answering checks — 2026-11-19 — REVIEW REQUIRED
 

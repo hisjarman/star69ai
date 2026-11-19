@@ -41,8 +41,8 @@ async function localWelcome(request,env,origin){
   try{
     const prompt="Write one short, natural, clever welcome greeting for a visitor to Star69AI, an AI receptionist service. Visitor location: "+location+". Make it sound like a locally aware, witty human host. Use a recognizable local sports team, city culture, landmark, or local expression only when it is a strong, well-known fit; for Dallas, Texas, a playful Dallas Cowboys 'How about them Cowboys?' reference is welcome. Do not force sports into every greeting. Do not invent current scores, schedules, events, local facts, or make stereotypes. If no confident local hook exists, use the city/country name and a warm clever welcome. Keep it to one sentence, ideally 8–18 words and under 140 characters. Do not mention IP addresses, tracking, geolocation, Cloudflare, AI generation, or how you know the location. Output only the greeting.";
     const result=await env.AI.run(MODEL,{messages:[{role:"system",content:"You create concise, location-aware website welcome messages. Be accurate, tasteful, and natural."},{role:"user",content:prompt}],max_tokens:64,temperature:0.72});
-    const candidate=String(result?.response||result?.result?.response||result?.choices?.[0]?.message?.content||result?.result?.choices?.[0]?.message?.content||"").replace(/[\\r\\n]+/g," ").replace(/^["'“”]+|["'“”]+$/g,"").trim();
-    if(candidate&&candidate.length<=180&&!/\\b(ip address|tracking|cloudflare|geolocation)\\b/i.test(candidate))greeting=candidate;
+    const candidate=String(result?.response||result?.result?.response||result?.choices?.[0]?.message?.content||result?.result?.choices?.[0]?.message?.content||"").replace(/[\r\n]+/g," ").replace(/^["'“”]+|["'“”]+$/g,"").trim();
+    if(candidate&&candidate.length<=180&&!/\b(ip address|tracking|cloudflare|geolocation)\b/i.test(candidate))greeting=candidate;
   }catch(error){console.error("visitor_welcome_inference_failed",String(error?.message||error));}
   const payload={greeting,countryCode:country,city,region};
   const response=json(payload,200,origin);

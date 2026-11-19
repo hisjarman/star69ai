@@ -152,3 +152,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - The optional decorative cursor is deliberately restrained: approximately 34–42px wide, gently eased pointer following, no rotation, pitch, yaw, banking, click flashes or other attention-grabbing movement. It remains hidden over text-entry controls.
 - The effect is limited to mouse/pen devices and is not enabled when the operating system requests reduced motion. The toggle does not affect the homepage visitor-arrival animation.
 - This is an explicit owner-requested additive header control and cursor comfort revision. The updated source fingerprints are pinned in the protection workflow in the same PR. Preserve all other protected header, navigation, utility links and footer behavior.
+
+
+## Owner correction — restore detailed spacecraft cursor with calm fixed-horizon FX — 2026-11-19
+
+- Restore the original detailed `/assets/cursor.png` spacecraft at 82–112px proportional width, preserving the complete artwork and jet flame. Do not crop, redraw, replace or cap its height.
+- Keep the ship level against a fixed horizon at all times: no heading rotation, pitch, yaw or banking. Reduce sensitivity through slow, capped easing so the follower does not snap or overreact to small pointer movements.
+- Retain restrained blue/orange engine glow and subtle click feedback. Keep the existing persistent CURSOR FX ON/OFF toggle and all accessibility/fallback behavior.
+- This correction supersedes the 34–42px cursor size in the earlier calm-cursor section. It does not authorize changes to the protected navigation, header layout, footer or visitor-arrival animation.

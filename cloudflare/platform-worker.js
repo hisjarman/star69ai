@@ -1242,7 +1242,7 @@ async function route(req,env){
    if(!row)throw Error("addon_request_not_found");
    if(row.quote_status!=="presented"||!String(row.quote_summary||"").trim())throw Error("current_written_quote_not_available");
    const now=new Date().toISOString();
-   const result=await env.DB.prepare("UPDATE avr_addon_orders SET quote_status='accepted',quote_updated_at=?,quote_accepted_at=?,quote_accepted_by=?,updated_at=? WHERE id=? AND customer_id=? AND quote_status='presented'").bind(now,now,id,c.id).run();
+   const result=await env.DB.prepare("UPDATE avr_addon_orders SET quote_status='accepted',quote_updated_at=?,quote_accepted_at=?,quote_accepted_by=?,updated_at=? WHERE id=? AND customer_id=? AND quote_status='presented'").bind(now,now,u.id,now,id,c.id).run();
    if(!result.meta?.changes)throw Error("quote_no_longer_available");
    return json({accepted:true,id},200,origin,env);
   }

@@ -100,3 +100,12 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Made the shared header a true viewport-width, full-bleed element so it reaches both the left and right edges even when a page content wrapper is narrower. Kept the cover artwork proportional and the existing compact responsive header behavior; no horizontal stretching or unrelated page-layout changes.
 - Updated the approved-header protection fingerprints in the same change. No navigation destinations, visitor-flight behavior, footer content, Worker, D1, Retell, billing, authentication or customer data changed.
 - Source-level validation and browser visual QA at mobile, tablet and desktop widths are required before merge. GitHub Pages deployment is not assumed.
+
+
+## Owner-requested true banner fill correction — 2026-11-19
+
+- The owner reports the homepage artwork still does not read visually as a site banner. This correction supersedes the prior complete-artwork `object-fit:contain` instruction for the homepage cover.
+- The homepage hero is a shallow, edge-to-edge social/site banner: fill the full available width and fixed responsive cover height using `object-fit:cover`. Preserve the image's proportions; crop excess image area rather than letterboxing, stretching, or allowing the source image's natural height to expand the header.
+- Keep the desktop cover capped at 184px and mobile at 150px. Keep the image centered, with a slightly elevated desktop focal position. The deep-space base remains behind the image.
+- The visitor spaceship remains a separate overlay and its routes, direction mirroring, landing/flag animation and timing are unchanged. Preserve Mission Control menu overflow, navigation, utility strip, interior header and footer.
+- Update the protected CSS fingerprint in the same PR. Browser QA and GitHub Pages deployment verification are still required; do not claim visual success until checked.

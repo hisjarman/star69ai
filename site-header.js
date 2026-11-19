@@ -56,7 +56,8 @@
     const key = "star69ai-cookie-consent-v1";
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(key) || "null"); } catch {}
-    if (saved && saved.version === 1 && ["all","essential"].includes(saved.choice)) return;
+    if (typeof window.gtag === "function") window.gtag("consent","default",{analytics_storage:"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
+    if (saved && saved.version === 1 && ["all","essential"].includes(saved.choice)) { if (typeof window.gtag === "function") window.gtag("consent","update",{analytics_storage:saved.analytics?"granted":"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"}); return; }
     const banner = document.createElement("section");
     banner.className = "star69-cookie-banner";
     banner.dataset.star69CookieBanner = "true";

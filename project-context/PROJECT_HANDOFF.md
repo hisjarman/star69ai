@@ -1,3 +1,15 @@
+## Marketing prospect phone-column consistency — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/marketing-phone-column-2026-11-19`, based on current `main`.
+- Corrected the expandable Marketing prospect list so both the Contacted and Not contacted tables show the same BUSINESS / EMAIL / PHONE / INDUSTRY / STATUS / OUTREACH / ACTION columns.
+- The existing `notes.phone` parser and clickable `tel:` renderer were already present and are unchanged; this fix adds the missing PHONE header to the Not contacted table so its third cell is correctly labeled.
+- Bumped the admin JavaScript cache key in `admin/index.html` so GitHub Pages clients request the updated script.
+- No Worker, D1 schema/data, prospect records, send history, unsubscribe records, email sending, authentication, billing or customer records changed.
+- Source assertions: exactly one missing header corrected; both table templates now contain PHONE; existing phone link renderer retained; script cache key updated. Browser visual QA at mobile/tablet/desktop and GitHub Pages publication verification remain outstanding.
+- Source-only PR. Do not merge to `main` or claim production deployment without explicit founder approval.
+
+---
+
 ## Security monitoring and traffic filtering — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `feature/security-traffic-monitoring-admin-2026-11-19`, based on current `main` at `c8c192f023caaf009b1ae45be8729e0be11ead63`.

@@ -18,6 +18,38 @@ async function rateLimit(request,env){
   if(Number(row?.requests||0)===1)await env.DB.prepare("DELETE FROM star69ai_concierge_limits WHERE window_started<?").bind(now-172800000).run();
   return Number(row?.requests||0)<=MAX_REQUESTS;
 }
+async function welcomeCacheKey(locationKey,origin){
+  const bytes=new TextEncoder().encode("star69ai-local-welcome-v1:"+locationKey+":"+String(origin||""));
+  const digest=await crypto.subtle.digest("SHA-256",bytes);
+  const hex=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,"0")).join("");
+  return new Request("https://star69ai-welcome-cache.invalid/"+hex);
+}
+async function localWelcome(request,env,origin){
+  const cf=request.cf||{};
+  const country=String(cf.country||"").toUpperCase().match(/^[A-Z]{2}$/)?.[0]||"";
+  const city=String(cf.city||"").trim().slice(0,80);
+  const region=String(cf.region||"").trim().slice(0,80);
+  const regionCode=String(cf.regionCode||"").trim().slice(0,12);
+  let countryName=country;
+  try{if(country)countryName=new Intl.DisplayNames(["en"],{type:"region"}).of(country)||country;}catch{}
+  const locationKey=[city,regionCode||region,country].join("|");
+  if(!country&&!city&&!region)return json({greeting:"Welcome aboard! Your next great connection starts here.",countryCode:"",city:"",region:""},200,origin);
+  const cacheKey=await welcomeCacheKey(locationKey,origin);
+  try{const cached=await caches.default.match(cacheKey);if(cached)return new Response(cached.body,{status:cached.status,headers:cached.headers});}catch{}
+  const location=[city,region,countryName].filter(Boolean).join(", ");
+  let greeting=city?("Hey, "+city+"! Welcome aboard Star69AI — let's make every connection count."):"Welcome from "+countryName+"! You're cleared for takeoff with Star69AI.";
+  try{
+    const prompt="Write one short, natural, clever welcome greeting for a visitor to Star69AI, an AI receptionist service. Visitor location: "+location+". Make it sound like a locally aware, witty human host. Use a recognizable local sports team, city culture, landmark, or local expression only when it is a strong, well-known fit; for Dallas, Texas, a playful Dallas Cowboys 'How about them Cowboys?' reference is welcome. Do not force sports into every greeting. Do not invent current scores, schedules, events, local facts, or make stereotypes. If no confident local hook exists, use the city/country name and a warm clever welcome. Keep it to one sentence, ideally 8–18 words and under 140 characters. Do not mention IP addresses, tracking, geolocation, Cloudflare, AI generation, or how you know the location. Output only the greeting.";
+    const result=await env.AI.run(MODEL,{messages:[{role:"system",content:"You create concise, location-aware website welcome messages. Be accurate, tasteful, and natural."},{role:"user",content:prompt}],max_tokens:64,temperature:0.72});
+    const candidate=String(result?.response||result?.result?.response||result?.choices?.[0]?.message?.content||result?.result?.choices?.[0]?.message?.content||"").replace(/[\\r\\n]+/g," ").replace(/^["'“”]+|["'“”]+$/g,"").trim();
+    if(candidate&&candidate.length<=180&&!/\\b(ip address|tracking|cloudflare|geolocation)\\b/i.test(candidate))greeting=candidate;
+  }catch(error){console.error("visitor_welcome_inference_failed",String(error?.message||error));}
+  const payload={greeting,countryCode:country,city,region};
+  const response=json(payload,200,origin);
+  response.headers.set("Cache-Control","public, max-age=86400, s-maxage=86400");
+  try{await caches.default.put(cacheKey,response.clone());}catch{}
+  return response;
+}
 async function handle(request,env){
   const url=new URL(request.url),origin=request.headers.get("Origin");
   if(origin&&!ALLOWED.has(origin))return json({error:"origin_not_allowed"},403,null);
@@ -34,6 +66,7 @@ async function handle(request,env){
     if(!image.ok)return new Response("Logo unavailable",{status:502,headers:{"Cache-Control":"no-store"}});
     const h=new Headers(image.headers);h.set("Content-Type",webp?"image/webp":"image/png");h.set("Cache-Control","public, max-age=86400, s-maxage=604800");h.set("X-Content-Type-Options","nosniff");h.set("X-Logo-Transform",image.headers.get("cf-resized")||"not-reported");return new Response(image.body,{status:200,headers:h});
   }
+  if(url.pathname==="/api/welcome"&&request.method==="GET")return localWelcome(request,env,origin);
   if(url.pathname==="/health"&&request.method==="GET")return json({ok:true,service:"star69ai-concierge",model:MODEL,privacy:"messages_not_stored"},200,origin);
   if(url.pathname==="/"&&request.method==="GET")return new Response(PAGE,{status:200,headers:headers(origin,true)});
   if(url.pathname!=="/api/chat"||request.method!=="POST")return json({error:"not_found"},404,origin);

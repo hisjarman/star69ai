@@ -160,3 +160,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Keep the image's native 3840:1645 proportions using width/height intrinsic attributes and a matching responsive banner aspect ratio. Render the entire image with `object-fit: contain`; do not crop, stretch, redraw or replace it.
 - Preserve the existing menu, brand, status, visitor ship, utility controls, navigation and footer behavior.
 - This owner-approved sizing revision supersedes earlier fixed-height/cropped banner sizing rules where they conflict.
+
+
+## Owner correction — compact detailed spacecraft cursor — 2026-11-19
+
+- Keep the cursor at the original compact 34–42px width. Do not enlarge it.
+- Preserve the complete original `/assets/cursor.png` artwork and its detail; render it proportionally with automatic height and `object-fit:contain`, without cropping, redrawing, replacing or capping its height.
+- Keep calm, eased pointer following on a fixed, level horizon: no rotation, pitch, yaw or banking. Preserve the existing toggle and accessibility/fallback behavior.
+- This correction supersedes the 82–112px sizing direction in the prior cursor note. The requirement is detail preservation at the compact size, not a larger cursor.

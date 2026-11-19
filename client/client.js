@@ -3,7 +3,7 @@
  const ua=navigator.userAgent||'', uaLooksDesktop=/Windows NT|Macintosh|X11|Linux x86_64|CrOS/i.test(ua), uaLooksMobile=/Android.*Mobile|iPhone|iPad|iPod|Mobile/i.test(ua);
  const desktopSiteMode=uaLooksDesktop||(!!navigator.userAgentData&&!navigator.userAgentData.mobile)||!uaLooksMobile;
  if(desktopSiteMode) document.documentElement.classList.add("cockpit-desktop-mode");
- const API="https://avr-platform-api.hisjarman.workers.dev", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
+ const API="https://api.star69ai.com", OVERAGE_RATES={starter:0.55,growth:0.45,pro:0.36};
  const $=s=>document.querySelector(s);
  let clerk=null,customer=null,loading=false,allCalls=[],callEmailDefault="",flexCanReceiveCalls=false;
  function note(t,e=false){const n=$("#notice");n.textContent=t;n.classList.remove("hidden","error");if(e)n.classList.add("error")}

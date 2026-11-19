@@ -1,3 +1,17 @@
+## Owner-requested shared header cleanup — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/compact-global-header-logo-bar-2026-11-19`, based on current `main`.
+- Interior public pages no longer render the homepage cinematic banner/cover. Their shared header begins with the compact utility/navigation bar.
+- The canonical Star69AI wordmark image is moved into the utility bar on every page, including the homepage; it is no longer overlaid on the homepage banner.
+- The homepage retains its existing cinematic hero artwork and visitor-arrival animation. The shared MENU/CLOSE control, grouped destinations, partner/client/contact links, cursor toggle, cookie controls, footer and accessibility behavior are preserved.
+- Removed the duplicate local legal-navigation header from `privacy.html` and `terms.html`; the shared site navigation already provides those destinations.
+- Updated `project-context/STAR69AI_HEADER_DESIGN_LOCK.md` to supersede the previous interior-cover/logo placement rules. Updated protected-header workflow fingerprints with the new source blob IDs.
+- Website-only changes. No Worker, D1, Retell, billing, authentication, DNS, email, customer or production configuration changed.
+- Required before merge: verify header rendering on homepage and interior pages at desktop/tablet/mobile; verify logo sizing and utility-bar wrapping; verify menu open/close, active-page state, cookie prompt, cursor toggle, legal page links and footer; run protected-header workflow and HTML/JavaScript checks.
+- Source-only PR. Do not merge to `main` or claim production deployment without explicit founder approval.
+
+---
+
 ## Marketing prospect phone-column consistency — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `fix/marketing-phone-column-2026-11-19`, based on current `main`.

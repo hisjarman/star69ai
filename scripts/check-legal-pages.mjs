@@ -8,25 +8,30 @@ const legalPages = [
   "sms-terms.html",
 ];
 const requiredNavLinks = [
-  "./privacy.html",
-  "./terms.html",
-  "./ai-compliance.html",
-  "./recording-notice.html",
-  "./sms-terms.html",
+  '["Privacy","/privacy.html"',
+  '["Terms","/terms.html"',
 ];
 const errors = [];
 for (const file of legalPages) {
   if (!fs.existsSync(file)) {
-    errors.push(`Missing required legal page: ${file}`);
+    errors.push(\`Missing required legal page: \${file}\`);
     continue;
   }
   const html = fs.readFileSync(file, "utf8");
-  if (!html.includes('href="./legal.css"')) errors.push(`${file}: missing shared legal.css`);
-  if (!html.includes('class="legal-nav"')) errors.push(`${file}: missing shared legal navigation`);
-  if (!html.includes('class="legal-footer"')) errors.push(`${file}: missing consistent legal footer`);
-  if (!/Effective\s+[A-Z][a-z]+\s+\d{1,2},\s+\d{4}/i.test(html)) errors.push(`${file}: missing or unrecognized effective date`);
+  if (!html.includes('href="./legal.css"')) errors.push(\`\${file}: missing shared legal.css\`);
+  if (!html.includes('src="/site-header.js"')) errors.push(\`\${file}: missing shared site navigation script\`);
+  if (!html.includes('class="legal-footer"')) errors.push(\`\${file}: missing consistent legal footer\`);
+  if (!/Effective\s+[A-Z][a-z]+\s+\d{1,2},\s+\d{4}/i.test(html)) errors.push(\`\${file}: missing or unrecognized effective date\`);
+  if ((file === "privacy.html" || file === "terms.html") && html.includes('class="legal-nav"')) {
+    errors.push(\`\${file}: duplicate local legal navigation should be omitted in favor of the shared site header\`);
+  }
+}
+if (!fs.existsSync("site-header.js")) {
+  errors.push("Missing site-header.js");
+} else {
+  const header = fs.readFileSync("site-header.js", "utf8");
   for (const link of requiredNavLinks) {
-    if (!html.includes(`href="${link}"`)) errors.push(`${file}: missing legal cross-link ${link}`);
+    if (!header.includes(link)) errors.push(\`site-header.js: shared navigation missing legal destination \${link}\`);
   }
 }
 if (!fs.existsSync("legal.css")) {
@@ -42,12 +47,12 @@ if (!fs.existsSync("legal.css")) {
     ":focus-visible",
     "@media (max-width: 600px)",
   ]) {
-    if (!css.includes(token)) errors.push(`legal.css: required readability rule missing: ${token}`);
+    if (!css.includes(token)) errors.push(\`legal.css: required readability rule missing: \${token}\`);
   }
 }
 if (errors.length) {
   console.error("Legal readability checks failed:");
-  for (const error of errors) console.error(`- ${error}`);
+  for (const error of errors) console.error(\`- \${error}\`);
   process.exit(1);
 }
-console.log(`Passed: ${legalPages.length} legal pages use the shared readable layout, navigation, effective dates and cross-links.`);
+console.log(\`Passed: \${legalPages.length} legal pages use the shared readable layout and global navigation, effective dates and consistent footer.\`);

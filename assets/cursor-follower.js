@@ -56,7 +56,7 @@
 
   ship.addEventListener("load", () => { imageReady = true; });
   ship.addEventListener("error", () => { imageReady = false; deactivate(); ship.remove(); });
-  ship.src = "/assets/cursor.jpeg";
+  ship.src = "/assets/cursor.png";;
   document.body.appendChild(ship);
 
   const overlayObserver = new MutationObserver(syncOverlayHost);

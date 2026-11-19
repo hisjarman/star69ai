@@ -151,13 +151,13 @@ async function handlePartnerLead(request,env,origin){
 async function handlePartnerDashboard(request,env,origin){
   let user;try{user=await getVerifiedUser(request,env);}catch(e){return authError(e,origin,env);}
   try{
-    let partner=await env.DB.prepare("SELECT id,name,email,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE lower(email)=? AND application_status='approved' ORDER BY updated_at DESC LIMIT 1").bind(user.email).first();
+    let partner=await env.DB.prepare("SELECT id,name,email,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE lower(email)=? AND application_status='approved' ORDER BY updated_at DESC LIMIT 1").bind(user.email).first();
     if(!partner)return json({error:"partner_approval_required"},403,origin,env);
     const partnerCode=partner.partnerCode||("S69"+crypto.randomUUID().replace(/-/g,"").slice(0,9)).toUpperCase();
     const partnerLink="https://star69ai.com/checkout.html?ref="+partnerCode;
     if(!partner.partnerCode||partner.referralUrl!==partnerLink){
       await env.DB.prepare("UPDATE affiliate_applications SET partner_code=COALESCE(partner_code,?),referral_url=?,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").bind(partnerCode,partnerLink,partner.id).run();
-      partner=await env.DB.prepare("SELECT id,name,email,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE id=?").bind(partner.id).first();
+      partner=await env.DB.prepare("SELECT id,name,email,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE id=?").bind(partner.id).first();
     }
     const [clicks,leadStats,commissionStats,referrals,commissions]=await Promise.all([
       env.DB.prepare("SELECT COUNT(*) AS total FROM partner_clicks WHERE affiliate_application_id=?").bind(partner.id).first(),
@@ -244,7 +244,7 @@ async function handleAdmin(request,env,origin,path){
       await env.DB.prepare("UPDATE partner_commissions SET status=?,paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END,payout_reference=COALESCE(?,payout_reference),admin_note=COALESCE(?,admin_note) WHERE id=?").bind(status,status,now,p.payoutReference===undefined?null:String(p.payoutReference).slice(0,160),p.adminNote===undefined?null:String(p.adminNote).slice(0,1000),commissionMatch[1]).run();
       return json({updated:true,status},200,origin,env);
     }
-    if(request.method==='GET'&&path==='/api/admin/partners'){const f=new URL(request.url).searchParams.get('status')||'all';const s=['pending','approved','rejected'].includes(f)?f:'all';const cols='id,name,email,website AS businessWebsite,promotion_method AS promotionMethod,audience,experience,notes,application_status AS applicationStatus,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,admin_note AS adminNote,created_at AS createdAt,updated_at AS updatedAt';const q=s==='all'?'SELECT '+cols+' FROM affiliate_applications ORDER BY created_at DESC LIMIT 500':'SELECT '+cols+' FROM affiliate_applications WHERE application_status=? ORDER BY created_at DESC LIMIT 500';const r=s==='all'?await env.DB.prepare(q).all():await env.DB.prepare(q).bind(s).all();return json({applications:r.results||[],count:(r.results||[]).length},200,origin,env);}
+    if(request.method==='GET'&&path==='/api/admin/partners'){const f=new URL(request.url).searchParams.get('status')||'all';const s=['pending','approved','rejected'].includes(f)?f:'all';const cols='id,name,email,website AS businessWebsite,promotion_method AS promotionMethod,audience,experience,notes,application_status AS applicationStatus,partner_code AS partnerCode,referral_url AS referralUrl,admin_note AS adminNote,created_at AS createdAt,updated_at AS updatedAt';const q=s==='all'?'SELECT '+cols+' FROM affiliate_applications ORDER BY created_at DESC LIMIT 500':'SELECT '+cols+' FROM affiliate_applications WHERE application_status=? ORDER BY created_at DESC LIMIT 500';const r=s==='all'?await env.DB.prepare(q).all():await env.DB.prepare(q).bind(s).all();return json({applications:r.results||[],count:(r.results||[]).length},200,origin,env);}
     const partnerMatch=path.match(new RegExp("^/api/admin/partners/([a-f0-9-]{36})$","i"));
     if(request.method==="PATCH"&&partnerMatch){
       let p;try{p=await request.json();}catch{return json({error:"invalid_json"},400,origin,env);}

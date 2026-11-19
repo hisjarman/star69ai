@@ -48,6 +48,26 @@
   gtag('js', new Date());
 </script>
 <link rel="stylesheet" href="/site-header.css"><link rel="stylesheet" href="/phone-evolution.css">
+<style id="visitor-welcome-placement">
+/* Location-aware greeting sits in normal document flow above the homepage eyebrow.
+   It never overlays the header artwork or hero illustration. */
+.site-global-welcome-bubble{
+  position:relative;z-index:2;display:block;width:fit-content;
+  max-width:min(620px,100%);box-sizing:border-box;margin:0 0 18px;
+  padding:9px 13px;border:1px solid rgba(67,180,254,.62);
+  border-radius:10px 10px 10px 3px;background:rgba(3,12,31,.88);color:#f2f8ff;
+  box-shadow:0 8px 28px rgba(0,0,0,.28),0 0 18px rgba(67,180,254,.12);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  font:600 clamp(10px,1.1vw,13px)/1.45 'Manrope',Arial,sans-serif;
+  text-shadow:0 1px 3px #000;pointer-events:none;opacity:0;transform:translateY(6px);
+  transition:opacity .35s ease,transform .35s ease;
+}
+.site-global-welcome-bubble.is-visible{opacity:1;transform:translateY(0)}
+.site-global-welcome-bubble[hidden]{display:none}
+@media(max-width:700px){.site-global-welcome-bubble{max-width:100%;margin-bottom:15px;padding:7px 10px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.site-global-welcome-bubble{transition:none;transform:none}}
+</style>
+
 <script defer src="/site-header.js"></script><script defer src="/phone-evolution.js"></script>
 
 <style id="s69-reference-design">

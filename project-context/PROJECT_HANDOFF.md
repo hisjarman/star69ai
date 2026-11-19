@@ -2069,3 +2069,13 @@ This section supersedes the earlier activation-status notes above where they des
 - The protected-header workflow fingerprints are updated for the approved header JS/CSS source.
 - Validation required: syntax check of header JS, inspect resulting HTML/CSS and workflow, desktop/mobile browser QA and live GitHub Pages verification. Source changes alone do not prove visual rendering or deployment.
 - Website-only change; no Worker, D1, Retell, billing, authentication or customer data changed. PR review required; do not merge without explicit founder approval.
+
+
+## Compact detailed spacecraft cursor correction — 2026-11-19 — REVIEW REQUIRED
+
+- Keep the decorative cursor at the established compact 34–42px width. Do not enlarge it.
+- Preserve the complete original `/assets/cursor.png` source artwork at native image quality with proportional `height:auto`, `object-fit:contain`, and no cropping, redrawing, replacement or forced max-height. The objective is to retain the original artwork's detail, not increase its screen size.
+- Keep the spacecraft level on a fixed horizon with no rotation, pitch, yaw or banking. Retain the slower capped easing, restrained glow, subtle click feedback, persistent CURSOR FX ON/OFF control, native text cursor, mouse/pen-only behavior, touch/reduced-motion fallback, image recovery and dialog/popover support.
+- This entry supersedes the 82–112px sizing instruction in the earlier “Detailed spacecraft cursor with calm fixed-horizon effects” note and PR #309.
+- Source validation required: JavaScript syntax and assertions for compact sizing, source image preservation, proportional rendering, fixed horizon, toggle and fallback behavior. Browser QA and GitHub Pages verification remain outstanding.
+- Website-only change; no Worker, D1, Retell, billing, authentication, customer data or production configuration changed. Do not merge without founder approval.

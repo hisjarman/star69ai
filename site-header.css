@@ -509,3 +509,73 @@ body.site-home-page .site-global-cover-image{
 @media(max-width:700px){
   .site-global-cover{height:auto!important;min-height:0!important;aspect-ratio:3840 / 1645}
 }
+
+
+/* 2026-11-19 owner-requested header cleanup:
+   keep the cinematic artwork on the homepage only and place the wordmark in the shared utility bar. */
+body.site-interior-page .site-global-cover{
+  display:none!important;
+  height:0!important;
+  min-height:0!important;
+  aspect-ratio:auto!important;
+  overflow:hidden!important;
+}
+.site-global-utility{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  min-height:64px;
+  padding:9px clamp(14px,3vw,42px);
+}
+.site-global-utility-brand{
+  display:flex;
+  flex:0 1 210px;
+  align-items:center;
+  justify-content:flex-start;
+  width:min(210px,28vw);
+  min-width:120px;
+  margin-right:auto;
+  padding:0 12px 0 0;
+  text-decoration:none!important;
+}
+.site-global-utility-brand img{
+  display:block;
+  width:100%;
+  max-width:210px;
+  max-height:48px;
+  height:auto;
+  object-fit:contain;
+  object-position:left center;
+}
+.site-global-toggle{
+  position:relative!important;
+  inset:auto!important;
+  flex:0 0 auto;
+}
+.site-global-nav{top:calc(100% + 8px)!important}
+body.site-interior-page .site-global-utility{
+  border-top:0;
+  background:linear-gradient(90deg,#030918,#07152b 50%,#030918);
+}
+@media(max-width:700px){
+  .site-global-utility{
+    justify-content:space-between!important;
+    gap:6px;
+    padding:8px 10px;
+  }
+  .site-global-utility-brand{
+    flex:0 1 145px;
+    width:min(145px,42vw);
+    min-width:104px;
+    padding-right:4px;
+  }
+  .site-global-utility-brand img{max-height:38px}
+  .site-global-toggle{padding:9px 11px}
+  .site-global-nav{top:calc(100% + 7px)!important;left:8px;right:8px}
+}
+@media(max-width:360px){
+  .site-global-utility-brand{flex-basis:116px;width:116px;min-width:100px}
+  .site-global-utility a{padding:7px 8px;font-size:7px}
+}

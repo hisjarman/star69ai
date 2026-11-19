@@ -86,3 +86,13 @@
   .checkout-hero{padding-right:17px;padding-left:17px}
   .s69-nov-promo{padding-right:12px;padding-left:12px}
 }
+
+
+.checkout-legal-review,.checkout-human{margin:22px 0;padding:18px;border:1px solid rgba(67,180,254,.34);border-radius:12px;background:rgba(4,16,35,.72)}
+.checkout-legal-review h2,.checkout-human h2{margin:0 0 8px;color:#f2f8ff;font-size:1.08rem}
+.checkout-legal-review>p,.checkout-human>p{color:#b7c8d8;font-size:.9rem;line-height:1.6}
+.checkout-legal-review .checkout-check{display:flex;align-items:flex-start;gap:10px;margin:14px 0;color:#edf5ff;line-height:1.55}
+.checkout-legal-review .checkout-check input{flex:0 0 auto;margin-top:4px;accent-color:#43b4fe}
+.checkout-legal-review a{color:#7ed5ff;text-decoration:underline;text-underline-offset:3px}
+.checkout-human{display:grid;gap:8px}
+.checkout-human .cf-turnstile{min-height:65px}

@@ -628,33 +628,3 @@ body.site-interior-page .site-global-utility{
   .site-global-utility-brand img{max-width:98px!important}
   .site-global-utility>a.site-global-login{padding-inline:5px!important;font-size:6.5px!important}
 }
-
-
-/* Owner correction — render the published 4K panoramic artwork at full natural width.
-   The image, not a fixed-height cover box, determines the banner height. */
-.site-global-cover{
-  width:100%!important;
-  max-width:none!important;
-  height:auto!important;
-  min-height:0!important;
-  aspect-ratio:3840 / 1645;
-  overflow:hidden!important;
-}
-.site-global-cover-image{
-  position:relative!important;
-  inset:auto!important;
-  display:block!important;
-  width:100%!important;
-  max-width:none!important;
-  height:auto!important;
-  max-height:none!important;
-  object-fit:initial!important;
-  object-position:center!important;
-  z-index:0!important;
-}
-.site-global-cover-shade{
-  position:absolute!important;
-  inset:0!important;
-  z-index:1!important;
-  pointer-events:none!important;
-}

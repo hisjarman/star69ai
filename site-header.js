@@ -51,8 +51,43 @@
 
       </div>
     </header>`;
+  const installCookieConsent = () => {
+    if (document.querySelector("[data-star69-cookie-banner]")) return;
+    const key = "star69ai-cookie-consent-v1";
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(key) || "null"); } catch {}
+    if (typeof window.gtag === "function") window.gtag("consent","default",{analytics_storage:"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
+    if (saved && saved.version === 1 && ["all","essential"].includes(saved.choice)) { if (typeof window.gtag === "function") window.gtag("consent","update",{analytics_storage:saved.analytics?"granted":"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"}); return; }
+    const banner = document.createElement("section");
+    banner.className = "star69-cookie-banner";
+    banner.dataset.star69CookieBanner = "true";
+    banner.setAttribute("role", "dialog");
+    banner.setAttribute("aria-modal", "false");
+    banner.setAttribute("aria-labelledby", "star69-cookie-title");
+    banner.innerHTML = '<div class="star69-cookie-copy"><strong id="star69-cookie-title">Your privacy choices</strong><p>Essential storage supports site security and checkout. Choose whether to allow optional analytics. You can allow optional analytics, reject optional cookies, or customize your choice. <a href="/privacy.html">Read the Privacy Notice</a>.</p><div class="star69-cookie-custom" hidden><label><input type="checkbox" checked disabled> Essential storage (always on)</label><label><input type="checkbox" data-cookie-analytics> Optional analytics</label></div></div><div class="star69-cookie-actions"><button type="button" data-cookie-customize>Customize</button><button type="button" data-cookie-reject>Reject optional</button><button type="button" data-cookie-accept>Allow analytics</button></div>';
+    document.body.appendChild(banner);
+    const save = choice => {
+      const detail = {version:1,choice,analytics:choice === "all",timestamp:new Date().toISOString()};
+      try { localStorage.setItem(key, JSON.stringify(detail)); } catch {}
+      banner.remove();
+      window.dispatchEvent(new CustomEvent("star69ai:cookie-consent",{detail}));
+      if (typeof window.gtag === "function") window.gtag("consent","update",{analytics_storage:detail.analytics?"granted":"denied",ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied"});
+    };
+    banner.querySelector("[data-cookie-accept]").addEventListener("click",()=>save("all"));
+    banner.querySelector("[data-cookie-reject]").addEventListener("click",()=>save("essential"));
+    banner.querySelector("[data-cookie-customize]").addEventListener("click",event=>{
+      const panel=banner.querySelector(".star69-cookie-custom");
+      panel.hidden=!panel.hidden;
+      event.currentTarget.textContent=panel.hidden?"Customize":"Hide options";
+      if(!panel.hidden)banner.querySelector("[data-cookie-analytics]").focus();
+    });
+    banner.querySelector(".star69-cookie-custom").addEventListener("change",event=>{
+      if(event.target.matches("[data-cookie-analytics]"))save(event.target.checked?"all":"essential");
+    });
+  };
   const install = () => {
     if (!document.body) return;
+    installCookieConsent();
     const homePath = location.pathname.replace(/index\.html$/, "").replace(/\/$/, "") || "/";
     document.body.classList.toggle("site-home-page", homePath === "/");
     document.body.classList.toggle("site-interior-page", homePath !== "/");

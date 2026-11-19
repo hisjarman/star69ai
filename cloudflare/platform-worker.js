@@ -353,15 +353,81 @@ async function maybeProvisionPaidOnboarding(env,onboardingId){
   if(env.RESEND_API_KEY&&env.RESEND_FROM_EMAIL)await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-paid-onboarding-alert/"+onboardingId},body:JSON.stringify({from:resendFrom(env),to:["support@star69ai.com"],subject:"Star69AI paid onboarding needs review",text:"Paid onboarding "+onboardingId+" needs review. Error: "+String(e.message||"unknown").slice(0,300)+". Check the Agency Admin and retry provisioning after correcting the issue."})}).catch(()=>{});
  }
 }
-async function startPublicFlexSignup(p,env,contact,email,phone,business,industry){
- if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
+const CHECKOUT_TERMS_VERSION="2026-11-19.1";
+const CHECKOUT_PRIVACY_VERSION="2026-11-19.1";
+const CHECKOUT_SERVICE_VERSION="2026-11-19.1";
+const CHECKOUT_OVERAGE={starter:0.55,growth:0.45,pro:0.36};
+function requireCheckoutAcknowledgements(p){if(p.termsAccepted!==true||p.privacyAccepted!==true||p.aiLimitationsAccepted!==true||p.planDisclosureAccepted!==true||p.billingAuthorizationAccepted!==true)throw Error("all_checkout_acknowledgements_required");}
+async function verifyCheckoutHuman(req,p,env){
+ const token=String(p.turnstileToken||"").trim();
+ if(!env.TURNSTILE_SECRET||!token||token.length>2048)throw Error("human_verification_required");
+ const body=new URLSearchParams({secret:env.TURNSTILE_SECRET,response:token});
+ const remoteip=String(req.headers.get("CF-Connecting-IP")||"").trim();
+ if(remoteip)body.set("remoteip",remoteip);
+ let response;
+ try{
+  response=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{
+   method:"POST",
+   headers:{"Content-Type":"application/x-www-form-urlencoded"},
+   body,
+   signal:AbortSignal.timeout(10000)
+  });
+ }catch{throw Error("human_verification_unavailable_try_again")}
+ if(!response.ok)throw Error("human_verification_unavailable_try_again");
+ const result=await response.json().catch(()=>({success:false}));
+ const hostname=String(result.hostname||"").toLowerCase();
+ if(result.success!==true||result.action!=="checkout"||!["star69ai.com","www.star69ai.com"].includes(hostname))throw Error("human_verification_failed_refresh_and_try_again");
+ return {hostname,action:"checkout"};
+}
+async function checkoutDocumentHashes(){
+ const paths=["terms.html","privacy.html","ai-compliance.html","recording-notice.html","checkout.html","checkout.js"];
+ const pairs=await Promise.all(paths.map(async path=>{
+  const response=await fetch("https://star69ai.com/"+path,{headers:{"Cache-Control":"no-cache"}});
+  if(!response.ok)throw Error("legal_documents_unavailable_retry_checkout");
+  const content=await response.text();
+  if((path==="terms.html"||path==="privacy.html")&&!content.includes("2026-11-19.1"))throw Error("legal_documents_not_current_retry_checkout");
+  return [path,await sha256Hex(content)];
+ }));
+ return Object.fromEntries(pairs);
+}
+async function recordCheckoutAcceptance(env,req,p,d,human){
+ requireCheckoutAcknowledgements(p);
+ const now=new Date().toISOString(),eventId=crypto.randomUUID();
+ const snapshot={planKey:d.planKey,cadence:d.cadence,promoCode:String(p.promoCode||"").slice(0,32),partnerCodePresent:!!p.partnerCode,monthlyPriceCents:d.monthlyPriceCents??null,prepaidPriceCents:d.prepaidPriceCents??null,setupFeeCents:d.setupFeeCents??0,includedMinutes:d.includedMinutes??0,overageRate:d.overageRate??null,overageCapPercent:d.overageCapPercent??75,flexStartedMinuteRate:d.flexStartedMinuteRate??null,minuteMeasurement:"Each started AI voice minute is billable; partial minutes round up.",renewal:d.cadence==="monthly"?"Monthly until cancelled.":"Prepaid or pay-as-you-go; no automatic renewal.",thirdPartyCosts:"Incremental third-party costs above $2/month require written approval and are passed through at verified cost; costs of $2/month or less are absorbed.",serviceScope:"Managed configuration, testing and routine maintenance within agreed scope. Custom integrations, specialized workflows, dedicated resources and advanced directory synchronization require a separate written quote and approval.",limits:"AI may misunderstand or provide inaccurate responses. It is not an emergency service or professional adviser. Customer must provide lawful instructions, caller notices/consents, escalation paths and human review.",paymentAuthorization:"Acceptance records the displayed payment schedule and authorizes proceeding to the selected payment step; it does not itself charge the customer or authorize optional automatic overage collection."};
+ const documentHashes=await checkoutDocumentHashes();
+ const acceptance={termsAccepted:true,privacyAccepted:true,aiLimitationsAccepted:true,planDisclosureAccepted:true,billingAuthorizationAccepted:true,affirmativeAction:"separate unchecked-by-default clickwrap acknowledgements",termsVersion:CHECKOUT_TERMS_VERSION,privacyVersion:CHECKOUT_PRIVACY_VERSION,serviceVersion:CHECKOUT_SERVICE_VERSION,documentHashes};
+ const agreementSha=await sha256Hex(JSON.stringify({snapshot,acceptance,documentHashes}));
+ await env.DB.prepare("INSERT INTO avr_checkout_evidence_events(event_id,customer_id,onboarding_id,event_type,email,business_name,plan_key,billing_cadence,terms_version,privacy_version,service_disclosure_version,plan_snapshot_json,acceptance_json,agreement_sha256,turnstile_hostname,turnstile_action,ip_address,user_agent,server_timestamp) VALUES(?,?,?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+ .bind(eventId,d.customerId,d.onboardingId||null,"purchase_terms_accepted",d.email,d.businessName,d.planKey,d.cadence,CHECKOUT_TERMS_VERSION,CHECKOUT_PRIVACY_VERSION,CHECKOUT_SERVICE_VERSION,JSON.stringify(snapshot),JSON.stringify(acceptance),agreementSha,human?.hostname||null,human?.action||null,req.headers.get("CF-Connecting-IP")||null,String(req.headers.get("User-Agent")||"").slice(0,500),now).run();
+ if(env.RESEND_API_KEY&&env.RESEND_FROM_EMAIL&&d.email){const receipt="Star69AI checkout acceptance receipt\n\nBusiness: "+d.businessName+"\nPlan: "+d.planKey+" / "+d.cadence+"\nIncluded minutes: "+String(snapshot.includedMinutes)+"\nOverage: "+(snapshot.overageRate==null?"Not applicable":"$"+snapshot.overageRate+" per minute; cap "+snapshot.overageCapPercent+"%") +"\nSetup fee: $"+(Number(snapshot.setupFeeCents||0)/100).toFixed(2)+"\nTerms version: "+CHECKOUT_TERMS_VERSION+"\nPrivacy version: "+CHECKOUT_PRIVACY_VERSION+"\nAI/service disclosure version: "+CHECKOUT_SERVICE_VERSION+"\nAccepted at (UTC): "+now+"\nEvidence reference: "+eventId+"\nAgreement SHA-256: "+agreementSha+"\n\nThis receipt documents your submitted acknowledgements. It is not a charge receipt. Your payment provider will issue a separate payment receipt. Keep this email with your service agreement.\n\nStar69AI Support";await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-acceptance-receipt/"+eventId},body:JSON.stringify({from:resendFrom(env),to:[d.email],subject:"Your Star69AI terms acceptance receipt",text:receipt})}).catch(()=>null);}
+ return {eventId,agreementSha};
+}
+async function recordCheckoutPaymentEvent(env,onboardingId,provider,reference){
+ const duplicate=await env.DB.prepare("SELECT event_id FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? AND provider=? AND provider_reference=? LIMIT 1").bind(onboardingId,"payment_confirmed",String(provider||""),String(reference||"")).first();
+ if(duplicate)return false;
+ const accepted=await env.DB.prepare("SELECT * FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? ORDER BY server_timestamp DESC LIMIT 1").bind(onboardingId,"purchase_terms_accepted").first();
+ if(!accepted)return false;
+ await env.DB.prepare("INSERT INTO avr_checkout_evidence_events(event_id,customer_id,onboarding_id,event_type,email,business_name,plan_key,billing_cadence,terms_version,privacy_version,service_disclosure_version,plan_snapshot_json,acceptance_json,agreement_sha256,turnstile_hostname,turnstile_action,ip_address,user_agent,provider,provider_reference,server_timestamp) VALUES(?,?,?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?,?)")
+ .bind(crypto.randomUUID(),accepted.customer_id,onboardingId,"payment_confirmed",accepted.email,accepted.business_name,accepted.plan_key,accepted.billing_cadence,accepted.terms_version,accepted.privacy_version,accepted.service_disclosure_version,accepted.plan_snapshot_json,accepted.acceptance_json,accepted.agreement_sha256,accepted.turnstile_hostname,accepted.turnstile_action,accepted.ip_address,accepted.user_agent,String(provider||"").slice(0,20),String(reference||"").slice(0,200),new Date().toISOString()).run();
+ return true;
+}
+async function assertCurrentCheckoutAcceptance(env,ob,customer){
+ const row=await env.DB.prepare("SELECT * FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? ORDER BY server_timestamp DESC LIMIT 1").bind(ob.id,"purchase_terms_accepted").first();
+ if(!row||row.terms_version!==CHECKOUT_TERMS_VERSION||row.privacy_version!==CHECKOUT_PRIVACY_VERSION||row.service_disclosure_version!==CHECKOUT_SERVICE_VERSION||row.plan_key!==ob.plan_key||row.billing_cadence!==ob.billing_cadence||row.customer_id!==customer.id)throw Error("current_checkout_acceptance_required_contact_support");
+ let a={};try{a=JSON.parse(row.acceptance_json||"{}")}catch{}
+ if(!a.termsAccepted||!a.privacyAccepted||!a.aiLimitationsAccepted||!a.planDisclosureAccepted||!a.billingAuthorizationAccepted)throw Error("current_checkout_acceptance_required_contact_support");
+ return row;
+}
+async function startPublicFlexSignup(p,env,contact,email,phone,business,industry,req,human){
+ requireCheckoutAcknowledgements(p);
  if(!env.CLERK_SECRET_KEY)throw Error("account_invitation_not_configured");
  const existing=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=? LIMIT 1").bind(email).first();
  if(existing)throw Error("customer_email_already_registered_sign_in_or_contact_support");
  const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID();
- const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),notes:String(p.notes||"").slice(0,4000),planInterest:"flex",billingPreference:"pay_as_you_go",privacyConsent:true,submittedAt:now};
+ const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),notes:String(p.notes||"").slice(0,4000),planInterest:"flex",billingPreference:"pay_as_you_go",privacyNoticeAcknowledged:p.privacyAccepted===true,submittedAt:now};
  await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,payg_enabled,included_minutes,billing_cadence,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',NULL,1,0,'monthly',?,?,?)").bind(customerId,business,contact,email,phone,"Flex account. Prepaid PayPal wallet credit is required before calls can be accepted; Star69AI must assign the receptionist and number before live service.",now,now).run();
  await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'new',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Flex pay-as-you-go activation request").slice(0,3000),"Public Flex signup",JSON.stringify(discovery),customerId,now,now).run();
+ await recordCheckoutAcceptance(env,req,p,{customerId,email,businessName:business,planKey:"flex",cadence:"flex",monthlyPriceCents:0,setupFeeCents:0,includedMinutes:0,overageRate:null,overageCapPercent:0,flexStartedMinuteRate:65},human);
  await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status) VALUES(?,'pending') ON CONFLICT(customer_id) DO NOTHING").bind(customerId).run();
  let accountDeliveryStatus="invitation_failed",invitationId=null;
  try{
@@ -382,11 +448,13 @@ async function startPublicCheckout(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
  const p=await body(req,30000);
  if(String(p.websiteHoneypot||p.websiteTrap||"").trim())return {accepted:true};
+ const human=await verifyCheckoutHuman(req,p,env);
+ requireCheckoutAcknowledgements(p);
  const contact=String(p.contactName||"").trim().slice(0,120),email=String(p.email||"").trim().toLowerCase(),phone=String(p.phone||"").trim().slice(0,40),business=String(p.businessName||"").trim().slice(0,160),industry=String(p.industry||"").trim().slice(0,100),plan=String(p.plan||"").toLowerCase(),cadence=String(p.cadence||"monthly"),subscribeNow=p.subscribeNow===true;
  if(contact.length<2||business.length<2||phone.length<5||! /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||industry.length<2)throw Error("complete_contact_business_and_industry_details_required");
- if(plan==="flex"){if(String(p.promoCode||"").trim())throw Error("promotion_only_for_monthly_plans");return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);}
+ if(plan==="flex"){if(String(p.promoCode||"").trim())throw Error("promotion_only_for_monthly_plans");return await startPublicFlexSignup(p,env,contact,email,phone,business,industry,req,human);}
  if(!planInfo[plan]||!["monthly","six_month","annual"].includes(cadence))throw Error("valid_subscription_plan_required");
- if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
+ requireCheckoutAcknowledgements(p);
  if(!env.RETELL_API_KEY||!env.CLERK_SECRET_KEY)throw Error("automated_demo_and_account_provisioning_not_configured");
  const existing=await env.DB.prepare("SELECT id,status,subscription_status FROM avr_customers WHERE lower(email)=? LIMIT 1").bind(email).first();
  if(existing)throw Error("customer_email_already_registered_sign_in_or_contact_support");
@@ -417,11 +485,12 @@ async function startPublicCheckout(req,env,origin){
  }
  const paymentProvider=cadence==="monthly"?"stripe":"paypal",orderPurpose=cadence==="monthly"?"setup_fee":"prepaid_plan";
  const now=new Date().toISOString(),customerId=crypto.randomUUID(),leadId=crypto.randomUUID(),onboardingId=crypto.randomUUID(),statusToken=crypto.randomUUID()+crypto.randomUUID();
- const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),recordingPreference:String(p.recordingPreference||"").slice(0,500),additionalNeeds:Array.isArray(p.additionalNeeds)?p.additionalNeeds.slice(0,20).map(x=>String(x).slice(0,180)):[],outboundAiCalls:String(p.outboundAiCalls||"").slice(0,500),automatedSms:String(p.automatedSms||"").slice(0,500),humanEscalation:String(p.humanEscalation||"").slice(0,1000),phoneSetup:String(p.phoneSetup||"").slice(0,300),planInterest:plan,billingPreference:cadence,notes:String(p.notes||"").slice(0,4000),privacyConsent:true,submittedAt:now};
+ const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),recordingPreference:String(p.recordingPreference||"").slice(0,500),additionalNeeds:Array.isArray(p.additionalNeeds)?p.additionalNeeds.slice(0,20).map(x=>String(x).slice(0,180)):[],outboundAiCalls:String(p.outboundAiCalls||"").slice(0,500),automatedSms:String(p.automatedSms||"").slice(0,500),humanEscalation:String(p.humanEscalation||"").slice(0,1000),phoneSetup:String(p.phoneSetup||"").slice(0,300),planInterest:plan,billingPreference:cadence,notes:String(p.notes||"").slice(0,4000),privacyNoticeAcknowledged:p.privacyAccepted===true,submittedAt:now};
  await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,affiliate_partner_id,affiliate_offer_mode,billing_cadence,promo_code,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',?,?,?,?,?,?,?,?)").bind(customerId,business,contact,email,phone,plan,affiliateId,offerMode,cadence,promoCode||null,"Demo requested. No live phone number or production routing is active until the customer approves the demo, required payment is verified and managed setup is complete.",now,now).run();
  await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'new',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Managed receptionist demo request").slice(0,3000),"Public demo-first checkout",JSON.stringify(discovery),customerId,now,now).run();
  const initialStatus=paymentProvider==="stripe"?"awaiting_subscription":"awaiting_plan_payment";
  await env.DB.prepare("INSERT INTO avr_paid_onboardings(id,customer_id,demo_request_id,email,plan_key,billing_cadence,setup_amount_cents,prepaid_amount_cents,setup_status,paypal_order_purpose,plan_payment_provider,plan_payment_status,status,public_token_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'pending',?,?,?,?)").bind(onboardingId,customerId,leadId,email,plan,cadence,setupCents,prepaidCents,setupCents===0?"not_required":"pending",orderPurpose,paymentProvider,initialStatus,await sha256Hex(statusToken),now,now).run();
+ await recordCheckoutAcceptance(env,req,p,{customerId,onboardingId,email,businessName:business,planKey:plan,cadence,monthlyPriceCents:Number(planInfo[plan].price)*100,prepaidPriceCents:prepaidCents,setupFeeCents:setupCents,includedMinutes:Number(planInfo[plan].minutes),overageRate:CHECKOUT_OVERAGE[plan],overageCapPercent:75},human);
  await maybeProvisionPaidOnboarding(env,onboardingId);
  const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(customerId).first();
@@ -459,6 +528,7 @@ async function capturePublicSetup(req,env,origin){
   const purchase=(order.purchase_units||[])[0]||{},capture=purchase.payments?.captures?.[0],amount=capture?.amount||purchase.amount;
   const expectedCents=purpose==="setup_fee"?Number(ob.setup_amount_cents):Number(ob.prepaid_amount_cents);
   if(order.status!=="COMPLETED"||purchase.reference_id!==ob.id||purchase.custom_id!==ob.customer_id||capture?.status!=="COMPLETED"||amount?.currency_code!=="USD"||Number(amount?.value)!==expectedCents/100)throw Error("paypal_payment_not_confirmed");
+  await recordCheckoutPaymentEvent(env,ob.id,"paypal",String(capture.id||orderId));
   const now=new Date().toISOString();
   if(purpose==="setup_fee"){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET setup_status='paid',paypal_capture_id=?,status='awaiting_subscription',updated_at=? WHERE id=? AND setup_status='pending'").bind(capture.id||null,now,ob.id).run();
@@ -487,6 +557,7 @@ async function resumePublicCheckout(req,env,origin){
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  if(!customer)throw Error("customer_not_found");
+ await assertCurrentCheckoutAcceptance(env,ob,customer);
  if(Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
  if(ob.setup_status==="pending"&&ob.plan_payment_status==="paid"){
   const order=await createPublicPaypalOrder(env,ob,customer,p.statusToken);
@@ -525,6 +596,7 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
   const onboardingId=o.metadata?.avr_paid_onboarding_id;
   if(onboardingId&&(o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded")){
    await env.DB.prepare("UPDATE avr_paid_onboardings SET plan_payment_status='paid',stripe_session_id=?,status='awaiting_provisioning',updated_at=? WHERE id=?").bind(o.id,new Date().toISOString(),onboardingId).run();
+   await recordCheckoutPaymentEvent(env,onboardingId,"stripe",String(o.id||o.payment_intent||""));
    await maybeProvisionPaidOnboarding(env,onboardingId);
   }
  }
@@ -1012,6 +1084,7 @@ async function route(req,env){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
    const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
    if(!ob||Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+   await assertCurrentCheckoutAcceptance(env,ob,c);
    if(ob.plan_payment_status==="paid")throw Error("subscription_already_paid");
    const statusToken=crypto.randomUUID()+crypto.randomUUID();
    await env.DB.prepare("UPDATE avr_paid_onboardings SET public_token_hash=?,updated_at=? WHERE id=?").bind(await sha256Hex(statusToken),new Date().toISOString(),ob.id).run();
@@ -1023,6 +1096,7 @@ async function route(req,env){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
    const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
    if(!ob||Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+   await assertCurrentCheckoutAcceptance(env,ob,c);
    if(ob.plan_payment_status!=="paid")throw Error("subscription_payment_required_first");
    if(ob.setup_status!=="pending"||Number(ob.setup_amount_cents||0)<1)throw Error("setup_payment_not_required");
    const statusToken=crypto.randomUUID()+crypto.randomUUID();

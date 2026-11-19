@@ -1217,7 +1217,7 @@ async function route(req,env){
   }
   if(path==="/api/client/addons"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
-   const r=await env.DB.prepare("SELECT id,addon_key,addon_name,billing_type,status,customer_note,created_at,updated_at FROM avr_addon_orders WHERE customer_id=? ORDER BY created_at DESC LIMIT 100").bind(c.id).all();
+   const r=await env.DB.prepare("SELECT id,addon_key,addon_name,billing_type,status,customer_note,quote_summary,quote_status,quote_updated_at,created_at,updated_at FROM avr_addon_orders WHERE customer_id=? ORDER BY created_at DESC LIMIT 100").bind(c.id).all();
    return json({orders:r.results||[]},200,origin,env)
   }
   if(path==="/api/client/addons"&&req.method==="POST"){
@@ -1234,6 +1234,17 @@ async function route(req,env){
    const id=crypto.randomUUID(),note=String(p.note||"").trim().slice(0,1500);
    await env.DB.prepare("INSERT INTO avr_addon_orders(id,customer_id,addon_key,addon_name,billing_type,customer_note) VALUES(?,?,?,?,?,?)").bind(id,c.id,key,catalog[key][0],catalog[key][1],note).run();
    return json({created:true,id,status:"requested"},201,origin,env)
+  }
+  const clientAddonQuoteMatch=path.match(/^\/api\/client\/addons\/([0-9a-f-]{36})\/quote-acceptance$/i);
+  if(clientAddonQuoteMatch&&req.method==="POST"){
+   const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
+   const id=clientAddonQuoteMatch[1],row=await env.DB.prepare("SELECT id,quote_status,quote_summary FROM avr_addon_orders WHERE id=? AND customer_id=?").bind(id,c.id).first();
+   if(!row)throw Error("addon_request_not_found");
+   if(row.quote_status!=="presented"||!String(row.quote_summary||"").trim())throw Error("current_written_quote_not_available");
+   const now=new Date().toISOString();
+   const result=await env.DB.prepare("UPDATE avr_addon_orders SET quote_status='accepted',quote_updated_at=?,updated_at=? WHERE id=? AND customer_id=? AND quote_status='presented'").bind(now,now,id,c.id).run();
+   if(!result.meta?.changes)throw Error("quote_no_longer_available");
+   return json({accepted:true,id},200,origin,env);
   }
   if(path==="/api/client/support-tickets"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
@@ -1294,8 +1305,21 @@ async function route(req,env){
    // Admin dashboard read routes used by the Agency Admin overview and tabs.
    // Keep these server-side queries behind requireAdmin above.
    if(path==="/api/admin/addon-orders"&&req.method==="GET"){
-    const rows=await env.DB.prepare("SELECT o.id,o.customer_id,o.addon_key,o.addon_name,o.billing_type,o.status,o.customer_note,o.admin_note,o.created_at,o.updated_at,c.business_name,c.email FROM avr_addon_orders o LEFT JOIN avr_customers c ON c.id=o.customer_id ORDER BY o.created_at DESC LIMIT 300").all();
+    const rows=await env.DB.prepare("SELECT o.id,o.customer_id,o.addon_key,o.addon_name,o.billing_type,o.status,o.customer_note,o.admin_note,o.quote_summary,o.quote_status,o.quote_updated_at,o.created_at,o.updated_at,c.business_name,c.email FROM avr_addon_orders o LEFT JOIN avr_customers c ON c.id=o.customer_id ORDER BY o.created_at DESC LIMIT 300").all();
     return json({orders:rows.results||[]},200,origin,env);
+   }
+   const adminAddonMatch=path.match(/^\/api\/admin\/addon-orders\/([0-9a-f-]{36})$/i);
+   if(adminAddonMatch&&req.method==="PATCH"){
+    const id=adminAddonMatch[1],p=await body(req,7000),status=String(p.status||"requested"),quoteStatus=String(p.quoteStatus||"none"),adminNote=String(p.adminNote||"").trim().slice(0,1500),quoteSummary=String(p.quoteSummary||"").trim().slice(0,3500);
+    if(!["requested","approved","in_progress","active","declined","cancelled"].includes(status))throw Error("invalid_addon_status");
+    if(!["none","presented","accepted","declined"].includes(quoteStatus))throw Error("invalid_quote_status");
+    if(quoteStatus==="presented"&&!quoteSummary)throw Error("quote_summary_required");
+    const row=await env.DB.prepare("SELECT id,customer_id FROM avr_addon_orders WHERE id=?").bind(id).first();
+    if(!row)throw Error("addon_request_not_found");
+    const now=new Date().toISOString();
+    await env.DB.prepare("UPDATE avr_addon_orders SET status=?,admin_note=?,quote_summary=?,quote_status=?,quote_updated_at=?,updated_at=? WHERE id=?").bind(status,adminNote,quoteSummary,quoteStatus,now,now,id).run();
+    await audit(env,u,"addon_quote_or_status_updated",row.customer_id,{addonOrderId:id,status,quoteStatus,quoteSummaryLength:quoteSummary.length});
+    return json({updated:true,id,status,quoteStatus},200,origin,env);
    }
    if(path==="/api/admin/support-tickets"&&req.method==="GET"){
     const rows=await env.DB.prepare("SELECT t.id,t.customer_id,t.category,t.subject,t.description,t.priority,t.status,t.admin_reply,t.created_at,t.updated_at,c.business_name,c.email FROM avr_support_tickets t LEFT JOIN avr_customers c ON c.id=t.customer_id ORDER BY t.created_at DESC LIMIT 300").all();

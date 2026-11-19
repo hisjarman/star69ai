@@ -1,3 +1,14 @@
+## Internal add-on cost catalog saved in admin console — 2026-11-19 — REVIEW REQUIRED
+
+- Added private administrator tab "Internal cost & pricing" to the Command Center. The tab loads its contents from the server-side admin-only endpoint `/api/admin/internal-cost-knowledge`; the browser HTML does not contain wholesale costs.
+- Internal catalog is stored in production D1 database `avr-trust-lab`, table `avr_internal_cost_knowledge`, record `addon-cost-catalog`. Access is gated by `requireAdmin` in the Worker route.
+- Catalog records the $20/hour internal labor guide, $2/month third-party pass-through policy, Retell public-listing cost references, SMS/voice/QA/directory usage examples, working labor estimates, current plan baselines, quote workflow and unverified account-invoice items.
+- Rates are research snapshots dated 2026-11-19, not verified Star69AI invoice costs or approved customer prices. The $5 voice-cloning figure remains an example until confirmed by an actual invoice.
+- Added migration `20261119_internal_cost_knowledge.sql` with idempotent table creation. The table was created directly in production D1 and the catalog record seeded; verify before applying the migration elsewhere.
+- This change is in the PR #297 feature branch only. The admin UI and Worker endpoint are not live until the PR is reviewed, approved, merged and deployed. Do not merge or deploy without founder approval.
+
+---
+
 ## Pricing catalog and custom-work quote workflow — 2026-11-19 — FEATURE BRANCH; REVIEW REQUIRED
 
 - Working branch: `feature/pricing-catalog-commercial-completion-2026-11-19`, based on current `main`. PRs #295 and #296 are already merged; do not merge them again.

@@ -2059,3 +2059,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Added a keyboard-accessible **CURSOR FX ON/OFF** control at the far-right end of the shared utility row. The preference is saved locally across page loads; switching OFF immediately restores the native pointer. The control is available on mouse/pen desktop layouts; the decorative effect remains unavailable for touch-only devices and reduced-motion preferences.
 - No change to the homepage visitor-arrival animation, navigation destinations, footer, Worker, D1, Retell, authentication, billing or customer records.
 - Required validation: JavaScript syntax checks for cursor/header scripts; source assertions for size, absence of rotation/3D transforms, smooth interpolation, persistent preference, toggle accessibility and native cursor restoration; run the protected-header workflow. Browser QA at desktop/mobile and live GitHub Pages verification remain outstanding. No merge or deployment performed.
+
+
+## Detailed spacecraft cursor with calm fixed-horizon effects — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/detailed-cursor-calm-fixed-horizon-2026-11-19`, based on current `main` after PR #308.
+- Restores the full existing `/assets/cursor.png` spacecraft artwork at a responsive 82–112px width, with automatic proportional height and no crop or max-height cap. The original flame and fine visual details are preserved; no replacement or redraw is used.
+- Keeps the spacecraft on a fixed, level horizon: no heading rotation, pitch, yaw or banking. The position follows the pointer with a slower capped easing step (18% interpolation, maximum 24px per animation frame) to reduce twitchiness and make motion more manageable.
+- Retains restrained blue/orange glow, subtle click feedback, the persistent CURSOR FX ON/OFF preference, mouse/pen-only activation, native text cursors, touch/reduced-motion fallback, image-load failure recovery, and dialog/popover overlay support.
+- Source validation required: JavaScript syntax check, fixed-horizon/no-rotation assertions, image path and proportional sizing checks, toggle and fallback checks. Browser QA at desktop, dialog/popover and text-entry states plus live GitHub Pages verification remain outstanding.
+- Website-only change; no Worker, D1, Retell, billing, authentication, customer data or production configuration changed. PR review required; do not merge without explicit founder approval.

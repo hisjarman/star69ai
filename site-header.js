@@ -27,8 +27,8 @@
       <div class="site-global-cover">
         <img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI over a cinematic space horizon" fetchpriority="high" decoding="async">
         <div class="site-global-cover-shade" aria-hidden="true"></div>
-        <a class="site-global-home-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI — Communications, Evolved."></a>
-        <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span><span class="site-global-tagline">COMMUNICATIONS, EVOLVED.</span></div>
+        <a class="site-global-home-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI"></a>
+        <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span></div>
         <button class="site-global-toggle" type="button" aria-label="Open Star69AI navigation" aria-expanded="false" aria-controls="site-global-navigation">
           <span class="site-global-toggle-label">MENU</span><span class="site-global-toggle-icon"><i></i><i></i><i></i></span>
         </button>

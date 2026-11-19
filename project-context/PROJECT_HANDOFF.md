@@ -1892,3 +1892,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Browser screenshots at desktop, large monitor, tablet and mobile remain required before merge; GitHub Pages publication is not yet verified.
 
 - Versioned the once-per-session key to avoid a stale flag from the prior broken initializer suppressing the corrected arrival on first visit after update.
+
+
+## Shared header tagline removal and full-bleed width — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `fix/header-tagline-remove-full-bleed-2026-11-19`, based on current `main` after reviewing the project handoff, approved header design lock, shared header implementation and protection workflow.
+- Removed the visible “COMMUNICATIONS, EVOLVED.” text from the shared header cover. Kept the Star69AI brand mark, SYSTEM ONLINE indicator, Mission Control navigation and utility links.
+- Made the shared header span the viewport width using a full-bleed layout, preventing a narrower page wrapper from leaving left/right gutters. Existing banner image rendering, compact responsive heights, visitor spaceship, menu behavior and interior-page navigation are otherwise unchanged.
+- Updated `project-context/STAR69AI_HEADER_DESIGN_LOCK.md` and pinned the new `site-header.js` / `site-header.css` Git blob IDs in `.github/workflows/protect-approved-header.yml` in the same branch.
+- Source assertions passed: visible tagline markup absent; header brand alt text no longer repeats the tagline; viewport-width full-bleed rule present; CSS braces balanced; protection workflow pins the exact updated source blobs.
+- Browser visual QA at mobile/tablet/desktop and GitHub Pages publication remain unverified. No merge or deployment performed. No navigation routes, visitor-flight logic, Worker, D1, Retell, billing, authentication or customer data changed.

@@ -92,3 +92,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - The visitor ship is a separate decorative overlay. Its source artwork points left, so mirror it horizontally on each left-to-right flight segment and leave it unmirrored on each right-to-left segment. Do not rotate the ship 180 degrees or alter its artwork.
 - Preserve the four randomized exploration routes, flight timing, landing/flag sequence, reduced-motion behavior, Mission Control dropdown overflow, navigation, utility links, and interior-page header.
 - This owner correction supersedes the earlier social-cover note that called for a deliberate crop of the hero artwork. It does not authorize changes to unrelated site features.
+
+
+## Owner-requested header text and full-width banner correction — 2026-11-19
+
+- Removed the visible “COMMUNICATIONS, EVOLVED.” tagline from the shared header cover; the Star69AI brand mark, SYSTEM ONLINE status, Mission Control menu and utility links remain.
+- Made the shared header a true viewport-width, full-bleed element so it reaches both the left and right edges even when a page content wrapper is narrower. Kept the cover artwork proportional and the existing compact responsive header behavior; no horizontal stretching or unrelated page-layout changes.
+- Updated the approved-header protection fingerprints in the same change. No navigation destinations, visitor-flight behavior, footer content, Worker, D1, Retell, billing, authentication or customer data changed.
+- Source-level validation and browser visual QA at mobile, tablet and desktop widths are required before merge. GitHub Pages deployment is not assumed.

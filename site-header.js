@@ -56,27 +56,26 @@
     document.body.classList.toggle("site-interior-page", homePath !== "/");
     document.querySelectorAll(".reference-topbar,.s69-header,header.topbar,header.site-header,[data-legacy-site-header]").forEach(node => node.remove());
     if (!document.querySelector("[data-site-global-header]")) document.body.insertAdjacentHTML("afterbegin", markup);
-    // The shared header (and its banner cover) must exist before the visitor ship is attached.
-    if (homePath === "/" && !document.querySelector(".site-global-visitor-ship")) {
-      let arrivalSeen = false;
-      try { arrivalSeen = window.sessionStorage.getItem("star69ai-visitor-arrival-seen-v2") === "1"; } catch (_) {}
-      if (!arrivalSeen) {
-        const cover = document.querySelector(".site-global-cover");
-        if (cover) {
-          const visitorShip = document.createElement("img");
-          visitorShip.className = "site-global-visitor-ship";
-          visitorShip.src = "/assets/visitorspaceship.png";
-          visitorShip.alt = "";
-          visitorShip.setAttribute("aria-hidden", "true");
-          visitorShip.decoding = "async";
-          visitorShip.draggable = false;
-          visitorShip.addEventListener("load", () => {
-            visitorShip.classList.add("is-ready");
-            try { window.sessionStorage.setItem("star69ai-visitor-arrival-seen-v2", "1"); } catch (_) {}
-          }, { once: true });
-          visitorShip.addEventListener("error", () => visitorShip.remove(), { once: true });
-          cover.appendChild(visitorShip);
-        }
+    // Replay a decorative visitor flight on every homepage load, choosing a different route.
+    if (homePath === "/" && !document.querySelector(".site-global-arrival")) {
+      const cover = document.querySelector(".site-global-cover");
+      if (cover) {
+        const route = 1 + Math.floor(Math.random() * 4);
+        const arrival = document.createElement("div");
+        arrival.className = "site-global-arrival route-" + route;
+        arrival.setAttribute("aria-hidden", "true");
+        const visitorShip = document.createElement("img");
+        visitorShip.className = "site-global-visitor-ship";
+        visitorShip.src = "/assets/visitorspaceship.png";
+        visitorShip.alt = "";
+        visitorShip.decoding = "async";
+        visitorShip.draggable = false;
+        const flag = document.createElement("span");
+        flag.className = "site-global-arrival-flag";
+        visitorShip.addEventListener("load", () => arrival.classList.add("is-ready"), { once: true });
+        visitorShip.addEventListener("error", () => arrival.remove(), { once: true });
+        arrival.append(visitorShip, flag);
+        cover.appendChild(arrival);
       }
     }
     document.querySelectorAll("[data-site-global-header]").forEach((node,index) => { if (index > 0) node.remove(); });

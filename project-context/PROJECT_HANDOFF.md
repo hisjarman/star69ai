@@ -1,3 +1,17 @@
+## Partner commission cap and eligibility update — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `feature/partner-commission-cap-2026-11-19`, based on current `main`; no changes merged or deployed.
+- Replaced the former 20% / 25% / 30% schedule with 10% for 1–4 active paying referred customers, 15% for 5–14, and 20% for 15+. The 20% rate is the absolute cap.
+- Public partner page and authenticated Partner Center now describe commissions on actual subscription-plan payments collected after discounts, including monthly and prepaid six-/twelve-month plans.
+- Explicit exclusions now include setup fees, add-ons, custom work, integrations, Directory Operator projects, SMS, usage overages, pay-as-you-go charges, third-party/pass-through costs, taxes, refunds, chargebacks, credits and unpaid/reversed amounts.
+- Platform Worker commission calculations for Stripe invoices and PayPal prepaid subscription payments use the new rates. Tier counts now include only converted referrals whose customer subscription status is active (not trialing/past-due/canceled). Partner Center exposes the current automatic tier. Administrator UI no longer offers manual tier assignment; the Worker no longer accepts manual tier overrides.
+- Existing historical commission ledger entries are not rewritten. New qualifying payments use the revised rates. The 30-day validation hold and $50 payout threshold remain unchanged.
+- No D1 schema migration is required by this code change. Existing commission records and payment references remain intact.
+- Required before merge: syntax/static assertions, review of Stripe eligible-line filtering and PayPal prepaid amount source, D1-backed Worker tests for 1/4/5/14/15+ active paying referrals, excluded invoice lines, discount handling, refunds/chargebacks, validation hold and payout minimum; browser QA for public page, Partner Center and admin console at mobile/tablet/desktop. Worker deployment and GitHub Pages publication are not part of this branch.
+- Do not merge to `main` or deploy the Worker until the founder explicitly approves.
+
+---
+
 ## Legal checkout acceptance, Turnstile and cookie-choice prompt — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `feature/legal-purchase-acceptance-turnstile-cookies-2026-11-19`, based on PR #295 head commit `099e643e83e68301b9d4ae5628ae8b51d6b0fb18`. PR #295 remains separate and unmerged.

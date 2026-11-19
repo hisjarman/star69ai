@@ -77,3 +77,9 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Replay the visitor spaceship on every homepage refresh. Select one of four randomized exploration routes, then land on the yin-yang emblem centered on the astronaut and plant a small decorative flag.
 - Keep the flight decorative, pointer-inert and hidden from assistive technology. Reduced-motion users receive a stationary ship and flag without animation.
 - No unrelated site, backend, Worker, D1, Retell, billing, authentication, customer data or deployment changes are authorized by this revision.
+
+
+## Compact cover navigation overflow safeguard — 2026-11-18
+
+- The compact homepage cover must retain `overflow:visible` so the existing Mission Control dropdown can extend below the banner without clipping. The visitor-flight overlay itself clips its animated ship within the artwork bounds.
+- This preserves the existing navigation interaction and does not change the cover dimensions or visitor flight.

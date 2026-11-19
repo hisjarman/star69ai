@@ -151,23 +151,23 @@ async function handlePartnerLead(request,env,origin){
 async function handlePartnerDashboard(request,env,origin){
   let user;try{user=await getVerifiedUser(request,env);}catch(e){return authError(e,origin,env);}
   try{
-    let partner=await env.DB.prepare("SELECT id,name,email,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE lower(email)=? AND application_status='approved' ORDER BY updated_at DESC LIMIT 1").bind(user.email).first();
+    let partner=await env.DB.prepare("SELECT id,name,email,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE lower(email)=? AND application_status='approved' ORDER BY updated_at DESC LIMIT 1").bind(user.email).first();
     if(!partner)return json({error:"partner_approval_required"},403,origin,env);
     const partnerCode=partner.partnerCode||("S69"+crypto.randomUUID().replace(/-/g,"").slice(0,9)).toUpperCase();
     const partnerLink="https://star69ai.com/checkout.html?ref="+partnerCode;
     if(!partner.partnerCode||partner.referralUrl!==partnerLink){
       await env.DB.prepare("UPDATE affiliate_applications SET partner_code=COALESCE(partner_code,?),referral_url=?,updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").bind(partnerCode,partnerLink,partner.id).run();
-      partner=await env.DB.prepare("SELECT id,name,email,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE id=?").bind(partner.id).first();
+      partner=await env.DB.prepare("SELECT id,name,email,partner_code AS partnerCode,referral_url AS referralUrl,payout_method AS payoutMethod,paypal_email AS paypalEmail,payout_updated_at AS payoutUpdatedAt,created_at AS joinedAt FROM affiliate_applications WHERE id=?").bind(partner.id).first();
     }
     const [clicks,leadStats,commissionStats,referrals,commissions]=await Promise.all([
       env.DB.prepare("SELECT COUNT(*) AS total FROM partner_clicks WHERE affiliate_application_id=?").bind(partner.id).first(),
-      env.DB.prepare("SELECT COUNT(*) AS leads,SUM(CASE WHEN r.lead_status='converted' AND c.subscription_status IN ('active','trialing') THEN 1 ELSE 0 END) AS customers FROM partner_referrals r LEFT JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=?").bind(partner.id).first(),
+      env.DB.prepare("SELECT COUNT(*) AS leads,COUNT(DISTINCT CASE WHEN r.lead_status='converted' AND c.subscription_status='active' THEN c.id END) AS customers FROM partner_referrals r LEFT JOIN avr_customers c ON c.id=r.customer_id WHERE r.affiliate_application_id=?").bind(partner.id).first(),
       env.DB.prepare("SELECT COALESCE(SUM(CASE WHEN status='pending' THEN commission_amount_cents ELSE 0 END),0) AS pending,COALESCE(SUM(CASE WHEN status='paid' THEN commission_amount_cents ELSE 0 END),0) AS paid FROM partner_commissions WHERE affiliate_application_id=?").bind(partner.id).first(),
       env.DB.prepare("SELECT business_name AS businessName,lead_status AS status,created_at AS createdAt,converted_at AS convertedAt FROM partner_referrals WHERE affiliate_application_id=? ORDER BY created_at DESC LIMIT 100").bind(partner.id).all(),
       env.DB.prepare("SELECT c.commission_amount_cents AS commissionAmountCents,c.payment_provider AS paymentProvider,c.payment_reference AS paymentReference,c.currency,c.status,c.validation_until AS validationUntil,c.created_at AS createdAt,cu.business_name AS businessName FROM partner_commissions c LEFT JOIN avr_customers cu ON cu.id=c.customer_id WHERE c.affiliate_application_id=? ORDER BY c.created_at DESC LIMIT 100").bind(partner.id).all()
     ]);
     const activeReferrals=Number(leadStats?.customers||0);
-    partner.currentRate=activeReferrals>=15?0.30:activeReferrals>=5?0.25:0.20;
+    partner.currentRate=activeReferrals>=15?0.20:activeReferrals>=5?0.15:0.10;
     partner.referralUrlStandard="https://star69ai.com/checkout.html?ref="+partnerCode+"&offer=standard";
     partner.referralUrlDiscounted="https://star69ai.com/checkout.html?ref="+partnerCode+"&offer=discount";
     return json({partner,stats:{clicks:Number(clicks?.total||0),leads:Number(leadStats?.leads||0),customers:activeReferrals,pendingCents:Number(commissionStats?.pending||0),paidCents:Number(commissionStats?.paid||0)},referrals:referrals.results||[],commissions:commissions.results||[]},200,origin,env);
@@ -244,13 +244,12 @@ async function handleAdmin(request,env,origin,path){
       await env.DB.prepare("UPDATE partner_commissions SET status=?,paid_at=CASE WHEN ?='paid' THEN ? ELSE paid_at END,payout_reference=COALESCE(?,payout_reference),admin_note=COALESCE(?,admin_note) WHERE id=?").bind(status,status,now,p.payoutReference===undefined?null:String(p.payoutReference).slice(0,160),p.adminNote===undefined?null:String(p.adminNote).slice(0,1000),commissionMatch[1]).run();
       return json({updated:true,status},200,origin,env);
     }
-    if(request.method==='GET'&&path==='/api/admin/partners'){const f=new URL(request.url).searchParams.get('status')||'all';const s=['pending','approved','rejected'].includes(f)?f:'all';const cols='id,name,email,website AS businessWebsite,promotion_method AS promotionMethod,audience,experience,notes,application_status AS applicationStatus,commission_tier AS commissionTier,partner_code AS partnerCode,referral_url AS referralUrl,admin_note AS adminNote,created_at AS createdAt,updated_at AS updatedAt';const q=s==='all'?'SELECT '+cols+' FROM affiliate_applications ORDER BY created_at DESC LIMIT 500':'SELECT '+cols+' FROM affiliate_applications WHERE application_status=? ORDER BY created_at DESC LIMIT 500';const r=s==='all'?await env.DB.prepare(q).all():await env.DB.prepare(q).bind(s).all();return json({applications:r.results||[],count:(r.results||[]).length},200,origin,env);}
+    if(request.method==='GET'&&path==='/api/admin/partners'){const f=new URL(request.url).searchParams.get('status')||'all';const s=['pending','approved','rejected'].includes(f)?f:'all';const cols='id,name,email,website AS businessWebsite,promotion_method AS promotionMethod,audience,experience,notes,application_status AS applicationStatus,partner_code AS partnerCode,referral_url AS referralUrl,admin_note AS adminNote,created_at AS createdAt,updated_at AS updatedAt';const q=s==='all'?'SELECT '+cols+' FROM affiliate_applications ORDER BY created_at DESC LIMIT 500':'SELECT '+cols+' FROM affiliate_applications WHERE application_status=? ORDER BY created_at DESC LIMIT 500';const r=s==='all'?await env.DB.prepare(q).all():await env.DB.prepare(q).bind(s).all();return json({applications:r.results||[],count:(r.results||[]).length},200,origin,env);}
     const partnerMatch=path.match(new RegExp("^/api/admin/partners/([a-f0-9-]{36})$","i"));
     if(request.method==="PATCH"&&partnerMatch){
       let p;try{p=await request.json();}catch{return json({error:"invalid_json"},400,origin,env);}
-      const status=p.applicationStatus,tier=p.commissionTier;
+      const status=p.applicationStatus;
       if(status!==undefined&&!["pending","approved","rejected"].includes(status))return json({error:"invalid_application_status"},400,origin,env);
-      if(tier!==undefined&&!["standard","founding","growth","premier"].includes(tier))return json({error:"invalid_commission_tier"},400,origin,env);
       const note=p.adminNote===undefined?null:String(p.adminNote).slice(0,2000);
       
       const found=await env.DB.prepare("SELECT id,name,email,application_status,partner_code,referral_url FROM affiliate_applications WHERE id=?").bind(partnerMatch[1]).first();
@@ -259,7 +258,7 @@ async function handleAdmin(request,env,origin,path){
       const code=nextStatus==="approved"?(found.partner_code||("S69"+crypto.randomUUID().replace(/-/g,"").slice(0,9)).toUpperCase()):found.partner_code;
       const generatedUrl=code?"https://star69ai.com/get-started.html?ref="+code:null;
       const referralUrl=generatedUrl||found.referral_url;
-      await env.DB.prepare("UPDATE affiliate_applications SET application_status=?,commission_tier=COALESCE(?,commission_tier),partner_code=COALESCE(partner_code,?),referral_url=COALESCE(NULLIF(? ,''),referral_url),admin_note=COALESCE(?,admin_note),updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").bind(nextStatus,tier||null,code,referralUrl||"",note,partnerMatch[1]).run();
+      await env.DB.prepare("UPDATE affiliate_applications SET application_status=?,partner_code=COALESCE(partner_code,?),referral_url=COALESCE(NULLIF(? ,''),referral_url),admin_note=COALESCE(?,admin_note),updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id=?").bind(nextStatus,code,referralUrl||"",note,partnerMatch[1]).run();
       let notificationSent=false;
       if(nextStatus==="approved"&&found.application_status!=="approved"){
         notificationSent=await sendResend(env,{to:found.email,subject:"Your Star69AI partner application is approved",text:"Hi "+found.name+",\n\nYour Star69AI partner application has been approved. Sign in or create your account at https://star69ai.com/partner-portal/ using this verified email address. Your personal referral link is: "+referralUrl+"\\n\\nYour Partner Center shows tracked clicks, referred leads and eligible commissions. Commission credit begins only after a qualifying subscription payment is confirmed and the validation period has passed.\n\nStar69AI Partner Team",html:"<p>Hi "+escapeHtml(found.name)+",</p><p>Your Star69AI partner application has been approved.</p><p><a href=\"https://star69ai.com/partner-portal/\">Open your Partner Center</a> and sign in or create an account using this verified email address.</p><p>Your personal referral link: <a href=\""+escapeHtml(referralUrl)+"\">"+escapeHtml(referralUrl)+"</a></p><p>Your Partner Center shows tracked clicks, referred leads and eligible commissions. Commission credit begins only after a qualifying subscription payment is confirmed and the validation period has passed.</p>"});

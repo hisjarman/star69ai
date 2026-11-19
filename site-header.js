@@ -29,6 +29,8 @@
         <div class="site-global-cover-shade" aria-hidden="true"></div>
         <a class="site-global-home-brand" href="/" aria-label="Star69AI home"><img src="/assets/main_logo.webp" alt="Star69AI"></a>
         <div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span></div>
+      </div>
+      <div class="site-global-utility">
         <button class="site-global-toggle" type="button" aria-label="Open Star69AI navigation" aria-expanded="false" aria-controls="site-global-navigation">
           <span class="site-global-toggle-label">MENU</span><span class="site-global-toggle-icon"><i></i><i></i><i></i></span>
         </button>
@@ -42,11 +44,11 @@
           </div>
           <div class="site-global-nav-footer"><span>STAR69AI // NAVIGATION ARRAY</span><span>SECURE CONNECTION <i></i></span></div>
         </nav>
-      </div>
-      <div class="site-global-utility">
+
         <a class="site-global-partner" href="/partner-portal/">PARTNER LOGIN <span>↗</span></a>
         <a class="site-global-login" href="/client/">CLIENT CONSOLE <span>↗</span></a>
         <a class="site-global-start" href="/get-started.html">INITIATE CONTACT <span>↗</span></a>
+
       </div>
     </header>`;
   const install = () => {

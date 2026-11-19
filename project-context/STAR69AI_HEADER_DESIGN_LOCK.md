@@ -109,3 +109,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Keep the desktop cover capped at 184px and mobile at 150px. Keep the image centered, with a slightly elevated desktop focal position. The deep-space base remains behind the image.
 - The visitor spaceship remains a separate overlay and its routes, direction mirroring, landing/flag animation and timing are unchanged. Preserve Mission Control menu overflow, navigation, utility strip, interior header and footer.
 - Update the protected CSS fingerprint in the same PR. Browser QA and GitHub Pages deployment verification are still required; do not claim visual success until checked.
+
+
+## Owner correction — full artwork and utility-row menu — 2026-11-18
+
+- Move the Mission Control menu trigger out of the artwork and into the persistent utility-button row, alongside Partner Login, Client Console and Initiate Contact. Keep the full grouped navigation panel attached to that row and ensure it opens below the row without being clipped.
+- On the homepage, display the complete hero artwork at full available width using its intrinsic aspect ratio. Do not crop it with `object-fit:cover`, stretch it, or force it to fill the viewport. The image determines the cover height proportionally on desktop and mobile.
+- Preserve the visitor spaceship overlay and animation, status indicator, all navigation destinations, utility actions, interior-page compact header and footer. Update the protected CSS fingerprint in the same PR.
+- Browser visual QA and GitHub Pages deployment verification remain outstanding.

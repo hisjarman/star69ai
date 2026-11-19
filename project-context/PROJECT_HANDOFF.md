@@ -1912,3 +1912,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Updated `project-context/STAR69AI_HEADER_DESIGN_LOCK.md` and pinned the new `site-header.js` / `site-header.css` Git blob IDs in `.github/workflows/protect-approved-header.yml` in the same branch.
 - Source assertions passed: visible tagline markup absent; header brand alt text no longer repeats the tagline; viewport-width full-bleed rule present; CSS braces balanced; protection workflow pins the exact updated source blobs.
 - Browser visual QA at mobile/tablet/desktop and GitHub Pages publication remain unverified. No merge or deployment performed. No navigation routes, visitor-flight logic, Worker, D1, Retell, billing, authentication or customer data changed.
+
+
+## Homepage header follow-up — 2026-11-18 — REVIEW REQUIRED
+
+- Moved the Mission Control menu trigger into the persistent utility-button row beside Partner Login, Client Console and Initiate Contact. The navigation panel now opens below that row.
+- Corrected homepage artwork presentation to show the complete image at full available width and intrinsic aspect ratio, without cropping or stretching. Its height scales proportionally with width rather than filling the viewport.
+- Preserved all navigation destinations, utility actions, visitor spaceship overlay/flight, status indicator, interior-page compact header, footer and backend behavior.
+- Updated the approved-header design lock and protection workflow fingerprint with the CSS change.
+- Static checks and browser visual QA are pending; GitHub Pages deployment is not assumed. Review via PR; do not merge without the founder's explicit approval.

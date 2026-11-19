@@ -133,3 +133,13 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Added a compact, fixed privacy-choice panel at the bottom of pages that load the shared header script. It offers optional analytics permission, rejection of optional analytics, and a customization control. Essential security and checkout storage remains enabled.
 - The panel is separate from the protected Mission Control navigation, homepage cover, utility strip and footer. Their structure, labels, destinations, positioning and interaction behavior remain unchanged.
 - Updated the protection workflow's pinned blob fingerprints for the additive consent UI. Future unrelated changes to the protected shared header remain subject to this design lock.
+
+
+## Owner-approved intelligent local welcome — 2026-11-19
+
+- Add one authentic country flag to the existing planted landing flag; do not display U.S. state flags or multiple flags. If the country is unavailable, retain the existing generic decorative flag.
+- Add a concise local welcome bubble on the homepage. The greeting may use a confidently recognizable local sports team, culture, landmark or expression (for example, a Dallas Cowboys greeting for Dallas); do not force sports references or invent current scores/events.
+- The homepage requests location context from the existing Star69AI Concierge Worker using Cloudflare's request country/city/region metadata. The Worker generates a short greeting with Workers AI and caches it by normalized location for 24 hours. No visitor IP, identity or precise address is stored for this feature.
+- Preserve the four randomized 10.8-second spaceship routes and replay on every homepage refresh. The existing header/menu/footer structure, route destinations and reduced-motion behavior remain intact.
+- New frontend helper: assets/visitor-welcome.js. New Worker GET route: /api/welcome on the existing star69ai-concierge Worker. This requires a separate reviewed Worker deployment after merge; GitHub Pages merge alone does not activate the endpoint.
+- Header source fingerprints in .github/workflows/protect-approved-header.yml are updated in the same reviewed pull request. No merge or Worker deployment without founder approval.

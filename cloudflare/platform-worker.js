@@ -1217,7 +1217,7 @@ async function route(req,env){
   }
   if(path==="/api/client/addons"&&req.method==="GET"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
-   const r=await env.DB.prepare("SELECT id,addon_key,addon_name,billing_type,status,customer_note,quote_summary,quote_status,quote_updated_at,created_at,updated_at FROM avr_addon_orders WHERE customer_id=? ORDER BY created_at DESC LIMIT 100").bind(c.id).all();
+   const r=await env.DB.prepare("SELECT id,addon_key,addon_name,billing_type,status,customer_note,quote_summary,quote_status,quote_updated_at,quote_accepted_at,quote_accepted_by,created_at,updated_at FROM avr_addon_orders WHERE customer_id=? ORDER BY created_at DESC LIMIT 100").bind(c.id).all();
    return json({orders:r.results||[]},200,origin,env)
   }
   if(path==="/api/client/addons"&&req.method==="POST"){
@@ -1238,11 +1238,11 @@ async function route(req,env){
   const clientAddonQuoteMatch=path.match(/^\/api\/client\/addons\/([0-9a-f-]{36})\/quote-acceptance$/i);
   if(clientAddonQuoteMatch&&req.method==="POST"){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)return json({error:"customer_account_not_found"},404,origin,env);
-   const id=clientAddonQuoteMatch[1],row=await env.DB.prepare("SELECT id,quote_status,quote_summary FROM avr_addon_orders WHERE id=? AND customer_id=?").bind(id,c.id).first();
+   const id=clientAddonQuoteMatch[1],row=await env.DB.prepare("SELECT id,quote_status,quote_summary,quote_accepted_at FROM avr_addon_orders WHERE id=? AND customer_id=?").bind(id,c.id).first();
    if(!row)throw Error("addon_request_not_found");
    if(row.quote_status!=="presented"||!String(row.quote_summary||"").trim())throw Error("current_written_quote_not_available");
    const now=new Date().toISOString();
-   const result=await env.DB.prepare("UPDATE avr_addon_orders SET quote_status='accepted',quote_updated_at=?,updated_at=? WHERE id=? AND customer_id=? AND quote_status='presented'").bind(now,now,id,c.id).run();
+   const result=await env.DB.prepare("UPDATE avr_addon_orders SET quote_status='accepted',quote_updated_at=?,quote_accepted_at=?,quote_accepted_by=?,updated_at=? WHERE id=? AND customer_id=? AND quote_status='presented'").bind(now,now,id,c.id).run();
    if(!result.meta?.changes)throw Error("quote_no_longer_available");
    return json({accepted:true,id},200,origin,env);
   }
@@ -1314,9 +1314,9 @@ async function route(req,env){
     if(!["requested","approved","in_progress","active","declined","cancelled"].includes(status))throw Error("invalid_addon_status");
     if(!["none","presented","accepted","declined"].includes(quoteStatus))throw Error("invalid_quote_status");
     if(quoteStatus==="presented"&&!quoteSummary)throw Error("quote_summary_required");
-    const row=await env.DB.prepare("SELECT id,customer_id,quote_status FROM avr_addon_orders WHERE id=?").bind(id).first();
+    const row=await env.DB.prepare("SELECT id,customer_id,quote_status,quote_summary FROM avr_addon_orders WHERE id=?").bind(id).first();
     if(!row)throw Error("addon_request_not_found");
-    if(quoteStatus==="accepted"&&row.quote_status!=="accepted")throw Error("client_acceptance_required");
+    if(quoteStatus==="accepted"&&(row.quote_status!=="accepted"||quoteSummary!==String(row.quote_summary||"")))throw Error("client_acceptance_required_or_quote_is_immutable");
     const now=new Date().toISOString();
     await env.DB.prepare("UPDATE avr_addon_orders SET status=?,admin_note=?,quote_summary=?,quote_status=?,quote_updated_at=?,updated_at=? WHERE id=?").bind(status,adminNote,quoteSummary,quoteStatus,now,now,id).run();
     await audit(env,u,"addon_quote_or_status_updated",row.customer_id,{addonOrderId:id,status,quoteStatus,quoteSummaryLength:quoteSummary.length});

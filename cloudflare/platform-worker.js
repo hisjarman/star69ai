@@ -353,8 +353,41 @@ async function maybeProvisionPaidOnboarding(env,onboardingId){
   if(env.RESEND_API_KEY&&env.RESEND_FROM_EMAIL)await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json","Idempotency-Key":"star69ai-paid-onboarding-alert/"+onboardingId},body:JSON.stringify({from:resendFrom(env),to:["support@star69ai.com"],subject:"Star69AI paid onboarding needs review",text:"Paid onboarding "+onboardingId+" needs review. Error: "+String(e.message||"unknown").slice(0,300)+". Check the Agency Admin and retry provisioning after correcting the issue."})}).catch(()=>{});
  }
 }
-async function startPublicFlexSignup(p,env,contact,email,phone,business,industry){
- if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
+const CHECKOUT_TERMS_VERSION="2026-11-19.1";
+const CHECKOUT_PRIVACY_VERSION="2026-11-19.1";
+const CHECKOUT_SERVICE_VERSION="2026-11-19.1";
+const CHECKOUT_OVERAGE={starter:0.55,growth:0.45,pro:0.36};
+function requireCheckoutAcknowledgements(p){if(p.termsAccepted!==true||p.privacyAccepted!==true||p.aiLimitationsAccepted!==true||p.planDisclosureAccepted!==true||p.billingAuthorizationAccepted!==true)throw Error("all_checkout_acknowledgements_required");}
+async function verifyCheckoutHuman(req,p,env){
+ const token=String(p.turnstileToken||"").trim();
+ if(!env.TURNSTILE_SECRET||!token||token.length>2048)throw Error("human_verification_required");
+ let response;
+ try{response=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({secret:env.TURNSTILE_SECRET,response:token,remoteip:req.headers.get("CF-Connecting-IP")||undefined})});}catch{throw Error("human_verification_unavailable_try_again")}
+ if(!response.ok)throw Error("human_verification_unavailable_try_again");
+ const result=await response.json().catch(()=>({success:false}));
+ const hostname=String(result.hostname||"").toLowerCase();
+ if(result.success!==true||result.action!=="checkout"||!["star69ai.com","www.star69ai.com"].includes(hostname))throw Error("human_verification_failed_refresh_and_try_again");
+ return {hostname,action:String(result.action||"")};
+}
+async function recordCheckoutAcceptance(env,req,p,d,human){
+ requireCheckoutAcknowledgements(p);
+ const now=new Date().toISOString(),eventId=crypto.randomUUID();
+ const snapshot={planKey:d.planKey,cadence:d.cadence,monthlyPriceCents:d.monthlyPriceCents??null,prepaidPriceCents:d.prepaidPriceCents??null,setupFeeCents:d.setupFeeCents??0,includedMinutes:d.includedMinutes??0,overageRate:d.overageRate??null,overageCapPercent:d.overageCapPercent??75,flexStartedMinuteRate:d.flexStartedMinuteRate??null,minuteMeasurement:"Each started AI voice minute is billable; partial minutes round up.",renewal:d.cadence==="monthly"?"Monthly until cancelled.":"Prepaid or pay-as-you-go; no automatic renewal.",thirdPartyCosts:"Incremental third-party costs above $2/month require written approval and are passed through at verified cost; costs of $2/month or less are absorbed.",serviceScope:"Managed configuration, testing and routine maintenance within agreed scope. Custom integrations, specialized workflows, dedicated resources and advanced directory synchronization require a separate written quote and approval.",limits:"AI may misunderstand or provide inaccurate responses. It is not an emergency service or professional adviser. Customer must provide lawful instructions, caller notices/consents, escalation paths and human review.",paymentAuthorization:"Acceptance records the displayed payment schedule and authorizes proceeding to the selected payment step; it does not itself charge the customer or authorize optional automatic overage collection."};
+ const acceptance={termsAccepted:true,privacyAccepted:true,aiLimitationsAccepted:true,planDisclosureAccepted:true,billingAuthorizationAccepted:true,affirmativeAction:"separate unchecked-by-default clickwrap acknowledgements",termsVersion:CHECKOUT_TERMS_VERSION,privacyVersion:CHECKOUT_PRIVACY_VERSION,serviceVersion:CHECKOUT_SERVICE_VERSION};
+ const agreementSha=await sha256Hex(JSON.stringify({snapshot,acceptance}));
+ await env.DB.prepare("INSERT INTO avr_checkout_evidence_events(event_id,customer_id,onboarding_id,event_type,email,business_name,plan_key,billing_cadence,terms_version,privacy_version,service_disclosure_version,plan_snapshot_json,acceptance_json,agreement_sha256,turnstile_hostname,turnstile_action,ip_address,user_agent,server_timestamp) VALUES(?,?,?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+ .bind(eventId,d.customerId,d.onboardingId||null,"purchase_terms_accepted",d.email,d.businessName,d.planKey,d.cadence,CHECKOUT_TERMS_VERSION,CHECKOUT_PRIVACY_VERSION,CHECKOUT_SERVICE_VERSION,JSON.stringify(snapshot),JSON.stringify(acceptance),agreementSha,human?.hostname||null,human?.action||null,req.headers.get("CF-Connecting-IP")||null,String(req.headers.get("User-Agent")||"").slice(0,500),now).run();
+ return {eventId,agreementSha};
+}
+async function assertCurrentCheckoutAcceptance(env,ob,customer){
+ const row=await env.DB.prepare("SELECT * FROM avr_checkout_evidence_events WHERE onboarding_id=? AND event_type=? ORDER BY server_timestamp DESC LIMIT 1").bind(ob.id,"purchase_terms_accepted").first();
+ if(!row||row.terms_version!==CHECKOUT_TERMS_VERSION||row.privacy_version!==CHECKOUT_PRIVACY_VERSION||row.service_disclosure_version!==CHECKOUT_SERVICE_VERSION||row.plan_key!==ob.plan_key||row.billing_cadence!==ob.billing_cadence||row.customer_id!==customer.id)throw Error("current_checkout_acceptance_required_contact_support");
+ let a={};try{a=JSON.parse(row.acceptance_json||"{}")}catch{}
+ if(!a.termsAccepted||!a.privacyAccepted||!a.aiLimitationsAccepted||!a.planDisclosureAccepted||!a.billingAuthorizationAccepted)throw Error("current_checkout_acceptance_required_contact_support");
+ return row;
+}
+async function startPublicFlexSignup(p,env,contact,email,phone,business,industry,req,human){
+ requireCheckoutAcknowledgements(p);
  if(!env.CLERK_SECRET_KEY)throw Error("account_invitation_not_configured");
  const existing=await env.DB.prepare("SELECT id FROM avr_customers WHERE lower(email)=? LIMIT 1").bind(email).first();
  if(existing)throw Error("customer_email_already_registered_sign_in_or_contact_support");
@@ -362,6 +395,7 @@ async function startPublicFlexSignup(p,env,contact,email,phone,business,industry
  const discovery={website:String(p.website||"").slice(0,500),serviceArea:String(p.serviceArea||"").slice(0,1200),services:String(p.services||"").slice(0,4000),callVolume:String(p.callVolume||"").slice(0,120),hours:String(p.hours||"").slice(0,1000),callTasks:String(p.callTasks||"").slice(0,4000),faqs:String(p.faqs||"").slice(0,4000),notes:String(p.notes||"").slice(0,4000),planInterest:"flex",billingPreference:"pay_as_you_go",privacyConsent:true,submittedAt:now};
  await env.DB.prepare("INSERT INTO avr_customers(id,business_name,contact_name,email,phone,status,plan_key,payg_enabled,included_minutes,billing_cadence,admin_notes,created_at,updated_at) VALUES(?,?,?,?,?,'pending',NULL,1,0,'monthly',?,?,?)").bind(customerId,business,contact,email,phone,"Flex account. Prepaid PayPal wallet credit is required before calls can be accepted; Star69AI must assign the receptionist and number before live service.",now,now).run();
  await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'new',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Flex pay-as-you-go activation request").slice(0,3000),"Public Flex signup",JSON.stringify(discovery),customerId,now,now).run();
+ await recordCheckoutAcceptance(env,req,p,{customerId,email,businessName:business,planKey:"flex",cadence:"flex",monthlyPriceCents:0,setupFeeCents:0,includedMinutes:0,overageRate:null,overageCapPercent:0,flexStartedMinuteRate:65},human);
  await env.DB.prepare("INSERT INTO avr_payg_wallets(customer_id,status) VALUES(?,'pending') ON CONFLICT(customer_id) DO NOTHING").bind(customerId).run();
  let accountDeliveryStatus="invitation_failed",invitationId=null;
  try{
@@ -382,11 +416,13 @@ async function startPublicCheckout(req,env,origin){
  if(!origin||!origins(env).includes(origin))throw Error("origin_not_allowed");
  const p=await body(req,30000);
  if(String(p.websiteHoneypot||p.websiteTrap||"").trim())return {accepted:true};
+ const human=await verifyCheckoutHuman(req,p,env);
+ requireCheckoutAcknowledgements(p);
  const contact=String(p.contactName||"").trim().slice(0,120),email=String(p.email||"").trim().toLowerCase(),phone=String(p.phone||"").trim().slice(0,40),business=String(p.businessName||"").trim().slice(0,160),industry=String(p.industry||"").trim().slice(0,100),plan=String(p.plan||"").toLowerCase(),cadence=String(p.cadence||"monthly"),subscribeNow=p.subscribeNow===true;
  if(contact.length<2||business.length<2||phone.length<5||! /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)||industry.length<2)throw Error("complete_contact_business_and_industry_details_required");
- if(plan==="flex"){if(String(p.promoCode||"").trim())throw Error("promotion_only_for_monthly_plans");return await startPublicFlexSignup(p,env,contact,email,phone,business,industry);}
+ if(plan==="flex"){if(String(p.promoCode||"").trim())throw Error("promotion_only_for_monthly_plans");return await startPublicFlexSignup(p,env,contact,email,phone,business,industry,req,human);}
  if(!planInfo[plan]||!["monthly","six_month","annual"].includes(cadence))throw Error("valid_subscription_plan_required");
- if(p.privacyConsent!==true)throw Error("checkout_privacy_consent_required");
+ requireCheckoutAcknowledgements(p);
  if(!env.RETELL_API_KEY||!env.CLERK_SECRET_KEY)throw Error("automated_demo_and_account_provisioning_not_configured");
  const existing=await env.DB.prepare("SELECT id,status,subscription_status FROM avr_customers WHERE lower(email)=? LIMIT 1").bind(email).first();
  if(existing)throw Error("customer_email_already_registered_sign_in_or_contact_support");
@@ -422,6 +458,7 @@ async function startPublicCheckout(req,env,origin){
  await env.DB.prepare("INSERT INTO avr_demo_requests(id,contact_name,email,phone,business_name,industry,details,lead_source,discovery_json,discovery_complete,status,customer_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,1,'new',?,?,?)").bind(leadId,contact,email,phone,business,industry,String(p.notes||"Managed receptionist demo request").slice(0,3000),"Public demo-first checkout",JSON.stringify(discovery),customerId,now,now).run();
  const initialStatus=paymentProvider==="stripe"?"awaiting_subscription":"awaiting_plan_payment";
  await env.DB.prepare("INSERT INTO avr_paid_onboardings(id,customer_id,demo_request_id,email,plan_key,billing_cadence,setup_amount_cents,prepaid_amount_cents,setup_status,paypal_order_purpose,plan_payment_provider,plan_payment_status,status,public_token_hash,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,'pending',?,?,?,?)").bind(onboardingId,customerId,leadId,email,plan,cadence,setupCents,prepaidCents,setupCents===0?"not_required":"pending",orderPurpose,paymentProvider,initialStatus,await sha256Hex(statusToken),now,now).run();
+ await recordCheckoutAcceptance(env,req,p,{customerId,onboardingId,email,businessName:business,planKey:plan,cadence,monthlyPriceCents:Number(planInfo[plan].price)*100,prepaidPriceCents:prepaidCents,setupFeeCents:setupCents,includedMinutes:Number(planInfo[plan].minutes),overageRate:CHECKOUT_OVERAGE[plan],overageCapPercent:75},human);
  await maybeProvisionPaidOnboarding(env,onboardingId);
  const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE id=?").bind(onboardingId).first();
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(customerId).first();
@@ -487,6 +524,7 @@ async function resumePublicCheckout(req,env,origin){
  const p=await body(req,5000),ob=await publicOnboardingAuth(env,p.onboardingId,p.statusToken);
  const customer=await env.DB.prepare("SELECT * FROM avr_customers WHERE id=?").bind(ob.customer_id).first();
  if(!customer)throw Error("customer_not_found");
+ await assertCurrentCheckoutAcceptance(env,ob,customer);
  if(Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
  if(ob.setup_status==="pending"&&ob.plan_payment_status==="paid"){
   const order=await createPublicPaypalOrder(env,ob,customer,p.statusToken);
@@ -1012,6 +1050,7 @@ async function route(req,env){
    const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c)throw Error("customer_account_not_found");
    const ob=await env.DB.prepare("SELECT * FROM avr_paid_onboardings WHERE customer_id=? ORDER BY created_at DESC LIMIT 1").bind(c.id).first();
    if(!ob||Number(ob.demo_approved||0)!==1)throw Error("demo_approval_required");
+   await assertCurrentCheckoutAcceptance(env,ob,c);
    if(ob.plan_payment_status==="paid")throw Error("subscription_already_paid");
    const statusToken=crypto.randomUUID()+crypto.randomUUID();
    await env.DB.prepare("UPDATE avr_paid_onboardings SET public_token_hash=?,updated_at=? WHERE id=?").bind(await sha256Hex(statusToken),new Date().toISOString(),ob.id).run();

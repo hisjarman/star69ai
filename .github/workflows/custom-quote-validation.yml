@@ -16,6 +16,7 @@ on:
       - "client/client.js"
       - "admin/admin.js"
       - "cloudflare/migrations/20261119_addon_quotes.sql"
+      - "cloudflare/migrations/20261119_internal_cost_knowledge.sql"
       - ".github/workflows/custom-quote-validation.yml"
 
 permissions:

@@ -125,3 +125,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Fit the complete original artwork proportionally inside the cover with `object-fit: contain`; never allow its natural image height to expand the desktop page and never crop, stretch or distort the image.
 - Preserve the deep-space background in any unused cover area. Keep the existing visitor-flight overlay, utility-row menu, dropdown overflow, navigation and interior header unchanged.
 - This correction supersedes the natural-height desktop rule in the earlier responsive banner note.
+
+
+## Owner-approved additive cookie preference prompt — 2026-11-19
+
+- The owner approved merging and publishing the legal checkout and cookie-choice work in PR #296.
+- Added a compact, fixed privacy-choice panel at the bottom of pages that load the shared header script. It offers optional analytics permission, rejection of optional analytics, and a customization control. Essential security and checkout storage remains enabled.
+- The panel is separate from the protected Mission Control navigation, homepage cover, utility strip and footer. Their structure, labels, destinations, positioning and interaction behavior remain unchanged.
+- Updated the protection workflow's pinned blob fingerprints for the additive consent UI. Future unrelated changes to the protected shared header remain subject to this design lock.

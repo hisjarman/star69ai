@@ -1312,7 +1312,7 @@ async function route(req,env){
    if(adminAddonMatch&&req.method==="PATCH"){
     const id=adminAddonMatch[1],p=await body(req,7000),status=String(p.status||"requested"),quoteStatus=String(p.quoteStatus||"none"),adminNote=String(p.adminNote||"").trim().slice(0,1500),quoteSummary=String(p.quoteSummary||"").trim().slice(0,3500);
     if(!["requested","approved","in_progress","active","declined","cancelled"].includes(status))throw Error("invalid_addon_status");
-    if(!["none","presented","accepted","declined"].includes(quoteStatus))throw Error("invalid_quote_status");
+    if(!["none","presented","declined"].includes(quoteStatus))throw Error("invalid_quote_status");
     if(quoteStatus==="presented"&&!quoteSummary)throw Error("quote_summary_required");
     const row=await env.DB.prepare("SELECT id,customer_id FROM avr_addon_orders WHERE id=?").bind(id).first();
     if(!row)throw Error("addon_request_not_found");

@@ -184,3 +184,12 @@ The owner clarified that the header remained too large after PR #315. This revis
 - Existing grouped destinations, legal links, footer, menu open/close, Escape/outside-click behavior, active-page state and accessibility semantics are retained.
 - The old header-banner visitor ship animation is retired with the banner. Other homepage hero content and page-level interactions are unchanged.
 - This is an explicit owner-requested design revision. Update the protected-header fingerprints in the same reviewed change.
+
+
+## Owner correction — full-width 4K panoramic banner — 2026-11-19
+
+- The published homepage panoramic artwork at `/assets/image_hero.webp` must render edge-to-edge across the full available horizontal width.
+- Preserve its intrinsic 3840:1645 aspect ratio. The image itself determines the rendered height proportionally at every viewport size.
+- Set the image to block layout, 100% width, no max-width cap and automatic height. Do not use a fixed-height image box, `object-fit:cover`, cropping, stretching or distortion.
+- Ensure the cover container does not impose a narrower max-width or fixed height. Keep the existing shade/overlay, navigation and visitor animation layered above the image.
+- This owner correction supersedes conflicting fixed-height and cropped/contained banner sizing instructions above. It applies to the published homepage panoramic image only; it does not restore a banner to interior pages.

@@ -1,4 +1,6 @@
 ## Partner commission cap and eligibility update — 2026-11-19 — REVIEW REQUIRED
+- Added a public `partner-terms.html` agreement page covering the commission cap, tier-count timing, qualifying subscription receipts, explicit exclusions, customer-discount restrictions, 90-day attribution, validation/payout rules, partner conduct, independent status and prospective program changes. Linked it from the partner application consent and Partner Center navigation. Existing application consent storage remains the current boolean/creation record; it is not a separately versioned legal-evidence ledger.
+
 
 - Working branch: `feature/partner-commission-cap-2026-11-19`, based on current `main`; no changes merged or deployed.
 - Replaced the former 20% / 25% / 30% schedule with 10% for 1–4 active paying referred customers, 15% for 5–14, and 20% for 15+. The 20% rate is the absolute cap.

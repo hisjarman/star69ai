@@ -117,3 +117,11 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - On the homepage, display the complete hero artwork at full available width using its intrinsic aspect ratio. Do not crop it with `object-fit:cover`, stretch it, or force it to fill the viewport. The image determines the cover height proportionally on desktop and mobile.
 - Preserve the visitor spaceship overlay and animation, status indicator, all navigation destinations, utility actions, interior-page compact header and footer. Update the protected CSS fingerprint in the same PR.
 - Browser visual QA and GitHub Pages deployment verification remain outstanding.
+
+
+## Final compact full-artwork banner correction — 2026-11-18
+
+- Keep the homepage cover edge-to-edge and compact: desktop height scales between 138px and 184px; mobile remains between 126px and 150px.
+- Fit the complete original artwork proportionally inside the cover with `object-fit: contain`; never allow its natural image height to expand the desktop page and never crop, stretch or distort the image.
+- Preserve the deep-space background in any unused cover area. Keep the existing visitor-flight overlay, utility-row menu, dropdown overflow, navigation and interior header unchanged.
+- This correction supersedes the natural-height desktop rule in the earlier responsive banner note.

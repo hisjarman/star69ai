@@ -22,7 +22,7 @@
     if (flag && emoji) flag.dataset.flag = emoji;
   };
   fetch("https://star69ai-concierge.hisjarman.workers.dev/api/welcome", {
-    method: "GET", mode: "cors", credentials: "omit", cache: "default", headers: { Accept: "application/json" }
+    method: "GET", mode: "cors", credentials: "omit", cache: "no-store", headers: { Accept: "application/json" }
   }).then(response => {
     if (!response.ok) throw new Error("welcome_unavailable");
     return response.json();

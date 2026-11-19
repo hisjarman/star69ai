@@ -1,3 +1,15 @@
+## Intelligent Directory Operator capability positioning — 2026-11-18 — REVIEW REQUIRED
+
+- Added a dedicated premium Directory Operator section to the public Capabilities page on branch `feature/intelligent-directory-operator-capability-2026-11-18`.
+- Content includes four illustrative call examples (purpose-based billing lookup, expertise/department discovery, multi-location routing and no-answer fallback), natural-language directory search, role/skill/department matching, location-aware routing, supported-language requests, contextual transfers, approved private-directory imports/maintenance, and search/routing-gap review.
+- Packaging distinction: basic configured call routing remains part of standard receptionist workflows where supported; the advanced Directory Operator is a separately scoped premium managed add-on. Public page directs prospects to request a written quote based on directory size, locations, integrations, routing complexity and maintenance. No fixed add-on price is advertised until provider and delivery costs are validated.
+- Accuracy boundaries: the section labels conversations as illustrative; private approved directory is the initial scope; public internet-wide business discovery is explicitly excluded. The feature is not represented as live or automatically included. Activation requires compatible voice workflow/functions, approved directory source, verified transfer destinations and end-to-end tests.
+- Changes are limited to `capabilities.html`, `capabilities.css` and this handoff. No pricing/checkout, backend, Worker, D1, Retell agent, billing, auth, CRM connection or customer data behavior was changed. No public deployment or production activation performed.
+- Required validation: source assertions for all four examples and pricing/availability caveats; HTML structure/IDs and CSS brace balance; responsive browser QA at 360px, 768px and 1280px; link checks; SEO metadata and GitHub Pages publication check.
+- PR review required. Do not merge to `main` without the founder's explicit approval.
+
+---
+
 ## Homepage hero true-banner fill correction — 2026-11-19 — REVIEW REQUIRED
 
 - Owner reports the hero still does not behave visually like a site banner. Changed only the homepage hero image presentation from letterboxed `object-fit:contain` to a full-bleed, fixed-height banner using `object-fit:cover`; the image retains its natural proportions and excess image area is cropped instead of leaving side/top/bottom gaps.

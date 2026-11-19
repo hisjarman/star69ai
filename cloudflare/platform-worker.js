@@ -967,6 +967,13 @@ async function retellWebhook(req,env){
  const analysis=call.call_analysis||{};
  await env.DB.prepare("INSERT INTO avr_calls(call_id,customer_id,agent_id,phone_number,from_number,to_number,direction,call_status,duration_ms,start_timestamp,end_timestamp,transcript,recording_url,call_summary,user_sentiment,disconnection_reason,raw_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(call_id) DO UPDATE SET customer_id=COALESCE(excluded.customer_id,avr_calls.customer_id),agent_id=COALESCE(excluded.agent_id,avr_calls.agent_id),phone_number=COALESCE(excluded.phone_number,avr_calls.phone_number),from_number=COALESCE(excluded.from_number,avr_calls.from_number),to_number=COALESCE(excluded.to_number,avr_calls.to_number),direction=COALESCE(excluded.direction,avr_calls.direction),call_status=excluded.call_status,duration_ms=COALESCE(excluded.duration_ms,avr_calls.duration_ms),start_timestamp=COALESCE(excluded.start_timestamp,avr_calls.start_timestamp),end_timestamp=COALESCE(excluded.end_timestamp,avr_calls.end_timestamp),transcript=COALESCE(excluded.transcript,avr_calls.transcript),recording_url=COALESCE(excluded.recording_url,avr_calls.recording_url),call_summary=COALESCE(excluded.call_summary,avr_calls.call_summary),user_sentiment=COALESCE(excluded.user_sentiment,avr_calls.user_sentiment),disconnection_reason=COALESCE(excluded.disconnection_reason,avr_calls.disconnection_reason),raw_json=excluded.raw_json")
  .bind(id,cid,agent,line,call.from_number||null,to,direction,callStatus,duration,start,end,call.transcript||null,call.recording_url||null,analysis.call_summary||null,analysis.user_sentiment||null,call.disconnection_reason||null,JSON.stringify(p).slice(0,100000)).run();
+ const salesMeta=call.metadata||{};
+ if(salesMeta.purpose==="star69ai_sales"&&salesMeta.prospect_id){
+  const salesStatus=call.call_status||(event==="call_ended"?"ended":event==="call_analyzed"?"analyzed":event);
+  await env.DB.prepare("UPDATE avr_marketing_ai_calls SET call_status=?,duration_ms=COALESCE(?,duration_ms),started_at=COALESCE(?,started_at),ended_at=COALESCE(?,ended_at),transcript=COALESCE(?,transcript),recording_url=COALESCE(?,recording_url),call_summary=COALESCE(?,call_summary),updated_at=? WHERE id=? OR retell_call_id=?")
+   .bind(salesStatus,duration,start,end,call.transcript||null,call.recording_url||null,analysis.call_summary||null,new Date().toISOString(),String(salesMeta.sales_call_id||""),id).run();
+ }
+
  if(cid&&event==="call_analyzed"){
   try{await analyzeCallIntelligence(env,cid,id,call.transcript||"",analysis.call_summary||"")}
   catch(error){console.error("call_intelligence_analysis_failed",id,String(error?.message||"analysis_failed"))}
@@ -1314,7 +1321,7 @@ async function route(req,env){
     return json({requests:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="GET"){
-    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.phone_number,p.industry,p.notes,p.status,p.created_at,p.last_contacted_at,ah.result_status AS after_hours_status,ah.check_method AS after_hours_method,ah.evidence AS after_hours_evidence,ah.phone_number AS after_hours_phone,ah.checked_at AS after_hours_checked_at,ah.checked_by AS after_hours_checked_by,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p LEFT JOIN avr_marketing_after_hours_checks ah ON ah.check_id=(SELECT c.check_id FROM avr_marketing_after_hours_checks c WHERE c.prospect_id=p.id ORDER BY c.checked_at DESC LIMIT 1) ORDER BY p.created_at DESC LIMIT 500").all();
+    const rows=await env.DB.prepare("SELECT p.id,p.business_name,p.contact_name,p.email,p.phone_number,p.industry,p.notes,p.status,p.call_number_type,p.call_permission_confirmed,p.call_permission_evidence,p.call_permission_checked_at,p.call_opted_out_at,p.created_at,p.last_contacted_at,ah.result_status AS after_hours_status,ah.check_method AS after_hours_method,ah.evidence AS after_hours_evidence,ah.phone_number AS after_hours_phone,ah.checked_at AS after_hours_checked_at,ah.checked_by AS after_hours_checked_by,(SELECT COUNT(*) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS send_count,(SELECT MAX(s.sent_at) FROM avr_marketing_sends s WHERE s.prospect_id=p.id) AS last_sent_at FROM avr_marketing_prospects p LEFT JOIN avr_marketing_after_hours_checks ah ON ah.check_id=(SELECT c.check_id FROM avr_marketing_after_hours_checks c WHERE c.prospect_id=p.id ORDER BY c.checked_at DESC LIMIT 1) ORDER BY p.created_at DESC LIMIT 500").all();
     return json({prospects:rows.results||[]},200,origin,env);
    }
    if(path==="/api/admin/marketing/prospects"&&req.method==="POST"){
@@ -1342,6 +1349,63 @@ async function route(req,env){
     await env.DB.prepare("UPDATE avr_marketing_prospects SET phone_number=?,updated_at=? WHERE id=?").bind(phone,now,id).run();
     await audit(env,u,"marketing_after_hours_check_recorded",null,{prospectId:id,resultStatus,checkMethod});
     return json({saved:true,checkId,checkedAt:now},201,origin,env);
+   }
+
+   if(path==="/api/admin/marketing/sales-calls"&&req.method==="GET"){
+    const rows=await env.DB.prepare("SELECT c.id,c.prospect_id,c.to_number,c.from_number,c.call_status,c.initiated_by,c.created_at,c.started_at,c.ended_at,c.duration_ms,c.call_summary,c.recording_url,p.business_name FROM avr_marketing_ai_calls c LEFT JOIN avr_marketing_prospects p ON p.id=c.prospect_id ORDER BY c.created_at DESC LIMIT 100").all();
+    return json({configured:!!(env.SALES_RETELL_AGENT_ID&&env.SALES_RETELL_FROM_NUMBER),agentConfigured:!!env.SALES_RETELL_AGENT_ID,callerConfigured:!!env.SALES_RETELL_FROM_NUMBER,calls:rows.results||[]},200,origin,env);
+   }
+   const salesEligibility=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/call-eligibility\/?$/i);
+   if(salesEligibility&&req.method==="POST"){
+    const id=salesEligibility[1],p=await body(req,5000),numberType=String(p.numberType||"unknown"),evidence=String(p.evidence||"").trim().slice(0,1200),permission=p.permissionConfirmed===true,doNotCall=p.doNotCall===true;
+    if(!["unknown","verified_business_landline","wireless_mobile","residential","other"].includes(numberType))throw Error("valid_sales_call_number_type_required");
+    if(permission&&numberType!=="verified_business_landline")throw Error("sales_ai_calls_require_verified_business_landline");
+    if(permission&&evidence.length<10)throw Error("documented_written_permission_evidence_required");
+    const prospect=await env.DB.prepare("SELECT id,phone_number,status FROM avr_marketing_prospects WHERE id=?").bind(id).first();
+    if(!prospect)throw Error("marketing_prospect_not_found");
+    if(!prospect.phone_number)throw Error("business_phone_required_before_sales_call_review");
+    const now=new Date().toISOString();
+    await env.DB.prepare("UPDATE avr_marketing_prospects SET call_number_type=?,call_permission_confirmed=?,call_permission_evidence=?,call_permission_checked_by=?,call_permission_checked_at=?,call_opted_out_at=CASE WHEN ?=1 THEN COALESCE(call_opted_out_at,?) ELSE call_opted_out_at END,updated_at=? WHERE id=?")
+     .bind(numberType,permission?1:0,evidence||null,String(u.email||"admin").slice(0,254),now,doNotCall?1:0,now,now,id).run();
+    await audit(env,u,"marketing_ai_call_eligibility_updated",null,{prospectId:id,numberType,permissionConfirmed:permission,doNotCall});
+    return json({saved:true,eligible:permission&&numberType==="verified_business_landline"&&!doNotCall},200,origin,env);
+   }
+   const salesCall=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/call\/?$/i);
+   if(salesCall&&req.method==="POST"){
+    if(!env.RETELL_API_KEY||!env.SALES_RETELL_AGENT_ID||!env.SALES_RETELL_FROM_NUMBER)throw Error("sales_retell_agent_and_caller_number_must_be_configured");
+    const id=salesCall[1],p=await body(req,2000),confirmed=p.confirmed===true;
+    if(!confirmed)throw Error("explicit_individual_call_approval_required");
+    const prospect=await env.DB.prepare("SELECT id,business_name,contact_name,phone_number,industry,status,call_number_type,call_permission_confirmed,call_permission_evidence,call_opted_out_at FROM avr_marketing_prospects WHERE id=?").bind(id).first();
+    if(!prospect)throw Error("marketing_prospect_not_found");
+    if(prospect.status!=="active"||prospect.call_opted_out_at)throw Error("prospect_is_suppressed_or_opted_out");
+    if(prospect.call_permission_confirmed!==1||prospect.call_number_type!=="verified_business_landline"||String(prospect.call_permission_evidence||"").trim().length<10)throw Error("documented_permission_and_verified_business_landline_required");
+    const toNumber="+"+String(prospect.phone_number||"").replace(/\D/g,"");
+    if(!/^\+[1-9]\d{7,14}$/.test(toNumber))throw Error("prospect_phone_must_be_valid_e164");
+    const fromNumber=String(env.SALES_RETELL_FROM_NUMBER||"").trim();
+    if(!/^\+[1-9]\d{7,14}$/.test(fromNumber)||fromNumber===toNumber)throw Error("dedicated_star69ai_caller_number_must_be_valid_e164");
+    const assignedCaller=await env.DB.prepare("SELECT customer_id FROM avr_numbers WHERE phone_number=? AND customer_id IS NOT NULL LIMIT 1").bind(fromNumber).first();
+    if(assignedCaller)throw Error("sales_caller_number_must_not_be_assigned_to_a_customer");
+
+    const recent=await env.DB.prepare("SELECT COUNT(*) AS n FROM avr_marketing_ai_calls WHERE created_at>=? AND call_status NOT IN ('failed','rejected')").bind(new Date(Date.now()-86400000).toISOString()).first();
+    if(Number(recent?.n||0)>=5)throw Error("daily_ai_sales_call_limit_reached");
+    const prior=await env.DB.prepare("SELECT id FROM avr_marketing_ai_calls WHERE prospect_id=? AND created_at>=? AND call_status NOT IN ('failed','rejected') LIMIT 1").bind(id,new Date(Date.now()-30*86400000).toISOString()).first();
+    if(prior)throw Error("prospect_called_within_last_30_days");
+    const active=await env.DB.prepare("SELECT id FROM avr_marketing_ai_calls WHERE prospect_id=? AND call_status IN ('creating','registered','ongoing','in_progress') LIMIT 1").bind(id).first();
+    if(active)throw Error("sales_call_already_in_progress");
+    const now=new Date().toISOString(),rowId=crypto.randomUUID();
+    await env.DB.prepare("INSERT INTO avr_marketing_ai_calls(id,prospect_id,to_number,from_number,call_status,initiated_by,permission_evidence,created_at,updated_at) VALUES(?,?,?,?, 'creating',?,?,?,?)")
+     .bind(rowId,id,toNumber,String(env.SALES_RETELL_FROM_NUMBER),String(u.email||"admin").slice(0,254),prospect.call_permission_evidence,now,now).run();
+    try{
+     const created=await retellApi(env,"/v2/create-phone-call","POST",{from_number:String(env.SALES_RETELL_FROM_NUMBER),to_number:toNumber,override_agent_id:String(env.SALES_RETELL_AGENT_ID),metadata:{purpose:"star69ai_sales",prospect_id:id,sales_call_id:rowId,requested_by:String(u.email||"admin").slice(0,254)},retell_llm_dynamic_variables:{business_name:String(prospect.business_name||"").slice(0,160),contact_name:String(prospect.contact_name||"").slice(0,100),industry:String(prospect.industry||"").slice(0,80)}});
+     const callId=String(created.call_id||"");
+     if(!callId)throw Error("retell_did_not_return_call_id");
+     await env.DB.prepare("UPDATE avr_marketing_ai_calls SET retell_call_id=?,call_status='registered',updated_at=? WHERE id=?").bind(callId,new Date().toISOString(),rowId).run();
+     await audit(env,u,"marketing_ai_sales_call_started",null,{prospectId:id,salesCallId:rowId,retellCallId:callId});
+     return json({started:true,callId,salesCallId:rowId},201,origin,env);
+    }catch(error){
+     await env.DB.prepare("UPDATE avr_marketing_ai_calls SET call_status='failed',call_summary=?,updated_at=? WHERE id=?").bind(String(error.message||"retell_call_failed").slice(0,500),new Date().toISOString(),rowId).run();
+     throw error;
+    }
    }
    const marketingSend=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/send\/?$/i);
    const marketingSendFixed=path==="/api/admin/marketing/send";

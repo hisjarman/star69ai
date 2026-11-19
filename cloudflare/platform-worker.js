@@ -361,13 +361,23 @@ function requireCheckoutAcknowledgements(p){if(p.termsAccepted!==true||p.privacy
 async function verifyCheckoutHuman(req,p,env){
  const token=String(p.turnstileToken||"").trim();
  if(!env.TURNSTILE_SECRET||!token||token.length>2048)throw Error("human_verification_required");
+ const body=new URLSearchParams({secret:env.TURNSTILE_SECRET,response:token});
+ const remoteip=String(req.headers.get("CF-Connecting-IP")||"").trim();
+ if(remoteip)body.set("remoteip",remoteip);
  let response;
- try{response=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({secret:env.TURNSTILE_SECRET,response:token,remoteip:req.headers.get("CF-Connecting-IP")||undefined})});}catch{throw Error("human_verification_unavailable_try_again")}
+ try{
+  response=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{
+   method:"POST",
+   headers:{"Content-Type":"application/x-www-form-urlencoded"},
+   body,
+   signal:AbortSignal.timeout(10000)
+  });
+ }catch{throw Error("human_verification_unavailable_try_again")}
  if(!response.ok)throw Error("human_verification_unavailable_try_again");
  const result=await response.json().catch(()=>({success:false}));
  const hostname=String(result.hostname||"").toLowerCase();
  if(result.success!==true||result.action!=="checkout"||!["star69ai.com","www.star69ai.com"].includes(hostname))throw Error("human_verification_failed_refresh_and_try_again");
- return {hostname,action:String(result.action||"")};
+ return {hostname,action:"checkout"};
 }
 async function checkoutDocumentHashes(){
  const paths=["terms.html","privacy.html","ai-compliance.html","recording-notice.html","checkout.html","checkout.js"];

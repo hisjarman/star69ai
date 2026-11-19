@@ -1921,3 +1921,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserved all navigation destinations, utility actions, visitor spaceship overlay/flight, status indicator, interior-page compact header, footer and backend behavior.
 - Updated the approved-header design lock and protection workflow fingerprint with the CSS change.
 - Static checks and browser visual QA are pending; GitHub Pages deployment is not assumed. Review via PR; do not merge without the founder's explicit approval.
+
+
+## Final compact full-artwork homepage banner correction — 2026-11-18 — REVIEW REQUIRED
+
+- Corrected the desktop regression where natural-height artwork expanded the entire page. Homepage cover is capped responsively at 184px desktop and 150px mobile.
+- The complete source artwork is proportionally contained inside the compact cover; no crop, stretch, distortion or natural-height expansion. Deep-space background fills any unused area.
+- Mission Control menu remains in the persistent utility row; spaceship animation, navigation, footer, interior headers and all backend systems are unchanged.
+- Updated header design lock and protected CSS fingerprint in this branch. Static CSS/source checks and protected-header CI are required; browser QA and Pages deployment verification remain outstanding.
+- Branch: `fix/compact-full-artwork-banner-2026-11-18`. Do not merge without explicit founder approval.

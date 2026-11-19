@@ -372,3 +372,36 @@ body.site-home-page .site-global-cover-image{
   }
   body.site-home-page .site-global-cover-image{object-position:center 50%!important}
 }
+
+
+/* Owner correction: show the entire original homepage artwork at its natural ratio.
+   The banner image controls its own proportional height; no desktop crop or viewport fill. */
+body.site-home-page .site-global-cover{
+  width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:auto!important;overflow:visible!important;
+}
+body.site-home-page .site-global-cover-image{
+  position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:auto!important;
+  max-width:none!important;object-fit:contain!important;object-position:center!important;
+}
+body.site-home-page .site-global-cover-shade{position:absolute!important;inset:0!important}
+body.site-home-page .site-global-cover-topline{top:clamp(12px,1.5vw,22px)!important}
+
+/* Mission Control shares the persistent utility-button row. */
+.site-global-utility{position:relative;z-index:1002;justify-content:flex-end;flex-wrap:wrap}
+.site-global-utility .site-global-toggle{
+  position:relative!important;top:auto!important;right:auto!important;z-index:1003;min-height:35px;padding:8px 13px;gap:10px;
+  border-radius:5px;font-size:9px;letter-spacing:1px;box-shadow:none;
+}
+.site-global-utility .site-global-toggle:hover{transform:translateY(-2px)}
+.site-global-utility .site-global-toggle-icon{gap:3px}
+.site-global-utility .site-global-toggle-icon i{width:14px}
+.site-global-utility .site-global-nav{
+  position:absolute!important;top:calc(100% + 8px)!important;left:clamp(9px,2vw,28px)!important;
+  right:clamp(9px,2vw,28px)!important;z-index:1004!important;max-height:min(72vh,680px)!important;
+}
+@media(max-width:700px){
+  .site-global-utility{justify-content:center;flex-wrap:wrap}
+  .site-global-utility .site-global-toggle{min-height:33px;padding:8px 9px;font-size:8px;letter-spacing:.6px}
+  .site-global-utility .site-global-nav{top:calc(100% + 7px)!important;left:9px!important;right:9px!important;max-height:calc(100svh - 150px)!important}
+  body.site-home-page .site-global-cover-image{object-fit:contain!important}
+}

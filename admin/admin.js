@@ -149,6 +149,7 @@ async function loadMarketingSalesCalls(){
  }catch(e){marketingSalesCallConfigured=false;if(config)config.textContent="Could not load sales-call configuration: "+(e.message||"API error");if(root)root.innerHTML='<div class="empty">Could not load sales call history.</div>'}
 }
 async function loadMarketing(){
+ await loadMarketingSalesCalls();
  const d=await api("/api/admin/marketing/prospects");
  marketingProspects=d.prospects||[];
  const recorded=p=>Number(p.send_count||0)>0;

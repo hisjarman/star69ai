@@ -160,3 +160,13 @@ This lock protects the approved source implementation. It cannot guarantee that 
 - Keep the image's native 3840:1645 proportions using width/height intrinsic attributes and a matching responsive banner aspect ratio. Render the entire image with `object-fit: contain`; do not crop, stretch, redraw or replace it.
 - Preserve the existing menu, brand, status, visitor ship, utility controls, navigation and footer behavior.
 - This owner-approved sizing revision supersedes earlier fixed-height/cropped banner sizing rules where they conflict.
+
+
+## Owner-requested compact shared header revision — 2026-11-19
+
+- The full-width cinematic hero/banner artwork appears on the homepage only. Interior pages must not render an empty, oversized or image-backed hero-cover header; their shared header begins directly with the compact utility/navigation bar.
+- Move the canonical Star69AI wordmark image into the shared utility bar on every page, including the homepage. Do not place the logo over the homepage banner.
+- Keep the existing MENU/CLOSE control, grouped navigation destinations, Partner Login, Client Console, Initiate Contact, cursor toggle, cookie controls, footer, keyboard behavior and accessibility behavior.
+- The utility bar is the single shared site identity/navigation bar. Legal pages must not add a duplicate local legal-navigation header above their content.
+- This owner request explicitly revises the earlier interior-page compact-cover and logo placement rules above. The homepage cinematic artwork and visitor arrival remain homepage-only.
+- PR validation must update this document and the protected-header workflow fingerprints alongside the changed header source.

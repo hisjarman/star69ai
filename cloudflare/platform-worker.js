@@ -1302,6 +1302,11 @@ async function route(req,env){
   if(path==="/api/billing/portal"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c?.stripe_customer_id)throw Error("stripe_customer_not_found");const s=await stripeRequest(env,"billing_portal/sessions",{customer:c.stripe_customer_id,return_url:"https://star69ai.com/client/" });return json({url:s.url},200,origin,env)}
   if(path.startsWith("/api/admin/")){
    const u=await requireAdmin(req,env);
+   if(path==="/api/admin/internal-cost-knowledge"&&req.method==="GET"){
+    const catalog=await env.DB.prepare("SELECT title,content,source_reviewed_at,updated_at FROM avr_internal_cost_knowledge WHERE id='addon-cost-catalog'").first();
+    if(!catalog)return json({error:"internal_cost_knowledge_not_found"},404,origin,env);
+    return json({catalog},200,origin,env);
+   }
    // Admin dashboard read routes used by the Agency Admin overview and tabs.
    // Keep these server-side queries behind requireAdmin above.
    if(path==="/api/admin/addon-orders"&&req.method==="GET"){

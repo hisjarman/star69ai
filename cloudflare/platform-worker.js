@@ -1355,7 +1355,7 @@ async function route(req,env){
     const rows=await env.DB.prepare("SELECT c.id,c.prospect_id,c.to_number,c.from_number,c.call_status,c.initiated_by,c.created_at,c.started_at,c.ended_at,c.duration_ms,c.call_summary,c.recording_url,p.business_name FROM avr_marketing_ai_calls c LEFT JOIN avr_marketing_prospects p ON p.id=c.prospect_id ORDER BY c.created_at DESC LIMIT 100").all();
     return json({configured:!!(env.SALES_RETELL_AGENT_ID&&env.SALES_RETELL_FROM_NUMBER),agentConfigured:!!env.SALES_RETELL_AGENT_ID,callerConfigured:!!env.SALES_RETELL_FROM_NUMBER,calls:rows.results||[]},200,origin,env);
    }
-   const salesEligibility=path.match(/^\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/call-eligibility\\/?$/i);
+   const salesEligibility=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/call-eligibility\/?$/i);
    if(salesEligibility&&req.method==="POST"){
     const id=salesEligibility[1],p=await body(req,5000),numberType=String(p.numberType||"unknown"),evidence=String(p.evidence||"").trim().slice(0,1200),permission=p.permissionConfirmed===true,doNotCall=p.doNotCall===true;
     if(!["unknown","verified_business_landline","wireless_mobile","residential","other"].includes(numberType))throw Error("valid_sales_call_number_type_required");
@@ -1370,7 +1370,7 @@ async function route(req,env){
     await audit(env,u,"marketing_ai_call_eligibility_updated",null,{prospectId:id,numberType,permissionConfirmed:permission,doNotCall});
     return json({saved:true,eligible:permission&&numberType==="verified_business_landline"&&!doNotCall},200,origin,env);
    }
-   const salesCall=path.match(/^\/api\\/admin\\/marketing\\/prospects\\/([a-f0-9-]{36})\\/call\\/?$/i);
+   const salesCall=path.match(/^\/api\/admin\/marketing\/prospects\/([a-f0-9-]{36})\/call\/?$/i);
    if(salesCall&&req.method==="POST"){
     if(!env.RETELL_API_KEY||!env.SALES_RETELL_AGENT_ID||!env.SALES_RETELL_FROM_NUMBER)throw Error("sales_retell_agent_and_caller_number_must_be_configured");
     const id=salesCall[1],p=await body(req,2000),confirmed=p.confirmed===true;

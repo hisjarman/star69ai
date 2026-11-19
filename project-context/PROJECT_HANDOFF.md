@@ -1,3 +1,13 @@
+## Homepage hero true-banner fill correction — 2026-11-19 — REVIEW REQUIRED
+
+- Owner reports the hero still does not behave visually like a site banner. Changed only the homepage hero image presentation from letterboxed `object-fit:contain` to a full-bleed, fixed-height banner using `object-fit:cover`; the image retains its natural proportions and excess image area is cropped instead of leaving side/top/bottom gaps.
+- Desktop cover remains capped at 184px; mobile remains capped at 150px. The cover remains full viewport width. The visitor spaceship remains a separate overlay; its randomized flight, mirroring, landing and flag behavior are untouched.
+- Updated the approved-header design lock and protected CSS blob fingerprint in the same branch. Navigation, utility links, interior header, footer, Worker, D1, Retell, billing, auth and customer data are unchanged.
+- Static validation: confirm the final CSS rule uses `object-fit:cover!important`, retains fixed responsive cover heights, and workflow fingerprint matches the new CSS blob. Browser visual QA at 360px, 768px and 1280px plus GitHub Pages deployment verification remain outstanding.
+- Branch: `fix/homepage-hero-true-banner-fill-2026-11-19`. Review via PR; do not merge without the founder's explicit approval.
+
+---
+
 ## Capability card typography hierarchy — 2026-11-18 — REVIEW REQUIRED
 
 - Follow-up to the prior card overflow correction: the remaining issue was visual hierarchy, not only wrapping. Updated the public Capabilities page cards so the icon and category sit together in a compact metadata row, followed by a full-width prominent title and a separately styled readable description.

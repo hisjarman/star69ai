@@ -18,8 +18,13 @@
     bubble.textContent = greeting;
     bubble.hidden = false;
     requestAnimationFrame(() => bubble.classList.add("is-visible"));
-    const emoji = countryFlag(data?.countryCode);
-    if (flag && emoji) flag.dataset.flag = emoji;
+    const city = String(data?.city || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const countryCode = city === "cancun" ? "MX" : String(data?.countryCode || "").toUpperCase();
+    const emoji = countryFlag(countryCode);
+    if (flag && emoji) {
+      flag.dataset.flag = emoji;
+      flag.setAttribute("aria-label", countryCode === "MX" ? "Mexico" : countryCode);
+    }
   };
   fetch("https://star69ai-concierge.hisjarman.workers.dev/api/welcome", {
     method: "GET", mode: "cors", credentials: "omit", cache: "no-store", headers: { Accept: "application/json" }

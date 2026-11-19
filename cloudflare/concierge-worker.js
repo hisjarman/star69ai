@@ -26,8 +26,11 @@ async function welcomeCacheKey(locationKey,origin){
 }
 async function localWelcome(request,env,origin){
   const cf=request.cf||{};
-  const country=String(cf.country||"").toUpperCase().match(/^[A-Z]{2}$/)?.[0]||"";
+  const detectedCountry=String(cf.country||"").toUpperCase().match(/^[A-Z]{2}$/)?.[0]||"";
   const city=String(cf.city||"").trim().slice(0,80);
+  const normalizedCity=city.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  const isCancun=normalizedCity==="cancun";
+  const country=isCancun?"MX":detectedCountry;
   const region=String(cf.region||"").trim().slice(0,80);
   const regionCode=String(cf.regionCode||"").trim().slice(0,12);
   let countryName=country;
@@ -37,13 +40,15 @@ async function localWelcome(request,env,origin){
   const cacheKey=await welcomeCacheKey(locationKey,origin);
   try{const cached=await caches.default.match(cacheKey);if(cached)return new Response(cached.body,{status:cached.status,headers:cached.headers});}catch{}
   const location=[city,region,countryName].filter(Boolean).join(", ");
-  let greeting=city?("Hey, "+city+"! Welcome aboard Star69AI — let's make every connection count."):"Welcome from "+countryName+"! You're cleared for takeoff with Star69AI.";
-  try{
+  let greeting=isCancun?"¡Qué onda, Cancún! From the Caribbean coast, welcome—let’s make every business connection count.":city?("Hey, "+city+"! Welcome aboard Star69AI — let’s make every connection count."):"Welcome from "+countryName+"! You’re cleared for takeoff with Star69AI.";
+  if(!isCancun){
+    try{
     const prompt="Write one short, natural, clever welcome greeting for a visitor to Star69AI, an AI receptionist service. Visitor location: "+location+". Make it sound like a locally aware, witty human host. Use a recognizable local sports team, city culture, landmark, or local expression only when it is a strong, well-known fit; for Dallas, Texas, a playful Dallas Cowboys 'How about them Cowboys?' reference is welcome. Do not force sports into every greeting. Do not invent current scores, schedules, events, local facts, or make stereotypes. If no confident local hook exists, use the city/country name and a warm clever welcome. Keep it to one sentence, ideally 8–18 words and under 140 characters. Do not mention IP addresses, tracking, geolocation, Cloudflare, AI generation, or how you know the location. Output only the greeting.";
     const result=await env.AI.run(MODEL,{messages:[{role:"system",content:"You create concise, location-aware website welcome messages. Be accurate, tasteful, and natural."},{role:"user",content:prompt}],max_tokens:64,temperature:0.72});
     const candidate=String(result?.response||result?.result?.response||result?.choices?.[0]?.message?.content||result?.result?.choices?.[0]?.message?.content||"").replace(/[\r\n]+/g," ").replace(/^["'“”]+|["'“”]+$/g,"").trim();
     if(candidate&&candidate.length<=180&&!/\b(ip address|tracking|cloudflare|geolocation)\b/i.test(candidate))greeting=candidate;
-  }catch(error){console.error("visitor_welcome_inference_failed",String(error?.message||error));}
+    }catch(error){console.error("visitor_welcome_inference_failed",String(error?.message||error));}
+  }
   const payload={greeting,countryCode:country,city,region};
   const response=json(payload,200,origin);
   response.headers.set("Cache-Control","public, max-age=86400, s-maxage=86400");

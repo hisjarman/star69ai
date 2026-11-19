@@ -2022,3 +2022,12 @@ This section supersedes the earlier activation-status notes above where they des
 - Updated the protected-header fingerprint and design-lock documentation in the same branch because the approved homepage header script now loads the welcome helper.
 - Required validation: JavaScript syntax checks for header/helper/Worker; static assertions for country-only flag, city/country personalization, 24-hour cache, no IP persistence, Dallas example prompt, no session guard, and preservation of the four routes; protected-header workflow must pass. Browser QA at 360px/768px/1280px and live GitHub Pages verification remain outstanding.
 - Worker code is source-only until separately deployed to the existing star69ai-concierge Worker. No Worker deployment or production activation performed. Do not merge this PR or deploy the Worker without founder approval.
+
+
+## Location-aware welcome: Cancún and Mexico flag — 2026-11-19 — REVIEW REQUIRED
+
+- Branch: `fix/location-aware-cancun-greeting-mexico-flag-2026-11-19`, based on current `main`.
+- The public welcome script now normalizes accented/unaccented Cancún city names and uses the Mexico country code (`MX`) for the arrival flag when the detected city is Cancún, even if the edge country code is missing or incorrect.
+- The concierge Worker now returns a deterministic, locally relevant Cancún greeting: “¡Qué onda, Cancún! From the Caribbean coast, welcome—let’s make every business connection count.” This avoids a generic AI-generated fallback for Cancún visitors and always reports `countryCode: MX` for that city. Other locations retain the existing AI-assisted greeting behavior.
+- Changed files: `assets/visitor-welcome.js`, `cloudflare/concierge-worker.js`, and this handoff.
+- Static source assertions passed for the Cancún normalization, exact greeting and Mexico flag override. Runtime/browser QA and live Worker verification remain outstanding. GitHub Pages and the concierge Worker deploy separately; merging the website script does not deploy the Worker. Do not merge or deploy the Worker without explicit founder approval.

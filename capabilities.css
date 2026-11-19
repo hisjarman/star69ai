@@ -250,3 +250,5 @@
 @media(max-width:900px){.cap-operator-heading{grid-template-columns:1fr;gap:17px}.cap-operator-layout{grid-template-columns:1fr}.cap-operator-details{grid-template-columns:1fr 1fr}.cap-operator-pricing{grid-template-columns:1fr;gap:13px}}
 @media(max-width:700px){.cap-operator{padding:62px 0}.cap-operator-heading{margin-bottom:27px}.cap-operator-heading h2{font-size:clamp(28px,8vw,39px)}.cap-operator-examples{padding:14px}.cap-operator-subhead{flex-direction:column;gap:4px}.cap-operator-subhead b{text-align:left}.cap-operator-details{grid-template-columns:1fr}.cap-operator-feature-panel,.cap-operator-admin{padding:17px}.cap-operator-pricing{padding:18px}.cap-operator-pricing .cap-button{width:100%}}
 @media(prefers-reduced-motion:reduce){.cap-operator *{scroll-behavior:auto}}
+
+.cap-operator-pricing strong{color:#34fd78}

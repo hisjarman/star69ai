@@ -96,3 +96,12 @@
 .checkout-legal-review a{color:#7ed5ff;text-decoration:underline;text-underline-offset:3px}
 .checkout-human{display:grid;gap:8px}
 .checkout-human .cf-turnstile{min-height:65px}
+
+/* Radio choices explain the consequence of each selection, not just its label. */
+.checkout-radio-option{align-items:flex-start;padding:13px 14px;margin:9px 0;border:1px solid rgba(67,180,254,.25);border-radius:10px;background:rgba(7,23,44,.62);cursor:pointer}
+.checkout-radio-option:has(input:checked){border-color:#34fd78;background:rgba(52,253,120,.07);box-shadow:0 0 0 1px rgba(52,253,120,.12)}
+.checkout-radio-option input[type=radio]{flex:0 0 19px;width:19px;height:19px;min-height:19px;margin:3px 0 0;accent-color:#34fd78}
+.checkout-radio-option span{display:grid;gap:5px;min-width:0}
+.checkout-radio-option strong{color:#f3f8ff;font-size:14px}
+.checkout-radio-option small{display:block;color:#b7cadd;font-size:12px;line-height:1.6;font-weight:400}
+.checkout-radio-option:focus-within{outline:2px solid #43b4fe;outline-offset:2px}

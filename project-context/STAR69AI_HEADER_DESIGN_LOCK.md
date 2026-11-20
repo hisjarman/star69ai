@@ -184,3 +184,14 @@ The owner clarified that the header remained too large after PR #315. This revis
 - Existing grouped destinations, legal links, footer, menu open/close, Escape/outside-click behavior, active-page state and accessibility semantics are retained.
 - The old header-banner visitor ship animation is retired with the banner. Other homepage hero content and page-level interactions are unchanged.
 - This is an explicit owner-requested design revision. Update the protected-header fingerprints in the same reviewed change.
+
+## Owner-approved menu overlay visibility repair — 2026-11-20
+
+- The owner explicitly requested that the established Mission Control menu code be included in PR #328 because the menu was inconsistent across public pages and would not open visibly.
+- Root cause: the compact shared utility row used `overflow:hidden`, clipping the absolutely positioned navigation panel even though the MENU button's JavaScript correctly toggled the open state.
+- Correct the shared stylesheet to keep the utility row and shared header overflow visible, allowing the existing overlay panel to render outside the compact row on desktop and mobile.
+- Preserve the 54px desktop / 50px mobile compact header, wordmark, MENU/CLOSE toggle, five navigation groups, all destinations, utility actions, active-page state, Escape and outside-click behavior. Do not restore the retired cover/banner region.
+- The public `receptionist-intelligence.html` page was missing the shared header and had a duplicate inline header; it now uses the common header assets. Admin screens, authenticated client/partner portals and the noindex onboarding completion page retain their dedicated layouts.
+- Update the protected CSS fingerprint in the workflow in this same PR. The menu correction is an owner-authorized repair to the approved implementation, not a new visual redesign.
+- Browser QA and GitHub Pages verification remain required before merge/deployment.
+

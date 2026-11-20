@@ -1,22 +1,43 @@
 /* Homepage-only visitor arrival and greeting. Does not touch the shared navigation. */
+.s69-home-banner{position:relative;isolation:isolate}
 .s69-home-banner .s69-visitor-ship{
   position:absolute;z-index:4;left:0;top:50%;width:clamp(108px,12vw,164px);
   height:auto;display:block;pointer-events:none;opacity:0;
   filter:drop-shadow(0 0 12px rgba(67,180,254,.72)) drop-shadow(0 0 22px rgba(244,97,254,.22));
   transform:translate3d(var(--s69-start-x),var(--s69-start-y),0) scaleX(var(--s69-flip,1));
+  transform-origin:center;
 }
 .s69-home-banner .s69-visitor-ship.is-flying{
-  animation:s69-visitor-flight var(--s69-duration,4s) cubic-bezier(.18,.72,.24,1) .2s forwards;
+  animation:s69-visitor-flight var(--s69-duration,4.2s) cubic-bezier(.18,.72,.24,1) .2s forwards;
+}
+.s69-landing-flag{
+  position:absolute;z-index:5;left:50%;top:50%;display:block;
+  font-size:clamp(19px,2.2vw,28px);line-height:1;
+  opacity:0;transform:translate(-50%,-82%) scale(.15);
+  transform-origin:bottom center;pointer-events:none;
+  filter:drop-shadow(0 0 8px rgba(67,180,254,.65));
+}
+.s69-home-banner .s69-landing-flag.is-planted{
+  animation:s69-flag-pop .58s cubic-bezier(.16,1.55,.42,1) calc(var(--s69-duration,4.2s) + .34s) forwards;
 }
 @keyframes s69-visitor-flight{
-  0%{opacity:0;transform:translate3d(var(--s69-start-x),var(--s69-start-y),0) scaleX(var(--s69-flip,1))}
-  10%{opacity:1}
-  48%{opacity:1;transform:translate3d(var(--s69-mid-x),var(--s69-mid-y),0) scaleX(var(--s69-flip,1))}
-  82%,100%{opacity:1;transform:translate3d(calc(50vw - 50%),0,0) scaleX(var(--s69-flip,1))}
+  0%{opacity:0;transform:translate3d(var(--s69-start-x),var(--s69-start-y),0) scaleX(var(--s69-flip,1)) rotate(0deg)}
+  9%{opacity:1}
+  27%{opacity:1;transform:translate3d(var(--s69-mid-x),var(--s69-mid-y),0) scaleX(var(--s69-flip,1)) rotate(-7deg)}
+  48%{transform:translate3d(calc(50vw - 50% + 13vw),calc(-50% - 22px),0) scaleX(var(--s69-flip,1)) rotate(8deg)}
+  68%{transform:translate3d(calc(50vw - 50% - 10vw),calc(-50% + 18px),0) scaleX(var(--s69-flip,1)) rotate(-6deg)}
+  86%{opacity:1;transform:translate3d(calc(50vw - 50%),-50%,0) scaleX(var(--s69-flip,1)) rotate(0deg)}
+  100%{opacity:1;transform:translate3d(calc(50vw - 50%),-50%,0) scaleX(var(--s69-flip,1)) scale(.48)}
+}
+@keyframes s69-flag-pop{
+  0%{opacity:0;transform:translate(-50%,-82%) scale(.15)}
+  70%{opacity:1;transform:translate(-50%,-82%) scale(1.22)}
+  100%{opacity:1;transform:translate(-50%,-82%) scale(1)}
 }
 .s69-visitor-greeting-wrap{
-  display:none;align-items:center;gap:10px;width:min(1320px,100%);margin:0 auto;
-  padding:10px clamp(20px,4.5vw,70px) 0;box-sizing:border-box;
+  display:none;align-items:center;justify-content:center;gap:10px;
+  width:min(1320px,100%);margin:0 auto;padding:12px 20px 10px;
+  box-sizing:border-box;text-align:center;
 }
 .s69-visitor-greeting-wrap.is-visible{display:flex}
 .site-global-arrival-flag{
@@ -25,23 +46,25 @@
 }
 .site-global-arrival-flag[hidden],.site-global-welcome-bubble[hidden]{display:none!important}
 .site-global-welcome-bubble{
-  display:block;max-width:min(760px,100%);margin:0;padding:9px 13px;
-  border:1px solid rgba(67,180,254,.5);border-radius:10px 10px 10px 3px;
+  display:block;max-width:min(760px,100%);margin:0;padding:9px 15px;
+  border:1px solid rgba(67,180,254,.5);border-radius:10px;
   background:linear-gradient(100deg,rgba(5,18,42,.94),rgba(8,25,49,.84));
   color:#f2f8ff;box-shadow:0 8px 26px rgba(0,0,0,.22),0 0 16px rgba(67,180,254,.1);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   font:600 clamp(11px,1.1vw,13px)/1.5 'Manrope',Arial,sans-serif;
-  text-shadow:0 1px 3px #000;opacity:0;transform:translateY(5px);
+  text-align:center;text-shadow:0 1px 3px #000;opacity:0;transform:translateY(5px);
   transition:opacity .35s ease,transform .35s ease;
 }
 .s69-visitor-greeting-wrap.is-visible .site-global-welcome-bubble{opacity:1;transform:translateY(0)}
 @media(max-width:700px){
   .s69-home-banner .s69-visitor-ship{width:clamp(88px,24vw,124px)}
-  .s69-visitor-greeting-wrap{gap:8px;padding:9px 16px 0}
+  .s69-landing-flag{font-size:21px}
+  .s69-visitor-greeting-wrap{gap:8px;padding:10px 14px 9px}
   .site-global-arrival-flag{font-size:18px}
   .site-global-welcome-bubble{padding:8px 10px;font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){
   .s69-home-banner .s69-visitor-ship{left:50%;top:50%;width:clamp(88px,10vw,136px);opacity:.92;transform:translate(-50%,-50%);animation:none!important}
+  .s69-home-banner .s69-landing-flag{opacity:1;transform:translate(-50%,-82%) scale(1);animation:none!important}
   .site-global-welcome-bubble{transition:none;transform:none}
 }

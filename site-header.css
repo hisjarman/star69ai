@@ -589,7 +589,7 @@ body.site-interior-page .site-global-utility{
   box-sizing:border-box;display:flex!important;flex-flow:row nowrap!important;
   justify-content:flex-end!important;align-items:center!important;gap:8px!important;
   min-height:54px!important;height:54px!important;padding:5px clamp(12px,2.5vw,28px)!important;
-  overflow:hidden;background:linear-gradient(90deg,#030918,#07152b 50%,#030918)!important;
+  overflow:visible!important;background:linear-gradient(90deg,#030918,#07152b 50%,#030918)!important;
 }
 .site-global-utility-brand{
   display:flex!important;flex:0 1 132px!important;width:132px!important;min-width:100px!important;
@@ -627,4 +627,15 @@ body.site-interior-page .site-global-utility{
   .site-global-utility-brand{flex-basis:98px!important;width:98px!important;min-width:86px!important}
   .site-global-utility-brand img{max-width:98px!important}
   .site-global-utility>a.site-global-login{padding-inline:5px!important;font-size:6.5px!important}
+}
+
+
+/* 2026-11-20 menu repair: keep the shared mission-control overlay outside the compact utility bar. */
+.site-global-header{position:relative;z-index:1000;overflow:visible!important}
+.site-global-utility{position:relative;overflow:visible!important}
+.site-global-nav{z-index:1100;pointer-events:auto}
+.site-global-header.menu-open .site-global-nav{pointer-events:auto}
+@media(max-width:700px){
+  .site-global-utility{overflow:visible!important}
+  .site-global-nav{max-height:min(72vh,620px);overscroll-behavior:contain}
 }

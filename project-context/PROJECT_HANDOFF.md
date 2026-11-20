@@ -1,3 +1,28 @@
+## Shared navigation repair included in homepage visitor update — 2026-11-20
+
+- The user asked that the previously supplied Star69AI menu be included because navigation was inconsistent and would not open on some pages.
+- Root cause confirmed in `site-header.css`: the compact shared utility row was set to `overflow:hidden`, while the mission-control menu is absolutely positioned outside that row. The dropdown was therefore clipped even when the JavaScript toggled its open state.
+- Fixed the shared stylesheet so the utility row and header allow the navigation overlay to render above page content, including on mobile. Preserved the compact single-row header approved on 2026-11-19; did not restore the retired oversized header cover.
+- Retained the previously approved menu structure: one shared MENU toggle, translucent mission-control overlay, colored destination buttons, active-page highlighting, close-on-link/outside click, Escape close, and responsive grid.
+- Audited all 24 root HTML pages. Public marketing/legal pages already load the shared header except `receptionist-intelligence.html`, which had its own inline header; it now loads the shared header and the duplicate inline header was removed. Admin-only pages, the noindex onboarding-complete page, and the client/partner portals retain their dedicated layouts.
+- The homepage greeting and spaceship sequence remain homepage-only. No Worker, D1, authentication, billing, or customer data changes.
+- Validation still required: run the repository's GitHub Actions checks and verify the shared menu on homepage, marketing, legal and mobile layouts in a browser. Do not claim live production verification without that test.
+
+---
+
+## Homepage smart greeting placement and complete visitor landing — 2026-11-20 — REVIEW REQUIRED
+
+- Working branch: `fix/homepage-greeting-and-complete-visitor-landing-2026-11-20`, based on main after PR #327.
+- Removed the homepage banner's visible SYSTEM ONLINE status and STAR69AI // COMMUNICATIONS, EVOLVED tagline. The underlying banner artwork remains.
+- Moved the homepage-only smart greeting markup before the cinematic banner in body order; the shared header is still inserted first by the existing header script, so the greeting appears centered immediately below navigation.
+- Centered the greeting and its country flag with responsive spacing. The smart greeting remains location-dependent and hidden if the Concierge Worker cannot return a usable location.
+- Completed the visitor spaceship routine: one of four randomized routes enters the banner, sweeps through the artwork, curves toward the center yin-yang emblem, lands at the center, and then pops a planted flag. The country flag returned by the welcome endpoint is reused on the planted flag; a small decorative flag remains if location data is unavailable.
+- The visitor ship, greeting, and planted flag are homepage-only. Shared `site-header.js`, `site-header.css`, navigation destinations, interior-page headers, Worker code, D1, billing, authentication and customer data are unchanged.
+- Updated homepage asset cache keys. Required validation: JS syntax, CSS structure, source assertions, protected-header workflow, browser visual QA at mobile/tablet/desktop, and GitHub Pages publication check. No browser visual QA or production deployment is claimed from source inspection alone.
+- Review via PR; do not merge to main or claim deployment without the founder's explicit approval.
+
+---
+
 ## Mission Control cinematic hierarchy refresh — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `design/mission-control-cinematic-refresh-2026-11-19`, created from current `main`.

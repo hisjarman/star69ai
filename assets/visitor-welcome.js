@@ -68,6 +68,8 @@
         flag.textContent = emoji;
         flag.setAttribute("aria-label", countryName(result.countryCode));
         flag.hidden = false;
+        const landingFlag = document.querySelector(".s69-home-banner .s69-landing-flag");
+        if (landingFlag) landingFlag.textContent = emoji;
       }
     }
     wrap.classList.add("is-visible");

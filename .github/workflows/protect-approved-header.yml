@@ -1,10 +1,15 @@
-name: Protect approved Star69AI cinematic header
+name: Protect approved Star69AI homepage shell
 
 on:
   pull_request:
     paths:
       - "site-header.js"
       - "site-header.css"
+      - "homepage-cinematic-banner.css"
+      - "assets/visitor-arrival.js"
+      - "assets/visitor-arrival.css"
+      - "assets/visitor-welcome.js"
+      - "index.html"
       - ".github/workflows/protect-approved-header.yml"
       - "project-context/STAR69AI_HEADER_DESIGN_LOCK.md"
   push:
@@ -12,14 +17,19 @@ on:
     paths:
       - "site-header.js"
       - "site-header.css"
+      - "homepage-cinematic-banner.css"
+      - "assets/visitor-arrival.js"
+      - "assets/visitor-arrival.css"
+      - "assets/visitor-welcome.js"
+      - "index.html"
       - ".github/workflows/protect-approved-header.yml"
 
 permissions:
   contents: read
 
 jobs:
-  approved-header-lock:
-    name: Verify approved header design is unchanged
+  approved-homepage-shell-lock:
+    name: Verify approved header, banner, navigation and arrival
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -27,25 +37,48 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Enforce approved header and menu
+      - name: Enforce approved source fingerprints
         shell: bash
         run: |
           set -euo pipefail
-          expected_js="91345fff344c78dd565194b7686522cc4eba208a"
-          expected_css="8fa7aabcc4cefeb21470356f18beb5068a998b9c"
-          actual_js="$(git rev-parse HEAD:site-header.js)"
-          actual_css="$(git rev-parse HEAD:site-header.css)"
+          declare -A expected=(
+            ["site-header.js"]="91345fff344c78dd565194b7686522cc4eba208a"
+            ["site-header.css"]="8fa7aabcc4cefeb21470356f18beb5068a998b9c"
+            ["homepage-cinematic-banner.css"]="1d0a45af2c1b9b5ee3e3d57837c251e5af87d724"
+            ["assets/visitor-arrival.js"]="7345e48335299defd6a5b8a64810a2f49322cba3"
+            ["assets/visitor-arrival.css"]="1271294260b0c2e0b070527702f5666ade5b46d0"
+            ["assets/visitor-welcome.js"]="36bfac8399a9c57d0632fb0ea49dd97de0566571"
+          )
+          for path in "${!expected[@]}"; do
+            actual="$(git rev-parse "HEAD:$path")"
+            if [[ "$actual" != "${expected[$path]}" ]]; then
+              echo "::error::Protected Star69AI file changed: $path"
+              echo "An explicit owner-approved design revision is required before updating its fingerprint."
+              exit 1
+            fi
+          done
+          echo "All six approved source files match their frozen fingerprints."
 
-          if [[ "$actual_js" != "$expected_js" ]]; then
-            echo "::error::The approved Star69AI cinematic header/menu JavaScript was changed."
-            echo "Restore the locked version or obtain explicit approval to revise the design lock."
-            exit 1
-          fi
-
-          if [[ "$actual_css" != "$expected_css" ]]; then
-            echo "::error::The approved Star69AI cinematic header/menu CSS was changed."
-            echo "Restore the locked version or obtain explicit approval to revise the design lock."
-            exit 1
-          fi
-
-          echo "Approved Star69AI cinematic header, grouped navigation menu and footer styles are unchanged."
+      - name: Verify homepage protected markup remains present and singular
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          html = Path("index.html").read_text(encoding="utf-8")
+          checks = {
+              "one homepage banner": html.count('class="s69-home-banner"') == 1,
+              "one greeting wrapper": html.count('class="s69-visitor-greeting-wrap"') == 1,
+              "banner before greeting": html.find('class="s69-home-banner"') < html.find('class="s69-visitor-greeting-wrap"'),
+              "arrival flag target": 'class="site-global-arrival-flag"' in html,
+              "welcome bubble target": 'class="site-global-welcome-bubble"' in html,
+              "homepage arrival script": '/assets/visitor-arrival.js' in html,
+              "location greeting script": '/assets/visitor-welcome.js' in html,
+              "cinematic banner stylesheet": '/homepage-cinematic-banner.css' in html,
+              "arrival stylesheet": '/assets/visitor-arrival.css' in html,
+          }
+          for label, passed in checks.items():
+              print(("PASS" if passed else "FAIL") + ": " + label)
+          if not all(checks.values()):
+              raise SystemExit("Protected homepage banner/greeting structure failed.")
+          PY

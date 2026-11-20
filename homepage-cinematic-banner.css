@@ -1,0 +1,110 @@
+/* Homepage-only cinematic banner. Kept separate from the shared navigation header. */
+.s69-home-banner{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-height:clamp(148px,19vw,246px);
+  overflow:hidden;
+  background:#030918;
+  border-bottom:1px solid rgba(67,180,254,.28);
+}
+.s69-home-banner__image{
+  position:absolute;
+  z-index:-3;
+  inset:-2%;
+  background-image:url("/assets/image_hero.webp");
+  background-position:center 48%;
+  background-size:cover;
+  background-repeat:no-repeat;
+  transform:scale(1.025);
+  animation:s69-home-banner-drift 34s ease-in-out infinite alternate;
+}
+.s69-home-banner__scan{
+  position:absolute;
+  z-index:-2;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(2,8,22,.78) 0%,rgba(2,8,22,.34) 36%,rgba(2,8,22,.08) 72%,rgba(2,8,22,.24) 100%),
+    linear-gradient(180deg,rgba(2,8,22,.12),transparent 45%,rgba(2,8,22,.55)),
+    repeating-linear-gradient(0deg,transparent 0 3px,rgba(160,218,255,.025) 4px);
+}
+.s69-home-banner__scan::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(105deg,transparent 34%,rgba(67,180,254,.11) 49%,transparent 63%);
+  transform:translateX(-100%);
+  animation:s69-home-banner-sweep 11s ease-in-out infinite;
+}
+.s69-home-banner__content{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:11px;
+  width:min(1360px,100%);
+  margin:0 auto;
+  padding:28px clamp(20px,5vw,72px);
+  text-shadow:0 2px 12px rgba(0,0,0,.9);
+}
+.s69-home-banner__status{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  color:#e8fff1;
+  font:800 10px/1.2 "IBM Plex Mono",monospace;
+  letter-spacing:.18em;
+}
+.s69-home-banner__status i{
+  width:7px;
+  height:7px;
+  flex:0 0 7px;
+  border-radius:50%;
+  background:#34fd78;
+  box-shadow:0 0 8px #34fd78,0 0 18px rgba(52,253,120,.75);
+  animation:s69-home-banner-pulse 1.9s ease-in-out infinite;
+}
+.s69-home-banner__tagline{
+  color:#f4f8ff;
+  font:500 clamp(10px,1.1vw,13px)/1.4 "IBM Plex Mono",monospace;
+  letter-spacing:.2em;
+}
+.s69-home-banner__tagline b{color:#43b4fe;font-weight:500}
+.s69-home-banner__edge{
+  position:absolute;
+  right:0;
+  bottom:0;
+  left:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,#34fd78 24%,#43b4fe 58%,#f461fe 82%,transparent);
+  box-shadow:0 0 15px rgba(67,180,254,.65);
+}
+@keyframes s69-home-banner-drift{
+  from{transform:scale(1.025) translate3d(-.35%,0,0)}
+  to{transform:scale(1.065) translate3d(.35%,0,0)}
+}
+@keyframes s69-home-banner-sweep{
+  0%,35%{transform:translateX(-100%)}
+  75%,100%{transform:translateX(100%)}
+}
+@keyframes s69-home-banner-pulse{
+  0%,100%{opacity:1;box-shadow:0 0 8px #34fd78,0 0 18px rgba(52,253,120,.75)}
+  50%{opacity:.58;box-shadow:0 0 4px #34fd78,0 0 9px rgba(52,253,120,.42)}
+}
+@media(max-width:700px){
+  .s69-home-banner{min-height:clamp(126px,34vw,178px)}
+  .s69-home-banner__image{background-position:center center}
+  .s69-home-banner__scan{
+    background:
+      linear-gradient(90deg,rgba(2,8,22,.66),rgba(2,8,22,.16) 80%),
+      linear-gradient(180deg,rgba(2,8,22,.08),transparent 42%,rgba(2,8,22,.52));
+  }
+  .s69-home-banner__content{gap:8px;padding:22px 20px}
+  .s69-home-banner__status{font-size:9px;letter-spacing:.14em}
+  .s69-home-banner__tagline{font-size:9px;letter-spacing:.13em}
+}
+@media(prefers-reduced-motion:reduce){
+  .s69-home-banner__image,.s69-home-banner__scan::after,.s69-home-banner__status i{animation:none!important}
+}

@@ -47,7 +47,7 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 </script>
-<link rel="stylesheet" href="/site-header.css"><link rel="stylesheet" href="/phone-evolution.css"><link rel="stylesheet" href="/homepage-cinematic-banner.css">
+<link rel="stylesheet" href="/site-header.css"><link rel="stylesheet" href="/phone-evolution.css"><link rel="stylesheet" href="/homepage-cinematic-banner.css"><link rel="stylesheet" href="/assets/visitor-arrival.css?v=20261120-1">
 <style id="visitor-welcome-placement">
 /* Location-aware greeting sits in normal document flow above the homepage eyebrow.
    It never overlays the header artwork or hero illustration. */
@@ -79,7 +79,7 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 @media(max-width:900px){.s69-hero{min-height:auto}.s69-hero-grid{grid-template-columns:1fr;gap:0;padding-top:58px}.s69-hero-copy{max-width:760px}.s69-hero h1{max-width:720px}.s69-hero-art{height:min(620px,75vw);min-height:380px;width:min(680px,100%);margin:10px auto -70px}.s69-earth{width:100%;right:0}.s69-intro-grid{grid-template-columns:1fr;gap:42px}.s69-video-stage{height:clamp(230px,45vw,360px)}.s69-trust-bar{grid-template-columns:1fr 1fr}.s69-trust-item:nth-child(2){border-right:0}.s69-trust-item:nth-child(3){border-right:0}.s69-trust-cta{grid-column:1/-1;justify-self:stretch}}
 @media(max-width:560px){.s69-hero-grid{padding:42px 20px 64px}.s69-eyebrow{font-size:9px;letter-spacing:1.5px;margin-bottom:17px}.s69-hero h1{font-size:clamp(43px,12vw,58px);letter-spacing:-2.5px;line-height:1.02;margin-bottom:18px}.s69-subhead{font-size:15px;line-height:1.65;margin-bottom:24px}.s69-ctas{display:grid;grid-template-columns:1fr;gap:11px}.s69-btn{width:100%;min-height:58px}.s69-proof{font-size:10px;line-height:1.5;margin-top:17px;flex-wrap:wrap;row-gap:12px}.s69-proof>div{padding:0 10px;font-size:9px}.s69-proof>div:first-child{padding-left:0}.s69-proof svg{width:18px;height:18px}.s69-hero-art{height:105vw;min-height:330px;max-height:470px;margin:8px auto -64px;width:112%;left:-6%}.s69-model{object-position:center bottom}.s69-model-caption{right:10%;bottom:20px;font-size:7px}.s69-intro{padding:52px 20px 42px}.s69-video-stage{height:235px;border-radius:15px}.s69-video-title{left:18px;font-size:18px}.s69-intro-copy h2{font-size:36px}.s69-intro-copy>p:not(.s69-eyebrow){font-size:14px}.s69-industries{grid-template-columns:repeat(4,1fr);row-gap:20px}.s69-industries svg{width:28px;height:28px}.s69-trust-section{padding:12px 15px 30px}.s69-trust-bar{grid-template-columns:1fr;padding:12px;border-radius:16px;gap:3px}.s69-trust-item{border-right:0;border-bottom:1px solid #263958;padding:10px 8px;font-size:11px}.s69-trust-cta{margin-top:8px}.s69-footer-line{font-size:8px;letter-spacing:1px;gap:10px;padding:23px 14px}.s69-footer-line:before,.s69-footer-line:after{max-width:38px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-</style><style>.s69-nov-promo{max-width:1180px;margin:14px auto;padding:0 20px}.s69-nov-promo>div{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:16px 20px;border:1px solid #34FD7888;border-radius:14px;background:linear-gradient(110deg,#0b2430,#101a35);color:#f4fbff}.s69-nov-promo strong{font-size:1.12rem;color:#34FD78}.s69-promo-kicker{font:700 .68rem/1.3 monospace;letter-spacing:.12em;color:#9fb3ca}.s69-nov-promo a{margin-left:auto;color:#34FD78;font-weight:800;text-decoration:none}@media(max-width:620px){.s69-nov-promo a{margin-left:0}}</style><link rel="stylesheet" href="./design-refresh.css">
+</style><link rel="stylesheet" href="./design-refresh.css">
 <link rel="stylesheet" href="./homepage-hero-rethought.css"><link rel="stylesheet" href="./intelligence-hero.css">
 <link rel="stylesheet" href="./call-shield-marketing.css?v=20261118-1"><link rel="stylesheet" href="./homepage-focus-mode.css">
 
@@ -128,7 +128,7 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
     <span class="s69-home-banner__tagline">STAR69AI <b>//</b> COMMUNICATIONS, EVOLVED</span>
   </div>
   <div class="s69-home-banner__edge" aria-hidden="true"></div>
-</section><section class="s69-nov-promo" aria-label="November promotion"><div><span class="s69-promo-kicker">LIMITED-TIME · NOVEMBER 2026</span><strong>Get your 3rd month free.</strong><span>Pay your first two monthly subscriptions, then receive month three free with code <b>3FORFREE</b>. The $99 setup fee still applies.</span><a href="./checkout.html?promo=3FORFREE">Claim the offer ↗</a></div></section>
+</section><div class="s69-visitor-greeting-wrap" aria-live="polite" aria-atomic="true"><span class="site-global-arrival-flag" hidden aria-hidden="true"></span><p class="site-global-welcome-bubble" hidden role="status"></p></div>
 <main>
 <section class="s69-hero s69-hero-rethought" id="home" aria-labelledby="s69-title">
   <div class="s69-hero-stars" aria-hidden="true"></div>
@@ -493,5 +493,5 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 <script defer src="./app.js"></script><script defer src="./story-series.js"></script><script defer src="./experience.js"></script>
 <script defer src="/call-rescue-simulator.js?v=20261118-1"></script>
 <script defer src="/secret-mission.js"></script>
-<script defer src="/assets/visitor-welcome.js"></script>
+<script defer src="/assets/visitor-arrival.js?v=20261120-1"></script><script defer src="/assets/visitor-welcome.js?v=20261120-1"></script>
 </body></html>

@@ -216,7 +216,7 @@ async function createCheckout(user,c,plan,env,cadence="monthly",promoCode="",opt
  else if(code==="STAR15MISSION"){if(selected!=="monthly")throw Error("mission_reward_monthly_billing_only");if(partnerDiscount)throw Error("promotion_cannot_be_combined_with_discounted_partner_referral");const missionCoupon=env.STRIPE_COUPON_SECRET_MISSION15;if(!missionCoupon)throw Error("mission_reward_not_configured_contact_support");const coupon=await stripeRequest(env,"coupons/"+encodeURIComponent(missionCoupon),{},"GET");if(coupon.valid===false||Number(coupon.percent_off)!==15||coupon.duration!=="repeating"||Number(coupon.duration_in_months)!==12)throw Error("mission_reward_configuration_invalid");coupons.push(missionCoupon);discountType="secret_mission_15_for_12_months";}
  else if(selected==="monthly"&&partnerDiscount){const partnerCoupon=env.STRIPE_COUPON_PARTNER15;if(!partnerCoupon)throw Error("partner_offer_not_configured");coupons.push(partnerCoupon);discountType="partner_15_for_12_months";}
  let stripeId=c.stripe_customer_id;if(!stripeId){const sc=await stripeRequest(env,"customers",{email:user.email,name:c.business_name,"metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId},"POST",options.idempotencyKey?options.idempotencyKey+"-customer":null);stripeId=sc.id;await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=?,updated_at=? WHERE id=?").bind(stripeId,new Date().toISOString(),c.id).run()}
- const extra=options.metadata||{};const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:options.successUrl||"https://star69ai.com/client/?billing=success",cancel_url:options.cancelUrl||"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"metadata[plan_key]":plan,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType,"subscription_data[metadata][plan_key]":plan};for(const [key,value] of Object.entries(extra))if(value!==undefined&&value!==null){params["metadata["+key+"]"]=String(value);params["subscription_data[metadata]["+key+"]"]=String(value)}
+ const extra=options.metadata||{};const params={mode:"subscription",customer:stripeId,"line_items[0][price]":price,"line_items[0][quantity]":1,success_url:options.successUrl||"https://star69ai.com/client/?billing=success",cancel_url:options.cancelUrl||"https://star69ai.com/client/?billing=cancelled","metadata[avr_customer_id]":c.id,"metadata[affiliate_partner_id]":affiliateId,"metadata[billing_cadence]":selected,"metadata[discount_type]":discountType,"metadata[plan_key]":plan,"subscription_data[metadata][avr_customer_id]":c.id,"subscription_data[metadata][affiliate_partner_id]":affiliateId,"subscription_data[metadata][billing_cadence]":selected,"subscription_data[metadata][discount_type]":discountType,"subscription_data[metadata][plan_key]":plan};if(options.expiresAt)params.expires_at=String(options.expiresAt);for(const [key,value] of Object.entries(extra))if(value!==undefined&&value!==null){params["metadata["+key+"]"]=String(value);params["subscription_data[metadata]["+key+"]"]=String(value)}
  coupons.forEach((coupon,index)=>{params["discounts["+index+"][coupon]"]=coupon;});
  if(code==="3FORFREE"){params["metadata[promo_code]"]=code;params["subscription_data[metadata][promo_code]"]=code;}
  const session=await stripeRequest(env,"checkout/sessions",params,"POST",options.idempotencyKey||null);return {url:session.url,id:session.id,cadence:selected,discountType};
@@ -259,6 +259,30 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
  await env.DB.prepare("UPDATE avr_paid_onboardings SET paypal_order_id=?,paypal_attempts=paypal_attempts+1,status=?,updated_at=? WHERE id=?").bind(order.id,nextStatus,new Date().toISOString(),onboarding.id).run();
  return {approvalUrl:approval,orderId:order.id};
 }
+async function reserve3forfreeSlot(env,customerId){
+ const campaign="3FORFREE-2026-11",now=new Date().toISOString(),expires=new Date(Date.now()+60*60*1000).toISOString();
+ if(now<"2026-11-01T00:00:00.000Z"||now>="2026-12-01T00:00:00.000Z")throw Error("promotion_not_available_for_selected_checkout");
+ const current=await env.DB.prepare("SELECT status,reserved_until FROM avr_promotion_enrollments WHERE campaign_key=? AND customer_id=? LIMIT 1").bind(campaign,customerId).first();
+ if(current?.status==="claimed")throw Error("promotion_already_redeemed");
+ if(current?.status==="reserved"&&current.reserved_until>now){
+  await env.DB.prepare("UPDATE avr_promotion_enrollments SET reserved_until=?,updated_at=? WHERE campaign_key=? AND customer_id=? AND status='reserved'").bind(expires,now,campaign,customerId).run();
+  return;
+ }
+ await env.DB.prepare("DELETE FROM avr_promotion_enrollments WHERE campaign_key=? AND status='reserved' AND reserved_until<=?").bind(campaign,now).run();
+ const inserted=await env.DB.prepare("INSERT INTO avr_promotion_enrollments(id,campaign_key,customer_id,status,reserved_until,created_at,updated_at) SELECT ?,?,?,'reserved',?,?,? WHERE (SELECT COUNT(*) FROM avr_promotion_enrollments WHERE campaign_key=? AND (status='claimed' OR status='reserved'))<5 ON CONFLICT(campaign_key,customer_id) DO NOTHING").bind(crypto.randomUUID(),campaign,customerId,expires,now,now,campaign).run();
+ if(Number(inserted.meta?.changes||0)>0)return;
+ const after=await env.DB.prepare("SELECT status,reserved_until FROM avr_promotion_enrollments WHERE campaign_key=? AND customer_id=? LIMIT 1").bind(campaign,customerId).first();
+ if(after?.status==="claimed"||(after?.status==="reserved"&&after.reserved_until>now))return;
+ throw Error("promotion_fully_claimed");
+}
+async function get3forfreeAvailability(env){
+ const campaign="3FORFREE-2026-11",now=new Date().toISOString();
+ await env.DB.prepare("DELETE FROM avr_promotion_enrollments WHERE campaign_key=? AND status='reserved' AND reserved_until<=?").bind(campaign,now).run();
+ const row=await env.DB.prepare("SELECT SUM(CASE WHEN status='claimed' THEN 1 ELSE 0 END) AS claimed,SUM(CASE WHEN status='reserved' THEN 1 ELSE 0 END) AS reserved FROM avr_promotion_enrollments WHERE campaign_key=?").bind(campaign).first();
+ const claimed=Number(row?.claimed||0),reserved=Number(row?.reserved||0),remaining=Math.max(0,5-claimed-reserved);
+ const open=now<"2026-12-01T00:00:00.000Z";
+ return {campaign:"November 2026",limit:5,claimed,reserved,remaining,available:remaining>0&&open,open,expiresAt:"2026-11-30T23:59:59Z"};
+}
 async function createPublicStripeSession(env,onboarding,customer,statusToken){
  if(onboarding.stripe_session_id){
   try{
@@ -267,10 +291,23 @@ async function createPublicStripeSession(env,onboarding,customer,statusToken){
    if(prior.status==="complete")return {completeUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),sessionId:prior.id};
   }catch{}
  }
- const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),metadata:{avr_paid_onboarding_id:onboarding.id,promo_code:customer.promo_code||"",idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)}};
- const session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,customer.promo_code||"",urls);
- await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,stripe_attempts=stripe_attempts+1,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();
- return {stripeUrl:session.url,sessionId:session.id};
+ const is3forfree=customer.promo_code==="3FORFREE";
+ if(is3forfree)await reserve3forfreeSlot(env,customer.id);
+ const expiresAt=is3forfree?Math.floor(Date.now()/1000)+3600:null;
+ const urls={successUrl:"https://star69ai.com/checkout-complete.html?onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken)+"&session_id={CHECKOUT_SESSION_ID}",cancelUrl:"https://star69ai.com/checkout.html?resume=1&onboarding_id="+encodeURIComponent(onboarding.id)+"&status_token="+encodeURIComponent(statusToken),expiresAt,metadata:{avr_paid_onboarding_id:onboarding.id,promo_code:customer.promo_code||""},idempotencyKey:"S69-monthly-checkout-"+onboarding.id+"-"+Number(onboarding.stripe_attempts||0)};
+ let session=null;
+ try{
+  session=await createCheckout({email:customer.email,name:customer.contact_name},customer,onboarding.plan_key,env,onboarding.billing_cadence,customer.promo_code||"",urls);
+  await env.DB.prepare("UPDATE avr_paid_onboardings SET stripe_session_id=?,stripe_attempts=stripe_attempts+1,status='awaiting_subscription',updated_at=? WHERE id=?").bind(session.id,new Date().toISOString(),onboarding.id).run();
+  if(is3forfree)await env.DB.prepare("UPDATE avr_promotion_enrollments SET stripe_session_id=?,updated_at=? WHERE campaign_key='3FORFREE-2026-11' AND customer_id=? AND status='reserved'").bind(session.id,new Date().toISOString(),customer.id).run();
+  return {stripeUrl:session.url,sessionId:session.id};
+ }catch(error){
+  if(is3forfree){
+   if(session?.id){try{await stripeRequest(env,"checkout/sessions/"+encodeURIComponent(session.id)+"/expire",{},"POST");await env.DB.prepare("DELETE FROM avr_promotion_enrollments WHERE campaign_key='3FORFREE-2026-11' AND customer_id=? AND status='reserved'").bind(customer.id).run();}catch(expireError){console.error("3forfree_checkout_expire_failed",session.id,expireError.message);}}
+   else await env.DB.prepare("DELETE FROM avr_promotion_enrollments WHERE campaign_key='3FORFREE-2026-11' AND customer_id=? AND status='reserved'").bind(customer.id).run();
+  }
+  throw error;
+ }
 }
 async function publicOnboardingAuth(env,id,token){
  if(!/^[a-f0-9-]{36}$/i.test(String(id||""))||!token)throw Error("invalid_checkout_reference");
@@ -589,11 +626,14 @@ async function stripeWebhook(req,env){const raw=await req.text(),sig=req.headers
  if((ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded")&&customerId){
   const paymentConfirmed=o.payment_status==="paid"||o.payment_status==="no_payment_required"||ev.type==="checkout.session.async_payment_succeeded";
   if(paymentConfirmed){
- 
+   if(o.metadata?.promo_code==="3FORFREE")await env.DB.prepare("UPDATE avr_promotion_enrollments SET status='claimed',reserved_until=NULL,stripe_session_id=?,updated_at=? WHERE campaign_key='3FORFREE-2026-11' AND customer_id=? AND status='reserved'").bind(o.id,new Date().toISOString(),customerId).run();
    const selectedPlan=o.metadata?.plan_key||null;
    await env.DB.prepare("UPDATE avr_customers SET stripe_customer_id=COALESCE(stripe_customer_id,?),stripe_subscription_id=?,affiliate_partner_id=COALESCE(affiliate_partner_id,?),billing_cadence=CASE WHEN ? IN ('monthly','six_month','annual') THEN ? ELSE billing_cadence END,plan_key=COALESCE(?,plan_key),included_minutes=CASE WHEN ?='starter' THEN 300 WHEN ?='growth' THEN 600 WHEN ?='pro' THEN 1200 ELSE included_minutes END,subscription_status='active',status=CASE WHEN EXISTS(SELECT 1 FROM avr_paid_onboardings po WHERE po.customer_id=avr_customers.id AND po.setup_status='pending') THEN 'pending' ELSE 'active' END,updated_at=? WHERE id=?").bind(stripeCustomer,o.subscription||null,o.metadata?.affiliate_partner_id||null,o.metadata?.billing_cadence||null,o.metadata?.billing_cadence||null,selectedPlan,selectedPlan,selectedPlan,selectedPlan,new Date().toISOString(),customerId).run();
    // Partner discounts and AI Challenge discounts are mutually exclusive; no follow-up coupon stacking is performed.
   }
+ }
+ if(ev.type==="checkout.session.expired"){
+  await env.DB.prepare("DELETE FROM avr_promotion_enrollments WHERE campaign_key='3FORFREE-2026-11' AND stripe_session_id=? AND status='reserved'").bind(o.id).run();
  }
  if(ev.type==="checkout.session.completed"||ev.type==="checkout.session.async_payment_succeeded"){
   const onboardingId=o.metadata?.avr_paid_onboarding_id;
@@ -1027,6 +1067,7 @@ async function route(req,env){
    return page("You are unsubscribed","This email address has been removed from Star69AI marketing outreach. No further marketing emails will be sent to this address.");
   }
 
+  if(path==="/api/public/promotions/3forfree"&&req.method==="GET")return json(await get3forfreeAvailability(env),200,origin,env);
   if(path==="/api/public/checkout/start"&&req.method==="POST")return json(await startPublicCheckout(req,env,origin),201,origin,env);
   if(path==="/api/public/checkout/capture"&&req.method==="POST")return json(await capturePublicSetup(req,env,origin),200,origin,env);
   if(path==="/api/public/checkout/resume"&&req.method==="POST")return json(await resumePublicCheckout(req,env,origin),200,origin,env);

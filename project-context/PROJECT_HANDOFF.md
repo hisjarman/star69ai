@@ -1,3 +1,14 @@
+
+
+## Trust-first five-customer introductory offer — 2026-11-19 — REVIEW REQUIRED
+
+- Branch: `feature/trust-first-five-client-offer-2026-11-19`, based on current `main`.
+- Removed the oversized 3FORFREE promotional strip from the homepage and checkout. Replaced the pricing-page banner with a compact, neutral introductory-enrollment note and live availability text. No ticking countdown, resetting timer, fabricated scarcity or urgency language.
+- Added a server-side November 2026 enrollment ledger. Stripe checkout creation atomically reserves one of five places for up to one hour; successful paid checkout claims the place; abandoned/expired sessions release reservations. Public availability counts claimed and currently held places. Checkout fails closed when all five places are claimed or reserved.
+- Offer remains for eligible new monthly customers only. First two monthly subscription invoices are paid normally; after the second successful paid invoice, the third monthly subscription invoice receives the configured 100% coupon. The $99 setup fee and other excluded charges remain payable. Existing partner/challenge/prepaid exclusions remain.
+- Added D1 migration `20261119_3forfree_five_customer_limit.sql`. **Before production activation:** apply this migration to the existing platform D1 database, deploy the updated `cloudflare/platform-worker.js` to the existing `avr-platform-api` Worker with all existing bindings/secrets preserved, then publish the GitHub Pages files. Do not claim the limit or counter is live until the migration and Worker deployment are verified.
+- Source-level checks required: Worker module syntax, migration SQL, HTML checks, reservation concurrency/expiry tests, webhook idempotency tests, and API response behavior. No D1 migration, Worker deployment, GitHub Pages deployment, Stripe setting or customer record was changed by this branch.
+- Review via PR. Do not merge or deploy without explicit founder approval.
 ## Mission Control cinematic hierarchy refresh — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `design/mission-control-cinematic-refresh-2026-11-19`, created from current `main`.

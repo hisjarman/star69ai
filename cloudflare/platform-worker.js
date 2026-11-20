@@ -261,8 +261,9 @@ async function createPublicPaypalOrder(env,onboarding,customer,statusToken){
 }
 async function reserve3forfreeSlot(env,customerId){
  const campaign="3FORFREE-2026-11",now=new Date().toISOString(),expires=new Date(Date.now()+60*60*1000).toISOString();
+ if(now<"2026-11-01T00:00:00.000Z"||now>="2026-12-01T00:00:00.000Z")throw Error("promotion_not_available_for_selected_checkout");
  const current=await env.DB.prepare("SELECT status,reserved_until FROM avr_promotion_enrollments WHERE campaign_key=? AND customer_id=? LIMIT 1").bind(campaign,customerId).first();
- if(current?.status==="claimed")return;
+ if(current?.status==="claimed")throw Error("promotion_already_redeemed");
  if(current?.status==="reserved"&&current.reserved_until>now)return;
  await env.DB.prepare("DELETE FROM avr_promotion_enrollments WHERE campaign_key=? AND status='reserved' AND reserved_until<=?").bind(campaign,now).run();
  const inserted=await env.DB.prepare("INSERT INTO avr_promotion_enrollments(id,campaign_key,customer_id,status,reserved_until,created_at,updated_at) SELECT ?,?,?,'reserved',?,?,? WHERE (SELECT COUNT(*) FROM avr_promotion_enrollments WHERE campaign_key=? AND (status='claimed' OR status='reserved'))<5 ON CONFLICT(campaign_key,customer_id) DO NOTHING").bind(crypto.randomUUID(),campaign,customerId,expires,now,now,campaign).run();

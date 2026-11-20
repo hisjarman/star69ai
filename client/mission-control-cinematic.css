@@ -609,3 +609,21 @@ body:after{opacity:.10!important}
   #eli-launcher b{color:#f4f9ff!important}
   #eli-launcher small{color:#b8d8f4!important}
 }
+
+
+/* Desktop sidebar parity with the newer mobile Mission Control drawer.
+   Keep active navigation blue/purple; reserve green for live/health indicators. */
+@media (min-width:701px){
+  #workspace .client-sidebar .client-nav .client-nav-item.active{
+    border-color:rgba(67,180,254,.62)!important;
+    background:linear-gradient(105deg,rgba(28,112,177,.42),rgba(88,49,137,.32))!important;
+    color:#fff!important;
+    box-shadow:inset 3px 0 #43B4FE,0 5px 18px rgba(0,0,0,.18)!important;
+  }
+  #workspace .client-sidebar .client-nav .client-nav-item.active:before{display:none!important}
+  #workspace .client-sidebar .client-nav .client-nav-item.active .nav-icon{
+    border-color:rgba(67,180,254,.38)!important;
+    background:rgba(67,180,254,.12)!important;
+    color:#79caff!important;
+  }
+}

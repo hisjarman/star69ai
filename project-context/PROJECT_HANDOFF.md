@@ -2188,3 +2188,17 @@ This section supersedes the earlier activation-status notes above where they des
 - Existing HTML, navigation data attributes, page switching, Eli iframe, JavaScript, authentication, API, Worker, D1, billing, and customer data are unchanged.
 - Validation performed: source-level review of the existing mobile drawer and assistant markup/CSS, and review of the final override selectors. Browser/device visual QA, CSS validation in the deployed browser, and GitHub Pages publication checks remain outstanding. No production deployment is claimed.
 - Review through PR; do not merge to `main` without explicit founder approval.
+
+
+## Homepage conversion and responsive polish — 2026-11-20 — REVIEW REQUIRED
+
+- Working branch: `redesign/homepage-conversion-and-polish-2026-11-20`, based on current `main`.
+- Homepage hero now leads with the managed AI receptionist service and explains the Crew's configure, test and maintain role; business intelligence remains a supporting capability rather than the primary product promise.
+- Reduced the homepage hero capability panel from twelve tiles to six core capabilities to reduce visual overload and avoid presenting every optional integration/workflow as a standard included feature. Updated supporting language to clarify that options are configured to each customer's workflow and connected services.
+- Corrected the AI Challenge homepage copy: achievement milestones are described as achievements only; removed the 5%/10%/15% subscription reward promotion because redemption is not enabled.
+- Added a homepage-only visual refinement layer: restrained dark premium capability cards, clearer CTA hierarchy, improved mobile spacing, and responsive Earth artwork presentation without changing its aspect ratio.
+- Corrected homepage metadata: dark color-scheme declaration, Open Graph image alt text, and moved the Google site-verification meta element inside the document head.
+- Files changed: `index.html`, `homepage-focus-mode.css`.
+- No shared navigation, JavaScript behavior, forms, lead capture, authentication, API, Workers, D1, billing, customer records or production settings changed.
+- Validation boundary: source-level string/structure checks only. Browser visual QA, accessibility audit, link/form smoke tests, and GitHub Pages publication verification remain outstanding. No production deployment is claimed.
+- Review through PR; do not merge to `main` without explicit founder approval.

@@ -2,10 +2,11 @@
 .s69-home-banner{
   position:relative;
   isolation:isolate;
-  display:flex;
-  align-items:center;
+  display:block;
   width:100%;
-  min-height:clamp(148px,19vw,246px);
+  height:auto;
+  min-height:0;
+  aspect-ratio:3840 / 1645;
   overflow:hidden;
   background:#030918;
   border-bottom:1px solid rgba(67,180,254,.28);
@@ -13,12 +14,12 @@
 .s69-home-banner__image{
   position:absolute;
   z-index:-3;
-  inset:-2%;
+  inset:0;
   background-image:url("/assets/image_hero.webp");
-  background-position:center 48%;
-  background-size:cover;
+  background-position:center center;
+  background-size:100% 100%;
   background-repeat:no-repeat;
-  transform:scale(1.025);
+  transform:translate3d(-.12%,0,0);
   animation:s69-home-banner-drift 34s ease-in-out infinite alternate;
 }
 .s69-home-banner__scan{
@@ -82,8 +83,8 @@
   box-shadow:0 0 15px rgba(67,180,254,.65);
 }
 @keyframes s69-home-banner-drift{
-  from{transform:scale(1.025) translate3d(-.35%,0,0)}
-  to{transform:scale(1.065) translate3d(.35%,0,0)}
+  from{transform:translate3d(-.12%,0,0)}
+  to{transform:translate3d(.12%,0,0)}
 }
 @keyframes s69-home-banner-sweep{
   0%,35%{transform:translateX(-100%)}
@@ -94,8 +95,8 @@
   50%{opacity:.58;box-shadow:0 0 4px #34fd78,0 0 9px rgba(52,253,120,.42)}
 }
 @media(max-width:700px){
-  .s69-home-banner{min-height:clamp(126px,34vw,178px)}
-  .s69-home-banner__image{background-position:center center}
+  .s69-home-banner{height:auto;min-height:0;aspect-ratio:3840 / 1645}
+  .s69-home-banner__image{background-position:center center;background-size:100% 100%}
   .s69-home-banner__scan{
     background:
       linear-gradient(90deg,rgba(2,8,22,.66),rgba(2,8,22,.16) 80%),

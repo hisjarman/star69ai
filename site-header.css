@@ -583,14 +583,20 @@ body.site-interior-page .site-global-utility{
 
 /* Owner-approved 2026-11-19: compact, single-row header on every page.
    The homepage hero content remains in the page; the oversized header banner is retired. */
-.site-global-cover{display:none!important;height:0!important;min-height:0!important;aspect-ratio:auto!important;overflow:hidden!important}
+/* The cinematic cover is injected only on the homepage, after the shared navigation. */
 .site-global-header{width:100%;max-width:100%;margin:0;overflow:visible}
 .site-global-utility{
   box-sizing:border-box;display:flex!important;flex-flow:row nowrap!important;
   justify-content:flex-end!important;align-items:center!important;gap:8px!important;
   min-height:54px!important;height:54px!important;padding:5px clamp(12px,2.5vw,28px)!important;
-  overflow:hidden;background:linear-gradient(90deg,#030918,#07152b 50%,#030918)!important;
+  overflow:visible!important;background:linear-gradient(90deg,#030918,#07152b 50%,#030918)!important;
 }
+.site-global-cover{position:relative;z-index:1;width:100%;height:auto!important;min-height:0!important;aspect-ratio:3840 / 1645;overflow:hidden!important;background:#030918}
+.site-global-cover-image{position:absolute;inset:0!important;display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;object-position:center center!important}
+.site-global-cover-shade{position:absolute;inset:0;z-index:0}
+.site-global-cover-topline{z-index:1}
+.site-global-arrival{z-index:2}
+@media(max-width:700px){.site-global-cover{height:auto!important;min-height:0!important;aspect-ratio:3840 / 1645}}
 .site-global-utility-brand{
   display:flex!important;flex:0 1 132px!important;width:132px!important;min-width:100px!important;
   max-width:132px!important;height:36px!important;max-height:36px!important;

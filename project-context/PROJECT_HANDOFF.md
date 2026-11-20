@@ -2176,3 +2176,15 @@ This section supersedes the earlier activation-status notes above where they des
 
 - Additional frontend audit updated every identified remaining live API reference in `newsletter-admin.js`, `partners-admin.js`, `trust-lab-admin.js`, `trust-lab-public.js`, `trust-lab.js`, `partners/partners.js`, and `partner-portal/partner-portal.js` to `https://trust.star69ai.com`; `demo-request.js` and `checkout-complete.js` now use `https://api.star69ai.com`.
 - Syntax checks passed for all 14 changed JavaScript files (including both Worker module sources after module-export normalization). Legacy Concierge `workers.dev` origin is retained in the Concierge allowlist for backward compatibility; the frontend now points to the branded hostname.
+
+
+## Client portal mobile navigation and assistant refinement — 2026-11-20 — REVIEW REQUIRED
+
+- Working branch: `design/client-portal-mobile-polish-2026-11-20`, based on current `main`.
+- Updated only `client/mission-control-cinematic.css` with a final mobile presentation layer.
+- Replaced oversized bright-green mobile navigation buttons with restrained dark-glass controls; the active destination uses a blue/purple highlight with a small green accent.
+- Refined the mobile drawer width, internal scrolling, backdrop darkness, spacing, and safe-area padding so the full menu remains usable on smaller screens.
+- Repositioned the floating Ask Eli launcher to the lower-right and placed it beneath the drawer's interaction layer so it does not cover menu destinations.
+- Existing HTML, navigation data attributes, page switching, Eli iframe, JavaScript, authentication, API, Worker, D1, billing, and customer data are unchanged.
+- Validation performed: source-level review of the existing mobile drawer and assistant markup/CSS, and review of the final override selectors. Browser/device visual QA, CSS validation in the deployed browser, and GitHub Pages publication checks remain outstanding. No production deployment is claimed.
+- Review through PR; do not merge to `main` without explicit founder approval.

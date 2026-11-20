@@ -2151,3 +2151,15 @@ This section supersedes the earlier activation-status notes above where they des
 
 - Additional frontend audit updated every identified remaining live API reference in `newsletter-admin.js`, `partners-admin.js`, `trust-lab-admin.js`, `trust-lab-public.js`, `trust-lab.js`, `partners/partners.js`, and `partner-portal/partner-portal.js` to `https://trust.star69ai.com`; `demo-request.js` and `checkout-complete.js` now use `https://api.star69ai.com`.
 - Syntax checks passed for all 14 changed JavaScript files (including both Worker module sources after module-export normalization). Legacy Concierge `workers.dev` origin is retained in the Concierge allowlist for backward compatibility; the frontend now points to the branded hostname.
+
+
+## Homepage hero / shared navigation separation and menu repair — 2026-11-19 — REVIEW REQUIRED
+
+- Branch: `fix/homepage-hero-banner-and-menu-2026-11-19`, based on current `main`.
+- Corrected the component boundary: `site-header.js` now injects only the shared compact navigation. The cinematic `image_hero.webp` cover is injected as a separate homepage-only sibling immediately after the nav and before `main`; interior pages never receive it.
+- Restored the four randomized visitor spacecraft routes, landing flag marker and homepage-only `assets/visitor-welcome.js` loader. The greeting helper continues to place its bubble above the homepage eyebrow and populate the flag from the existing Concierge Worker response.
+- Fixed the dropdown clipping cause: the final compact-header CSS had `overflow:hidden` on `.site-global-utility`, which contains the absolutely positioned navigation dropdown. The utility row now uses visible overflow so the menu can open outside the 50/54px row.
+- Preserved the slim shared navigation, existing destinations, menu click/Escape/outside-click behavior, cursor toggle, footer, cookie consent, and all backend integrations.
+- Updated the header design lock and protected-header fingerprints.
+- Validation required: JavaScript syntax; CSS parsing/brace checks; source assertions for homepage-only banner insertion, all four routes, welcome loader, visible dropdown overflow, and no banner markup in the shared header. Run protected-header GitHub Actions and browser QA at 360px, 768px and 1280px. Confirm homepage banner/greeting/flag/ship and menu behavior on homepage and interior pages.
+- Website source only. No Worker, D1, Retell, Stripe, PayPal, authentication, DNS, email, customer data or production configuration changed. No merge or deployment performed.

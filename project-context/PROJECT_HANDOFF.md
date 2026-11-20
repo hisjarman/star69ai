@@ -1,3 +1,16 @@
+## Homepage smart greeting placement and complete visitor landing — 2026-11-20 — REVIEW REQUIRED
+
+- Working branch: `fix/homepage-greeting-and-complete-visitor-landing-2026-11-20`, based on main after PR #327.
+- Removed the homepage banner's visible SYSTEM ONLINE status and STAR69AI // COMMUNICATIONS, EVOLVED tagline. The underlying banner artwork remains.
+- Moved the homepage-only smart greeting markup before the cinematic banner in body order; the shared header is still inserted first by the existing header script, so the greeting appears centered immediately below navigation.
+- Centered the greeting and its country flag with responsive spacing. The smart greeting remains location-dependent and hidden if the Concierge Worker cannot return a usable location.
+- Completed the visitor spaceship routine: one of four randomized routes enters the banner, sweeps through the artwork, curves toward the center yin-yang emblem, lands at the center, and then pops a planted flag. The country flag returned by the welcome endpoint is reused on the planted flag; a small decorative flag remains if location data is unavailable.
+- The visitor ship, greeting, and planted flag are homepage-only. Shared `site-header.js`, `site-header.css`, navigation destinations, interior-page headers, Worker code, D1, billing, authentication and customer data are unchanged.
+- Updated homepage asset cache keys. Required validation: JS syntax, CSS structure, source assertions, protected-header workflow, browser visual QA at mobile/tablet/desktop, and GitHub Pages publication check. No browser visual QA or production deployment is claimed from source inspection alone.
+- Review via PR; do not merge to main or claim deployment without the founder's explicit approval.
+
+---
+
 ## Mission Control cinematic hierarchy refresh — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `design/mission-control-cinematic-refresh-2026-11-19`, created from current `main`.

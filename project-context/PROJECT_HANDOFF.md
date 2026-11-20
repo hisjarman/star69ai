@@ -1,3 +1,18 @@
+## Published Insight — AI receptionist vs. human receptionist cost comparison — 2026-11-20
+
+- **Article:** AI Receptionist vs. Human Receptionist: Which Costs Your Business Less in 2026?
+- **URL/slug:** https://star69ai.com/insights/ai-vs-human-receptionist.html (`ai-vs-human-receptionist.html`).
+- **Primary SEO keyword:** AI receptionist vs human receptionist.
+- **Audience:** Small-business owners and operations managers.
+- **Article body:** 2412 words; meta description: 136 characters.
+- **Editorial update:** Reworked the existing comparison URL rather than creating a duplicate. Added a transparent total-cost framework, current U.S. receptionist wage data, broad employer-benefit context with an explicit occupation-level caveat, federal overtime guidance, a dated Star69AI plan-price example, side-by-side comparison, hybrid-use cases, buyer questions and FAQs.
+- **Sources checked 2026-11-20:** BLS Receptionists (May 2025 wage data); BLS Employer Costs for Employee Compensation (June 2026); U.S. Department of Labor overtime guidance; current Star69AI public pricing page.
+- **Files updated:** `insights/ai-vs-human-receptionist.html`, `insights/index.html`, `sitemap.xml`, and this handoff.
+- **Publication:** These editorial-only files were committed directly to `main` under the user's explicit authorization for automatic article publishing. This follows the established narrow content-publishing exception; no application code, Worker, D1, billing, authentication or customer data was changed.
+- **Validation:** Structured-data JSON parsed; exactly one H1; article IDs unique; shared readability stylesheet retained; existing index card and sitemap URL updated in place. GitHub Pages live HTTP verification is reported separately and must not be inferred from a successful source commit.
+
+---
+
 ## Homepage mobile banner and visitor greeting placement — 2026-11-20
 
 - Owner supplied a mobile screenshot identifying two layout defects: an empty strip above the cinematic banner and an empty greeting region below it.

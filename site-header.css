@@ -597,6 +597,7 @@ body.site-interior-page .site-global-utility{
 .site-global-cover-topline{z-index:1}
 .site-global-arrival{z-index:2}
 @media(max-width:700px){.site-global-cover{height:auto!important;min-height:0!important;aspect-ratio:3840 / 1645}}
+body.site-home-page .site-global-cover-image{object-fit:contain!important;object-position:center center!important}
 .site-global-utility-brand{
   display:flex!important;flex:0 1 132px!important;width:132px!important;min-width:100px!important;
   max-width:132px!important;height:36px!important;max-height:36px!important;

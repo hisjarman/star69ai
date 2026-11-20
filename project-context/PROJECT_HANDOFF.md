@@ -1,3 +1,15 @@
+## Shared navigation repair included in homepage visitor update — 2026-11-20
+
+- The user asked that the previously supplied Star69AI menu be included because navigation was inconsistent and would not open on some pages.
+- Root cause confirmed in `site-header.css`: the compact shared utility row was set to `overflow:hidden`, while the mission-control menu is absolutely positioned outside that row. The dropdown was therefore clipped even when the JavaScript toggled its open state.
+- Fixed the shared stylesheet so the utility row and header allow the navigation overlay to render above page content, including on mobile. Preserved the compact single-row header approved on 2026-11-19; did not restore the retired oversized header cover.
+- Retained the previously approved menu structure: one shared MENU toggle, translucent mission-control overlay, colored destination buttons, active-page highlighting, close-on-link/outside click, Escape close, and responsive grid.
+- Audited all 24 root HTML pages. Public marketing/legal pages already load the shared header except `receptionist-intelligence.html`, which had its own inline header; it now loads the shared header and the duplicate inline header was removed. Admin-only pages, the noindex onboarding-complete page, and the client/partner portals retain their dedicated layouts.
+- The homepage greeting and spaceship sequence remain homepage-only. No Worker, D1, authentication, billing, or customer data changes.
+- Validation still required: run the repository's GitHub Actions checks and verify the shared menu on homepage, marketing, legal and mobile layouts in a browser. Do not claim live production verification without that test.
+
+---
+
 ## Homepage smart greeting placement and complete visitor landing — 2026-11-20 — REVIEW REQUIRED
 
 - Working branch: `fix/homepage-greeting-and-complete-visitor-landing-2026-11-20`, based on main after PR #327.

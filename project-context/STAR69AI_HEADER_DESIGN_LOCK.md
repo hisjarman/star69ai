@@ -195,3 +195,43 @@ The owner clarified that the header remained too large after PR #315. This revis
 - Update the protected CSS fingerprint in the workflow in this same PR. The menu correction is an owner-authorized repair to the approved implementation, not a new visual redesign.
 - Browser QA and GitHub Pages verification remain required before merge/deployment.
 
+
+
+---
+
+## Expanded owner protection boundary — 2026-11-20
+
+The owner has explicitly requested that the approved shared header, homepage banner, navigation/menu, visitor greeting and visitor spaceship animation must not be changed without explicit permission.
+
+### Frozen components
+
+- Shared header and grouped Mission Control navigation: `site-header.js` and `site-header.css`.
+- Homepage banner presentation and motion: `homepage-cinematic-banner.css`.
+- Visitor ship routes, flight timing, landing flag and reduced-motion behavior: `assets/visitor-arrival.js` and `assets/visitor-arrival.css`.
+- Location-aware greeting, country flag handling and fallback behavior: `assets/visitor-welcome.js`.
+- Homepage banner/greeting structure in `index.html`: exactly one banner, followed by exactly one greeting wrapper containing the arrival flag and welcome bubble, with the matching styles/scripts loaded.
+
+### Permission rule
+
+No routine cleanup, refactor, responsive adjustment, copy edit, asset replacement, dependency update or unrelated feature work may edit or override these protected elements. Do not change protected files, their selectors, markup, routes, timing, animation keyframes, responsive rules or behavior unless the owner explicitly authorizes that specific change. A general request to clean up code is not permission to alter this protected experience.
+
+An explicitly authorized revision must be narrowly scoped, reviewed as a dedicated change, update this document and the protected source fingerprints in the same pull request, and pass the protection workflow. Do not weaken or remove the workflow as part of unrelated work.
+
+### Automated enforcement
+
+The workflow `.github/workflows/protect-approved-header.yml` now pins Git blob fingerprints for the six protected source files and checks the required homepage banner/greeting structure and asset references. Any source-file change fails the protection job until the owner explicitly approves the revision and the fingerprints are deliberately updated in the same reviewed change.
+
+The CI check is a repository guardrail, not an absolute permission system: someone with permission to rewrite the workflow, bypass required checks, or push directly to the protected branch could bypass it. For stronger enforcement, configure GitHub branch rules requiring this check, require pull requests, block force pushes/deletions, and require CODEOWNERS approval for the protected files and workflow.
+
+### Scope boundary
+
+This lock does not freeze homepage marketing copy, pricing, other page sections, footer content, unrelated scripts/styles, backend services, or the rest of the website. Those may be cleaned up independently only when they do not change the protected experience through global selectors, inherited styles, script side effects, DOM rewrites or asset changes. Any CSS/JS cleanup must be checked for indirect effects on the protected elements.
+
+### Audit notes — first-pass source review
+
+- The existing lock covered only `site-header.js` and `site-header.css`; the homepage banner CSS, visitor flight code, greeting code and homepage markup were outside its fingerprint protection. This gap is now covered by the expanded workflow.
+- `site-header.js` currently combines navigation rendering, cookie-consent UI, legacy header/footer cleanup, brand-logo normalization and cursor-follower loading. These are separable responsibilities and candidates for a future behavior-preserving refactor, but must not be refactored while the shared header is frozen.
+- `index.html` contains substantial inline assistant, disclosure/interaction and section-reveal scripts alongside page markup. These can be extracted into page-specific files in a later cleanup, but only after regression tests and without moving or changing the protected banner/greeting block.
+- The homepage loads several independent stylesheets and scripts with cache-busting query strings. A later asset inventory can identify duplicate selectors, unused styles and stale assets; do not remove files based only on filename or search results.
+- The banner currently uses multiple visual-motion layers (slow background drift, scan sweep, status pulse, ship flight and flag pop). Preserve all layers and reduced-motion behavior. A future audit should verify that every decorative animation respects reduced-motion preferences consistently.
+- The first-pass audit was source inspection, not a complete dead-code proof. No CSS/JS/assets were deleted, no broad refactor was performed, and no visual behavior was intentionally changed.

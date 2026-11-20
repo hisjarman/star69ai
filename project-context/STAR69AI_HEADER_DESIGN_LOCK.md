@@ -184,3 +184,14 @@ The owner clarified that the header remained too large after PR #315. This revis
 - Existing grouped destinations, legal links, footer, menu open/close, Escape/outside-click behavior, active-page state and accessibility semantics are retained.
 - The old header-banner visitor ship animation is retired with the banner. Other homepage hero content and page-level interactions are unchanged.
 - This is an explicit owner-requested design revision. Update the protected-header fingerprints in the same reviewed change.
+
+
+## Homepage hero and shared navigation separation — 2026-11-19
+
+- The shared header component contains only the compact sitewide navigation/utility row and its menu. It must never own, inject, remove, or hide homepage hero/banner content.
+- The cinematic `image_hero.webp` cover is a homepage-only sibling section inserted immediately after the shared navigation and before the homepage `main` content. Interior pages do not render this section.
+- The homepage-only cover owns the randomized visitor spacecraft flight, landing flag, and the loader for the location-aware welcome greeting. Preserve all four flight routes and replay on every homepage load.
+- The welcome bubble remains attached to the homepage hero copy; the flag remains attached to the visitor spacecraft landing marker.
+- The shared Mission Control dropdown must extend beyond the utility row. Never apply clipping overflow to the utility row or another ancestor of the dropdown.
+- Keep the 54px desktop / 50px mobile navigation dimensions, grouped destinations, responsive controls, keyboard behavior, and accessibility semantics.
+- The CSS and JavaScript protected-header fingerprints must be updated together whenever this approved separation is revised.

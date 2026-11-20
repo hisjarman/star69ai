@@ -91,7 +91,44 @@
     if (!document.querySelector("[data-site-global-header]")) document.body.insertAdjacentHTML("afterbegin", markup);
     document.querySelectorAll("[data-site-global-header]").forEach((node,index) => { if (index > 0) node.remove(); });
     const header = document.querySelector("[data-site-global-header]");
-    if (!header || header.dataset.navigationReady === "true") return;
+    if (!header) return;
+
+    // The cinematic visitor banner is a homepage-only page section, never part of the shared navigation.
+    if (homePath === "/" && !document.querySelector("[data-star69-home-hero-banner]")) {
+      const cover = document.createElement("div");
+      cover.className = "site-global-cover";
+      cover.dataset.star69HomeHeroBanner = "true";
+      cover.innerHTML = '<img class="site-global-cover-image" src="/assets/image_hero.webp" alt="Star69AI — Communications Evolved" width="3840" height="1645" fetchpriority="high" decoding="async"><div class="site-global-cover-shade" aria-hidden="true"></div><div class="site-global-cover-topline"><span class="site-global-status"><i></i> SYSTEM ONLINE</span></div>';
+      header.insertAdjacentElement("afterend", cover);
+
+      // Replay one of four visitor flight paths on every homepage load.
+      const route = 1 + Math.floor(Math.random() * 4);
+      const arrival = document.createElement("div");
+      arrival.className = "site-global-arrival route-" + route;
+      arrival.setAttribute("aria-hidden", "true");
+      const visitorShip = document.createElement("img");
+      visitorShip.className = "site-global-visitor-ship";
+      visitorShip.src = "/assets/visitorspaceship.png";
+      visitorShip.alt = "";
+      visitorShip.decoding = "async";
+      visitorShip.draggable = false;
+      const flag = document.createElement("span");
+      flag.className = "site-global-arrival-flag";
+      visitorShip.addEventListener("load", () => arrival.classList.add("is-ready"), { once: true });
+      visitorShip.addEventListener("error", () => arrival.remove(), { once: true });
+      arrival.append(visitorShip, flag);
+      cover.appendChild(arrival);
+
+      if (!document.querySelector("[data-star69-visitor-welcome-loader]")) {
+        const welcomeScript = document.createElement("script");
+        welcomeScript.src = "/assets/visitor-welcome.js";
+        welcomeScript.async = true;
+        welcomeScript.dataset.star69VisitorWelcomeLoader = "true";
+        document.head.appendChild(welcomeScript);
+      }
+    }
+
+    if (header.dataset.navigationReady === "true") return;
     header.dataset.navigationReady = "true";
     const toggle = header.querySelector('.site-global-toggle');
     const nav = header.querySelector('.site-global-nav');

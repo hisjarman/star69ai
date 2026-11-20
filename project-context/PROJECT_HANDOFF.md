@@ -1,3 +1,14 @@
+## Homepage mobile banner and visitor greeting placement — 2026-11-20
+
+- Owner supplied a mobile screenshot identifying two layout defects: an empty strip above the cinematic banner and an empty greeting region below it.
+- Removed the duplicate visitor-greeting wrapper that appeared before the banner. The single homepage-only greeting wrapper remains immediately after the banner, where the existing welcome script can populate it.
+- Styled the post-banner greeting area as a centered, intentional arrival space; explicitly reset inherited absolute positioning from shared header styles so the welcome bubble is centered in that region.
+- Changed the homepage cinematic banner to preserve the source artwork's full 3840:1645 composition at every viewport width. Removed the cover crop and zoom drift that clipped the Earth/astronaut artwork; the mobile banner now gains the vertical space needed to show more of the full scene without stretching it.
+- Bumped homepage asset cache keys. No shared navigation, Worker, D1, authentication, billing, or customer data changes.
+- Required validation: check HTML wrapper count, CSS structure, mobile/tablet/desktop responsive behavior, run repository checks, and verify GitHub Pages publication. Browser visual QA remains required before claiming the live appearance is confirmed.
+
+---
+
 ## Shared navigation repair included in homepage visitor update — 2026-11-20
 
 - The user asked that the previously supplied Star69AI menu be included because navigation was inconsistent and would not open on some pages.

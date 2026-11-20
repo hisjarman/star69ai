@@ -36,8 +36,9 @@
 }
 .s69-visitor-greeting-wrap{
   display:none;align-items:center;justify-content:center;gap:10px;
-  width:min(1320px,100%);margin:0 auto;padding:12px 20px 10px;
-  box-sizing:border-box;text-align:center;
+  width:100%;min-height:clamp(104px,15vw,172px);margin:0 auto;
+  padding:18px 20px;box-sizing:border-box;text-align:center;
+  background:linear-gradient(180deg,#030918 0%,#071b28 48%,#102b32 100%);
 }
 .s69-visitor-greeting-wrap.is-visible{display:flex}
 .site-global-arrival-flag{
@@ -46,7 +47,8 @@
 }
 .site-global-arrival-flag[hidden],.site-global-welcome-bubble[hidden]{display:none!important}
 .site-global-welcome-bubble{
-  display:block;max-width:min(760px,100%);margin:0;padding:9px 15px;
+  position:relative!important;left:auto!important;bottom:auto!important;
+  display:block;width:auto;max-width:min(760px,calc(100% - 34px));margin:0;padding:11px 18px;
   border:1px solid rgba(67,180,254,.5);border-radius:10px;
   background:linear-gradient(100deg,rgba(5,18,42,.94),rgba(8,25,49,.84));
   color:#f2f8ff;box-shadow:0 8px 26px rgba(0,0,0,.22),0 0 16px rgba(67,180,254,.1);
@@ -59,9 +61,9 @@
 @media(max-width:700px){
   .s69-home-banner .s69-visitor-ship{width:clamp(88px,24vw,124px)}
   .s69-landing-flag{font-size:21px}
-  .s69-visitor-greeting-wrap{gap:8px;padding:10px 14px 9px}
+  .s69-visitor-greeting-wrap{min-height:clamp(112px,30vw,150px);gap:8px;padding:16px 14px}
   .site-global-arrival-flag{font-size:18px}
-  .site-global-welcome-bubble{padding:8px 10px;font-size:10px}
+  .site-global-welcome-bubble{max-width:calc(100% - 28px);padding:10px 12px;font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){
   .s69-home-banner .s69-visitor-ship{left:50%;top:50%;width:clamp(88px,10vw,136px);opacity:.92;transform:translate(-50%,-50%);animation:none!important}

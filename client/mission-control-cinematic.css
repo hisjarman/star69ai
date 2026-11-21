@@ -627,3 +627,22 @@ body:after{opacity:.10!important}
     color:#79caff!important;
   }
 }
+
+/* Desktop client-menu toggle: match Mission Control's blue/purple controls. */
+@media (min-width:701px){
+  #workspace #cockpit-menu-toggle.cockpit-menu-toggle{
+    border-color:rgba(67,180,254,.48)!important;
+    background:linear-gradient(110deg,rgba(67,180,254,.14),rgba(244,97,254,.12))!important;
+    color:#79caff!important;
+    box-shadow:0 0 16px rgba(67,180,254,.10)!important;
+  }
+  #workspace #cockpit-menu-toggle.cockpit-menu-toggle:hover{
+    border-color:rgba(244,97,254,.62)!important;
+    background:linear-gradient(110deg,rgba(67,180,254,.20),rgba(244,97,254,.18))!important;
+    color:#fff!important;
+  }
+  #workspace #cockpit-menu-toggle.cockpit-menu-toggle:focus-visible{
+    outline:2px solid #43B4FE!important;
+    outline-offset:3px!important;
+  }
+}

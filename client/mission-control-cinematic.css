@@ -646,3 +646,36 @@ body:after{opacity:.10!important}
     outline-offset:3px!important;
   }
 }
+
+
+/* Desktop sidebar navigation: blue/purple controls, green reserved for status. */
+@media (min-width:701px){
+  #workspace .client-sidebar .client-nav-item{
+    border:1px solid rgba(67,180,254,.24)!important;
+    background:linear-gradient(105deg,rgba(20,67,112,.30),rgba(55,35,91,.24))!important;
+    color:#d7eaff!important;
+    box-shadow:inset 0 1px rgba(255,255,255,.035)!important;
+  }
+  #workspace .client-sidebar .client-nav-item:hover{
+    border-color:rgba(244,97,254,.58)!important;
+    background:linear-gradient(105deg,rgba(22,126,208,.42),rgba(113,54,184,.38))!important;
+    color:#fff!important;
+    box-shadow:inset 2px 0 #43B4FE,0 0 18px rgba(67,180,254,.12)!important;
+  }
+  #workspace .client-sidebar .client-nav-item.active{
+    border-color:rgba(102,190,255,.72)!important;
+    background:linear-gradient(105deg,rgba(22,126,208,.48),rgba(113,54,184,.44))!important;
+    color:#fff!important;
+    box-shadow:inset 3px 0 #7bcaff,0 0 22px rgba(49,129,218,.16)!important;
+  }
+  #workspace .client-sidebar .client-nav-item .nav-icon{
+    border-color:rgba(123,202,255,.34)!important;
+    background:rgba(35,127,202,.16)!important;
+    color:#a9ddff!important;
+  }
+  #workspace .client-sidebar .client-nav-item.active .nav-icon{
+    border-color:rgba(123,202,255,.62)!important;
+    background:rgba(35,127,202,.26)!important;
+    color:#fff!important;
+  }
+}

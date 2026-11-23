@@ -1,3 +1,21 @@
+## Published Insight — Salon appointment cancellations — 2026-11-23
+
+- **Article:** How Salons Can Reduce Last-Minute Cancellations and Keep the Appointment Book Full
+- **URL/slug:** https://star69ai.com/insights/salon-appointment-cancellations.html (`salon-appointment-cancellations.html`).
+- **Primary SEO keyword:** salon appointment cancellations.
+- **Target industry:** Salons and spas.
+- **Meta description:** Reduce salon appointment cancellations with clear policies, helpful reminders, a responsive waitlist, and a consistent rebooking process. (137 characters).
+- **Article body:** 849 words, verified within the required 600–900-word range, excluding SEO metadata and social copy.
+- **Editorial format:** Byline “By Star69AI Editorial Team”; publication date; estimated five-minute reading time; two-paragraph introduction; clickable table of contents; four practical strategies; four FAQs; conclusion and managed-service CTA; contextual internal links; concise editorial disclosure.
+- **Featured image:** Original ImageGen artwork optimized as WebP at 640 × 360 pixels (14,938 bytes). Saved as `assets/salon-appointment-cancellations.webp`. Alt text: “Salon stylist reviewing the appointment calendar at a modern salon reception counter.”
+- **Brand language:** Explicit managed AI receptionist positioning, “Our Crew,” “Initiate Contact,” and “Communications, Evolved.” No activation, booking, integration, or outcome is promised.
+- **Research and references:** No external statistics, legal conclusions, technical claims, or third-party research were used. The article recommends checking local requirements for cancellation/deposit policies and respecting communication preferences and consent.
+- **Files updated:** `insights/salon-appointment-cancellations.html`, `assets/salon-appointment-cancellations.webp`, `insights/index.html`, `sitemap.xml`, and this handoff.
+- **Publication:** All five files were committed together directly to `main` under the user's explicit automatic-publishing authorization. No branch or pull request was created.
+- **Validation:** Meta description length (137 characters); article word count (849); one H1; Article and BreadcrumbList JSON-LD; canonical/Open Graph/Twitter metadata; image path, intrinsic dimensions and alt text; clickable TOC anchors; index card and sitemap entry. GitHub Pages live HTTP verification is reported separately.
+
+---
+
 ## Published Insight — AI receptionist vs. human receptionist cost comparison — 2026-11-20
 
 - **Article:** AI Receptionist vs. Human Receptionist: Which Costs Your Business Less in 2026?

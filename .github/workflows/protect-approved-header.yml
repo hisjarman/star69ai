@@ -43,7 +43,7 @@ jobs:
           set -euo pipefail
           declare -A expected=(
             ["site-header.js"]="91345fff344c78dd565194b7686522cc4eba208a"
-            ["site-header.css"]="8fa7aabcc4cefeb21470356f18beb5068a998b9c"
+            ["site-header.css"]="6cb04dcb2003f628e10b55b27ee3a8fac4fc9be2"
             ["homepage-cinematic-banner.css"]="1d0a45af2c1b9b5ee3e3d57837c251e5af87d724"
             ["assets/visitor-arrival.js"]="7345e48335299defd6a5b8a64810a2f49322cba3"
             ["assets/visitor-arrival.css"]="1271294260b0c2e0b070527702f5666ade5b46d0"

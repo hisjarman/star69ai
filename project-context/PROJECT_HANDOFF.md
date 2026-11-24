@@ -5,7 +5,7 @@
 - **Primary SEO keyword:** plumbing call handling.
 - **Target industry:** Plumbing contractors and small plumbing businesses.
 - **Meta description:** Improve plumbing call handling with a clear intake checklist, dispatch priorities, estimate follow-up, and a reliable after-hours plan. (135 characters).
-- **Article body:** 870 words, verified within the required 600–900-word range, excluding SEO metadata and social copy.
+- **Article body:** 877 words, verified within the required 600–900-word range, excluding SEO metadata and social copy.
 - **Editorial format:** Byline “By Star69AI Editorial Team”; publication date; five-minute reading estimate; two-paragraph introduction; clickable table of contents; four practical strategies; four FAQs; conclusion and managed-service CTA; contextual internal links; concise editorial disclosure.
 - **Featured image:** Original ImageGen artwork optimized as WebP at 640 × 360 pixels (25,484 bytes). Saved as `assets/plumbing-call-handling-dispatch.webp`. Alt text: “Plumbing office coordinator taking a service call while a technician prepares for an on-site repair.”
 - **Brand language:** Explicit managed AI receptionist positioning, “Our Crew,” “Initiate Contact,” and “Communications, Evolved.” No booking, activation, integration, safety, or business outcome is promised.

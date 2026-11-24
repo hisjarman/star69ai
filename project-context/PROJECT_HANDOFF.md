@@ -1,3 +1,21 @@
+## Published Insight — HVAC and plumbing emergency call capture — 2026-11-24
+
+- **Article:** Stop Losing Emergency Jobs: How AI Receptionists Help HVAC and Plumbing Companies Capture More Calls
+- **URL/slug:** https://star69ai.com/insights/hvac-plumbing-emergency-call-capture.html (`hvac-plumbing-emergency-call-capture.html`).
+- **Primary SEO keyword:** AI receptionist for HVAC companies.
+- **Audience:** HVAC, plumbing, and home-service business owners.
+- **Meta description:** Capture HVAC and plumbing service calls with a clear AI receptionist workflow for intake, after-hours coverage, human escalation and follow-up. (143 characters).
+- **Article body:** 1524 words, calculated from the article body markup.
+- **Editorial format:** Byline “By Star69AI Editorial Team”; publication date; six-minute reading estimate; two introductory paragraphs; clickable table of contents; trade-specific HVAC/plumbing intake; life-safety escalation; human handoff checklist; five FAQs; conclusion and managed-service CTA; contextual internal links; editorial disclosure.
+- **Featured image:** Original ImageGen artwork optimized as WebP at 640 × 360 pixels (27,496 bytes). Saved as `assets/hvac-plumbing-emergency-call-capture.webp`. Alt text: “A dispatcher wearing a headset routes an HVAC and plumbing service call on a digital map while a field technician prepares outside.”
+- **Brand language:** Explicit managed AI receptionist positioning; Our Crew; Initiate Contact; Communications, Evolved. No guaranteed jobs, bookings, dispatch, response time, or revenue outcomes.
+- **Research and references:** CPSC safety guidance dated May 27, 2026 for gas leaks, carbon-monoxide alarms, and post-storm hazards; CPSC carbon-monoxide fact sheet; FTC small-business advertising guidance for evidence-based objective claims. No unsupported industry statistics or performance guarantees.
+- **Files updated:** `insights/hvac-plumbing-emergency-call-capture.html`, `assets/hvac-plumbing-emergency-call-capture.webp`, `insights/index.html`, `sitemap.xml`, and this handoff.
+- **Publication:** Editorial content, featured image, Insights listing, sitemap, and handoff committed together directly to `main` under the user's explicit automatic-publishing authorization. No application code, Worker, D1, billing, authentication, or customer data changed.
+- **Validation:** 143-character meta description; 1524-word article body; one H1; Article and BreadcrumbList JSON-LD; canonical/Open Graph/Twitter metadata; image path, intrinsic dimensions and alt text; TOC targets; Insights card and sitemap URL. GitHub Pages live HTTP verification is reported separately.
+
+---
+
 ## Published Insight — Plumbing call handling and dispatch — 2026-11-24
 
 - **Article:** How Plumbing Companies Can Improve Call Handling and Keep Dispatch on Track

@@ -1,24 +1,24 @@
 (() => {
   const groups = [
-    { title: "EXPLORE", subtitle: "Discover the service", links: [
-      ["Home","/","home","cyan"],["How it works","/how-it-works.html","workflow","blue"],
-      ["What it can do","/capabilities.html","sparkles","purple"],["Industry Hub","/hub/","layers","green"],
-      ["Industry overview","/industries.html","briefcase","green"],["Provider directory","/directory/","globe","purple"]
+    { title: "EXPLORE", subtitle: "Discover the Star69AI universe", tone: "blue", links: [
+      ["Home","/","home",true],["How it works","/how-it-works.html","workflow"], 
+      ["What it can do","/capabilities.html","sparkles",true],["Industry Hub","/hub/","layers",true],
+      ["Industry overview","/industries.html","briefcase"],["Provider directory","/directory/","globe"]
     ]},
-    { title: "SEE IT IN ACTION", subtitle: "Experience the technology", links: [
-      ["Demos","/demos.html","play-circle","purple"],["AI Challenge","/challenge/","gamepad-2","purple"],
-      ["AI Trust Lab","/trust-lab.html","shield-check","cyan"]
+    { title: "SEE IT IN ACTION", subtitle: "Try the experience", tone: "purple", links: [
+      ["Demos","/demos.html","play-circle",true],["AI Challenge","/challenge/","gamepad-2"],
+      ["AI Trust Lab","/trust-lab.html","shield-check",true]
     ]},
-    { title: "LEARN & SUPPORT", subtitle: "Answers and insights", links: [
-      ["Learning Center","/learning-center/","graduation-cap","blue"],["Insights & Guides","/insights/","book-open","purple"],["Stories","/blog/","book-open","gold"],
-      ["FAQ","/faq.html","circle-help","gold"],["Managed AI research","/research/managed-ai-receptionists.html","microscope","blue"]
+    { title: "LEARN & SUPPORT", subtitle: "Guides, answers and ideas", tone: "blue", links: [
+      ["Learning Center","/learning-center/","graduation-cap"],["Insights & Guides","/insights/","book-open",true],["Stories","/blog/","book-open"],
+      ["FAQ","/faq.html","circle-help"],["Managed AI research","/research/managed-ai-receptionists.html","microscope"]
     ]},
-    { title: "COMPANY & PLANS", subtitle: "Work with Star69AI", links: [
-      ["About Star69AI","/about.html","orbit","cyan"],["Managed service","/managed-service.html","sliders","green"],
-      ["Pricing","/pricing.html","credit-card","gold"],["Partner program","/partners/","users","green"],["Partner Login","/partner-portal/","users","purple"],["Contact","/get-started.html","orbit","cyan"]
+    { title: "COMPANY & PLANS", subtitle: "Choose your next step", tone: "green", links: [
+      ["About Star69AI","/about.html","orbit"],["Managed service","/managed-service.html","sliders"],
+      ["Pricing","/pricing.html","credit-card",true],["Partner program","/partners/","users"],["Partner Login","/partner-portal/","users"],["Contact","/get-started.html","orbit",true]
     ]},
-    { title: "POLICIES", subtitle: "Your information and terms", links: [
-      ["Privacy","/privacy.html","lock","blue"],["Terms","/terms.html","file-text","gold"]
+    { title: "POLICIES", subtitle: "Trust and transparency", tone: "gold", links: [
+      ["Privacy","/privacy.html","lock"],["Terms","/terms.html","file-text"]
     ]}
   ];
   const navIcons = {home:"⌂",workflow:"⌘",layers:"▦","credit-card":"＄","play-circle":"▷","graduation-cap":"✧","book-open":"▤",orbit:"✳",sliders:"☷",globe:"◎",microscope:"⌕",briefcase:"▣","circle-help":"?","gamepad-2":"⌗","shield-check":"⬡",users:"◉",lock:"▧","file-text":"▤",sparkles:"✧"};
@@ -31,11 +31,26 @@
         </button>
         <nav class="site-global-nav" id="site-global-navigation" aria-label="Star69AI main navigation" inert>
           <div class="site-global-nav-head"><span>MISSION CONTROL <small>// SELECT DESTINATION</small></span><span class="site-global-nav-live"><i></i> ALL SYSTEMS READY</span></div>
+          <div class="site-global-nav-quick" aria-label="Quick destinations">
+            <span class="site-global-nav-quick-label">BOOKMARKS <small>// QUICK JUMP</small></span>
+            <a href="/" data-nav-path="/">★ Home</a>
+            <a href="/demos.html" data-nav-path="/demos.html">★ Demos</a>
+            <a href="/pricing.html" data-nav-path="/pricing.html">★ Pricing</a>
+            <a href="/get-started.html" data-nav-path="/get-started.html">★ Initiate Contact</a>
+          </div>
           <div class="site-global-nav-grid">
             ${groups.map(group => `<section class="site-global-nav-group" aria-label="${group.title}">
               <div class="site-global-nav-group-head"><h2>${group.title}</h2><p>${group.subtitle}</p></div>
-              <div class="site-global-nav-group-links">${group.links.map(([label,url,icon,color]) => `<a class="site-global-nav-button tone-${color}" data-nav-path="${url}" href="${url}"><span class="site-global-nav-symbol" aria-hidden="true">${navIcons[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}</div>
+              <div class="site-global-nav-group-links">${group.links.map(([label,url,icon,featured]) => `<a class="site-global-nav-button tone-${group.tone}" data-nav-path="${url}" href="${url}">${featured ? '<span class="site-global-nav-star" aria-label="Featured destination">★</span>' : ''}<span class="site-global-nav-symbol" aria-hidden="true">${navIcons[icon] || "✦"}</span><span>${label}</span><b aria-hidden="true">↗</b></a>`).join("")}</div>
             </section>`).join("")}
+          </div>
+          <div class="site-global-nav-legend" aria-label="Navigation color key">
+            <span class="site-global-nav-legend-title">NAVIGATION KEY</span>
+            <span class="key-blue">● Explore / Learn</span>
+            <span class="key-purple">● Experience</span>
+            <span class="key-green">● Company / Plans</span>
+            <span class="key-gold">● Policies</span>
+            <span class="key-star">★ Featured destination</span>
           </div>
           <div class="site-global-nav-footer"><span>STAR69AI // NAVIGATION ARRAY</span><span>SECURE CONNECTION <i></i></span></div>
         </nav>

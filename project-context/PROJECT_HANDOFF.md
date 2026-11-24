@@ -2247,3 +2247,13 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserves the compact shared header, utility row, menu open/close and inert behavior, current-page highlighting, Escape/outside-click close, and existing navigation destinations. No backend, Worker, D1, authentication, billing, customer data, homepage banner or visitor-animation changes.
 - Validation planned: JavaScript syntax; exact route/destination assertions; verify group color mapping, bookmarks and legend; verify protected-header workflow fingerprints; inspect responsive CSS at mobile/tablet/desktop. Browser visual QA and GitHub Pages live verification are not available from source inspection alone and remain outstanding.
 - Review through PR. Do not merge to `main` or claim production deployment until checks pass and visual QA is completed.
+
+
+## Client dashboard blue/purple action-color correction — 2026-11-24
+
+- Owner reported green showing over the client dashboard's blue controls.
+- Confirmed the legacy `cockpit.css` still declares bright green as the generic primary-button color, while the newer Mission Control stylesheet contains multiple later overrides. The mobile active-navigation icon also still used a green accent, creating an inconsistent blue/green treatment.
+- Added a final, high-specificity presentation layer to `client/mission-control-cinematic.css`: primary actions use the blue-to-purple gradient; secondary actions use restrained blue/purple glass; active navigation and its icon stay blue; green remains reserved for live/positive status indicators.
+- Added version query parameters to all six client-dashboard stylesheet references in `client/index.html` so browsers request the corrected CSS rather than reusing cached styles.
+- No dashboard navigation routes, client JavaScript, API calls, authentication, billing, Worker, D1, Retell integration or customer data changed.
+- Validation required: confirm every stylesheet reference carries the new cache key; assert final primary/secondary/active-navigation color rules and green semantic-status boundary; check CSS brace balance and HTML structure; run repository CI and GitHub Pages deployment. Browser/device visual QA is still required before claiming the live visual result is confirmed.

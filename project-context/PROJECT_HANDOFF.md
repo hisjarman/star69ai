@@ -2235,3 +2235,15 @@ This section supersedes the earlier activation-status notes above where they des
 - No shared navigation, JavaScript behavior, forms, lead capture, authentication, API, Workers, D1, billing, customer records or production settings changed.
 - Validation boundary: source-level string/structure checks only. Browser visual QA, accessibility audit, link/form smoke tests, and GitHub Pages publication verification remain outstanding. No production deployment is claimed.
 - Review through PR; do not merge to `main` without explicit founder approval.
+
+
+## Mission Control navigator-style menu — 2026-11-24 — REVIEW REQUIRED
+
+- Owner requested a navigation redesign that makes the public menu easier to scan and use as a map/bookmark system, replacing the inconsistent-looking per-button colors.
+- Working branch: `design/mission-control-navigation-legend-2026-11-24`, based on current `main`.
+- Retains the five established groups and all current routes, including the Insights & Guides destination added by PR #339.
+- Uses consistent group colors: blue for Explore and Learn, purple for See It in Action, green for Company & Plans, and gold for Policies.
+- Adds a BOOKMARKS / QUICK JUMP strip for Home, Demos, Pricing and Initiate Contact; adds gold stars to selected featured destinations; adds a compact NAVIGATION KEY explaining the colors and star.
+- Preserves the compact shared header, utility row, menu open/close and inert behavior, current-page highlighting, Escape/outside-click close, and existing navigation destinations. No backend, Worker, D1, authentication, billing, customer data, homepage banner or visitor-animation changes.
+- Validation planned: JavaScript syntax; exact route/destination assertions; verify group color mapping, bookmarks and legend; verify protected-header workflow fingerprints; inspect responsive CSS at mobile/tablet/desktop. Browser visual QA and GitHub Pages live verification are not available from source inspection alone and remain outstanding.
+- Review through PR. Do not merge to `main` or claim production deployment until checks pass and visual QA is completed.

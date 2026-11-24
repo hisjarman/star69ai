@@ -1,3 +1,21 @@
+## Published Insight — Plumbing call handling and dispatch — 2026-11-24
+
+- **Article:** How Plumbing Companies Can Improve Call Handling and Keep Dispatch on Track
+- **URL/slug:** https://star69ai.com/insights/plumbing-call-handling-dispatch.html (`plumbing-call-handling-dispatch.html`).
+- **Primary SEO keyword:** plumbing call handling.
+- **Target industry:** Plumbing contractors and small plumbing businesses.
+- **Meta description:** Improve plumbing call handling with a clear intake checklist, dispatch priorities, estimate follow-up, and a reliable after-hours plan. (135 characters).
+- **Article body:** 870 words, verified within the required 600–900-word range, excluding SEO metadata and social copy.
+- **Editorial format:** Byline “By Star69AI Editorial Team”; publication date; five-minute reading estimate; two-paragraph introduction; clickable table of contents; four practical strategies; four FAQs; conclusion and managed-service CTA; contextual internal links; concise editorial disclosure.
+- **Featured image:** Original ImageGen artwork optimized as WebP at 640 × 360 pixels (25,484 bytes). Saved as `assets/plumbing-call-handling-dispatch.webp`. Alt text: “Plumbing office coordinator taking a service call while a technician prepares for an on-site repair.”
+- **Brand language:** Explicit managed AI receptionist positioning, “Our Crew,” “Initiate Contact,” and “Communications, Evolved.” No booking, activation, integration, safety, or business outcome is promised.
+- **Research and references:** No external statistics, technical claims, or legal conclusions were used. Recommendations are general business-operations practices; dispatch and emergency handling remain subject to the business's qualified staff and approved procedures. Internal Star69AI links are included.
+- **Files updated:** `insights/plumbing-call-handling-dispatch.html`, `assets/plumbing-call-handling-dispatch.webp`, `insights/index.html`, `sitemap.xml`, and this handoff.
+- **Publication:** The article, featured image, Insights card, sitemap entry, and handoff were committed together directly to `main` under the user's explicit automatic-publishing authorization. No branch or pull request was created.
+- **Validation:** Meta description length (135 characters); article word count (870); one H1; Article and BreadcrumbList JSON-LD; canonical/Open Graph/Twitter metadata; image path, intrinsic dimensions and alt text; clickable TOC anchors; index card and sitemap entry. GitHub Pages live HTTP verification is reported separately.
+
+---
+
 ## Published Insight — Salon appointment cancellations — 2026-11-23
 
 - **Article:** How Salons Can Reduce Last-Minute Cancellations and Keep the Appointment Book Full

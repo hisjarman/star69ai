@@ -10,7 +10,7 @@
       ["AI Trust Lab","/trust-lab.html","shield-check","cyan"]
     ]},
     { title: "LEARN & SUPPORT", subtitle: "Answers and insights", links: [
-      ["Learning Center","/learning-center/","graduation-cap","blue"],["Stories","/blog/","book-open","gold"],
+      ["Learning Center","/learning-center/","graduation-cap","blue"],["Insights & Guides","/insights/","book-open","purple"],["Stories","/blog/","book-open","gold"],
       ["FAQ","/faq.html","circle-help","gold"],["Managed AI research","/research/managed-ai-receptionists.html","microscope","blue"]
     ]},
     { title: "COMPANY & PLANS", subtitle: "Work with Star69AI", links: [

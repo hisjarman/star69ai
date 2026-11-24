@@ -244,3 +244,9 @@ This lock does not freeze homepage marketing copy, pricing, other page sections,
 - No other header controls, page layouts, homepage banner, visitor greeting, menu behavior, routes or footer styling were intentionally changed.
 - This specific owner request authorizes the button's visual contrast correction only. The protected CSS fingerprint is updated in this same reviewed change.
 - Verify the button at desktop/tablet/mobile widths and keyboard focus before merge. GitHub Pages live appearance must be checked after deployment.
+
+
+## Owner-approved menu addition — 2026-11-23
+
+- Added **Insights & Guides** under **LEARN & SUPPORT**, linking to `/insights/`.
+- This is a focused navigation addition; all existing destinations, group structure, and menu behavior remain unchanged.

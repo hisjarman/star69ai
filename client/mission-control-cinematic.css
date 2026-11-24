@@ -646,3 +646,51 @@ body:after{opacity:.10!important}
     outline-offset:3px!important;
   }
 }
+
+
+/* 2026-11-24 dashboard color-cascade correction.
+   All action controls stay blue/purple; green is reserved for positive/live status. */
+#workspace .client-page button.btn:not(.secondary):not(.danger),
+#workspace .client-workspace-header .btn:not(.secondary):not(.danger),
+#auth .btn:not(.secondary):not(.danger),
+.btn:not(.secondary):not(.danger),.button:not(.secondary):not(.danger){
+  border:1px solid rgba(133,190,255,.68)!important;
+  background:linear-gradient(112deg,#176fbd 0%,#365fc0 55%,#7136b8 100%)!important;
+  color:#fff!important;
+  box-shadow:0 7px 20px rgba(28,103,190,.2),inset 0 1px rgba(255,255,255,.16)!important;
+}
+#workspace .client-page button.btn:not(.secondary):not(.danger):hover,
+#workspace .client-workspace-header .btn:not(.secondary):not(.danger):hover,
+#auth .btn:not(.secondary):not(.danger):hover,
+.btn:not(.secondary):not(.danger):hover,.button:not(.secondary):not(.danger):hover{
+  border-color:rgba(177,220,255,.9)!important;
+  background:linear-gradient(112deg,#2498ec 0%,#456fda 52%,#8a4bd0 100%)!important;
+  color:#fff!important;
+}
+#workspace .client-page .btn.secondary,
+#workspace .client-workspace-header .btn.secondary,
+#auth .btn.secondary,.btn.secondary{
+  border:1px solid rgba(95,166,235,.48)!important;
+  background:linear-gradient(110deg,rgba(24,75,125,.32),rgba(67,42,111,.28))!important;
+  color:#e5f3ff!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.06)!important;
+}
+#workspace .client-page .btn.secondary:hover,
+#workspace .client-workspace-header .btn.secondary:hover,
+#auth .btn.secondary:hover,.btn.secondary:hover{
+  border-color:rgba(183,142,255,.75)!important;
+  background:linear-gradient(110deg,rgba(30,105,171,.42),rgba(106,53,151,.4))!important;
+  color:#fff!important;
+}
+#workspace .client-sidebar .client-nav .client-nav-item.active{
+  border-color:rgba(67,180,254,.62)!important;
+  background:linear-gradient(105deg,rgba(28,112,177,.42),rgba(88,49,137,.32))!important;
+  color:#fff!important;
+  box-shadow:inset 3px 0 #43B4FE,0 5px 18px rgba(0,0,0,.18)!important;
+}
+#workspace .client-sidebar .client-nav .client-nav-item.active:before{display:none!important}
+#workspace .client-sidebar .client-nav .client-nav-item.active .nav-icon{
+  border-color:rgba(67,180,254,.42)!important;
+  background:rgba(67,180,254,.12)!important;
+  color:#79caff!important;
+}

@@ -250,3 +250,13 @@ This lock does not freeze homepage marketing copy, pricing, other page sections,
 
 - Added **Insights & Guides** under **LEARN & SUPPORT**, linking to `/insights/`.
 - This is a focused navigation addition; all existing destinations, group structure, and menu behavior remain unchanged.
+
+
+## Owner-approved Mission Control navigation map — 2026-11-24
+
+- The owner explicitly requested a more intuitive, navigator-style menu rather than the previous mix of unrelated button colors.
+- Preserve the five visitor-intent groups and all existing destinations, including Insights & Guides. Assign one consistent accent to each group: blue for Explore and Learn, purple for Experience, green for Company & Plans, and gold for Policies.
+- Add a compact BOOKMARKS / QUICK JUMP row for Home, Demos, Pricing and Initiate Contact so visitors can reach common destinations without scanning every group.
+- Mark selected high-value destinations with a gold star; the star means “featured destination,” not an endorsement or status indicator. Include a visible navigation color key explaining both the group colors and star.
+- Preserve the compact single-row header, existing MENU/CLOSE toggle, responsive overlay, current-page state, Escape/outside-click behavior, keyboard focus, utility actions, and every existing route. No homepage banner, visitor greeting, footer, Worker, D1, authentication, billing or customer data changes are part of this revision.
+- This is an explicit owner-authorized navigation revision. Update the protected source fingerprints in the same pull request and pass the protection workflow. Check desktop and mobile layout and accessibility before merge; do not claim live appearance until GitHub Pages is verified.

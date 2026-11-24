@@ -639,3 +639,26 @@ body.site-interior-page .site-global-utility{
   .site-global-utility{overflow:visible!important}
   .site-global-nav{max-height:min(72vh,620px);overscroll-behavior:contain}
 }
+
+
+/* Owner-requested readability correction — Initiate Contact utility action. */
+.site-global-utility a.site-global-start{
+  color:#03101d!important;
+  background:#34fd78!important;
+  border:1px solid #34fd78!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.75px!important;
+  text-shadow:none!important;
+  box-shadow:0 0 12px rgba(52,253,120,.18);
+}
+.site-global-utility a.site-global-start:hover{
+  color:#03101d!important;
+  background:#62ff96!important;
+  border-color:#62ff96!important;
+  box-shadow:0 0 18px rgba(52,253,120,.32);
+}
+.site-global-utility a.site-global-start:focus-visible{
+  outline:2px solid #ffffff!important;
+  outline-offset:3px!important;
+}

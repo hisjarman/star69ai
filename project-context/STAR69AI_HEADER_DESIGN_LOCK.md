@@ -235,3 +235,12 @@ This lock does not freeze homepage marketing copy, pricing, other page sections,
 - The homepage loads several independent stylesheets and scripts with cache-busting query strings. A later asset inventory can identify duplicate selectors, unused styles and stale assets; do not remove files based only on filename or search results.
 - The banner currently uses multiple visual-motion layers (slow background drift, scan sweep, status pulse, ship flight and flag pop). Preserve all layers and reduced-motion behavior. A future audit should verify that every decorative animation respects reduced-motion preferences consistently.
 - The first-pass audit was source inspection, not a complete dead-code proof. No CSS/JS/assets were deleted, no broad refactor was performed, and no visual behavior was intentionally changed.
+
+
+## Owner-requested Initiate Contact button readability correction — 2026-11-23
+
+- The owner explicitly reported that the text inside the shared **Initiate Contact ↗** utility button was difficult to read and requested a readability fix.
+- Narrowly increased contrast without changing the link destination, label, utility-row position, navigation structure or behavior: use the approved neon-green accent as a solid button background and deep navy text, strengthen label weight/size, retain a clear hover state and add a visible keyboard focus outline.
+- No other header controls, page layouts, homepage banner, visitor greeting, menu behavior, routes or footer styling were intentionally changed.
+- This specific owner request authorizes the button's visual contrast correction only. The protected CSS fingerprint is updated in this same reviewed change.
+- Verify the button at desktop/tablet/mobile widths and keyboard focus before merge. GitHub Pages live appearance must be checked after deployment.

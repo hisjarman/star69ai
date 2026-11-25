@@ -473,3 +473,41 @@ body.site-home-page .site-global-nav{z-index:5}
 .addon-benchmark-disclosure p{margin:9px 0 0}
 @media(max-width:850px){.addon-price-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.addon-price-grid{grid-template-columns:1fr;gap:10px}.addon-price-card{padding:17px}.addon-price-name{min-height:0}.addon-price-card>strong{font-size:27px}}
+
+
+/* Star69AI public action buttons — logo-spectrum gradient + Cancun cyan illumination. */
+:root{
+  --s69-action-spectrum:linear-gradient(105deg,#65f79a 0%,#35e6df 48%,#43b4fe 100%);
+  --s69-action-spectrum-hover:linear-gradient(105deg,#8bffb4 0%,#62f3ef 48%,#78c8ff 100%);
+}
+body :where(.button,.btn,button.button,button.btn){
+  border:1px solid rgba(122,239,235,.82)!important;
+  background:var(--s69-action-spectrum)!important;
+  color:#03101d!important;
+  font-weight:850!important;
+  text-shadow:none!important;
+  box-shadow:0 8px 22px rgba(37,196,206,.18),0 0 18px rgba(67,180,254,.12),inset 0 1px rgba(255,255,255,.42)!important;
+  transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important;
+}
+body :where(.button:hover,.btn:hover,button.button:hover,button.btn:hover){
+  background:var(--s69-action-spectrum-hover)!important;
+  color:#03101d!important;
+  box-shadow:0 10px 27px rgba(37,196,206,.24),0 0 24px rgba(67,180,254,.20),inset 0 1px rgba(255,255,255,.55)!important;
+  filter:saturate(1.08);
+  transform:translateY(-1px);
+}
+body :where(.button.secondary,.btn.secondary,button.button.secondary,button.btn.secondary){
+  border:1px solid rgba(67,223,255,.62)!important;
+  background:linear-gradient(110deg,rgba(52,253,120,.08),rgba(67,223,255,.10),rgba(67,180,254,.13))!important;
+  color:#e9faff!important;
+  box-shadow:0 0 14px rgba(67,180,254,.10),inset 0 1px rgba(255,255,255,.08)!important;
+}
+body :where(.button.secondary:hover,.btn.secondary:hover,button.button.secondary:hover,button.btn.secondary:hover){
+  border-color:#43dfff!important;
+  background:linear-gradient(110deg,rgba(52,253,120,.13),rgba(67,223,255,.17),rgba(67,180,254,.20))!important;
+  color:#fff!important;
+  box-shadow:0 0 20px rgba(67,180,254,.22)!important;
+}
+body :where(.button,.btn,button.button,button.btn):focus-visible{
+  outline:2px solid #43dfff!important;outline-offset:3px!important;
+}

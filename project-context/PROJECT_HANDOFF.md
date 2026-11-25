@@ -114,6 +114,19 @@
 - Review through PR. Do not merge to `main` or claim deployment until founder approval and visual verification.
 
 
+## Marketing prospect after-hours answering checks — 2026-11-19 — REVIEW REQUIRED
+
+- Working branch: `feature/marketing-after-hours-intelligence-2026-11-19`, based on current `main`.
+- Added an optional business phone field to the admin Marketing Outreach prospect form and a per-prospect After-hours column with a collapsible check recorder.
+- Administrators can manually call the listed business number or document a public website/business-listing observation, then record one of five results: AI receptionist detected, human answering service, voicemail, no answer, or inconclusive. Each record stores the phone checked, check method, evidence note, timestamp and administrator identity; the latest result is shown on the prospect row and earlier checks remain in history.
+- Added authenticated platform Worker endpoint `POST /api/admin/marketing/prospects/:id/after-hours-check`, which validates status/method/phone/evidence, stores the check in `avr_marketing_after_hours_checks`, updates the prospect phone field and writes an admin audit event. Prospect GET now returns the latest check.
+- Added D1 migration `cloudflare/migrations/20261119_marketing_after_hours_checks.sql` to add `phone_number` to `avr_marketing_prospects` and create the check-history table/index.
+- Safety boundary: this feature does not place AI or automated outbound calls, record audio, or claim absence of AI based on a single inconclusive test. The manual phone link is initiated by the administrator. Results are observations, not a guarantee that a business has no after-hours service.
+- Validation: admin JavaScript parsed successfully; Worker source parsed after normalizing its module export; route/status/method/table/cache-bust static assertions passed. D1 migration runtime test, Worker tests, browser QA, deployment and end-to-end D1 verification remain outstanding.
+- Deployment sequence required before production use: apply the D1 migration to the existing platform database, deploy the updated `cloudflare/platform-worker.js` to the existing `avr-platform-api` Worker while preserving bindings/secrets, then publish the admin UI via GitHub Pages and verify prospect list/check-save behavior. No migration or Worker deployment performed by this branch.
+- No email sending, partner commissions, customer records, Retell configuration, billing, auth, DNS or Cloudflare zone configuration changed. Do not merge or deploy without explicit founder approval.
+
+
 ## Owner-requested slim global header — 2026-11-19 — REVIEW REQUIRED
 
 - Working branch: `fix/slim-global-header-all-pages-2026-11-19`, based on current `main`.

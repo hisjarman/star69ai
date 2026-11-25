@@ -2293,3 +2293,14 @@ This section supersedes the earlier activation-status notes above where they des
 - Added version query parameters to all six client-dashboard stylesheet references in `client/index.html` so browsers request the corrected CSS rather than reusing cached styles.
 - No dashboard navigation routes, client JavaScript, API calls, authentication, billing, Worker, D1, Retell integration or customer data changed.
 - Validation required: confirm every stylesheet reference carries the new cache key; assert final primary/secondary/active-navigation color rules and green semantic-status boundary; check CSS brace balance and HTML structure; run repository CI and GitHub Pages deployment. Browser/device visual QA is still required before claiming the live visual result is confirmed.
+
+
+## Owner-requested logo-spectrum buttons and illuminated menu text — 2026-11-24 — REVIEW REQUIRED
+
+- Working branch: `design/logo-spectrum-controls-2026-11-24`.
+- Applied the Star69AI “69” logo's green-to-cyan-to-blue blend to primary public action buttons, shared utility actions, quick-jump links and navigation destination labels. Added a restrained cyan-blue illuminated edge/glow for hover and keyboard focus.
+- Kept dark navy text on the luminous primary-button gradient for readability. Secondary controls remain dark/glass with a cyan-blue outline rather than becoming bright filled buttons.
+- Preserved the menu's five group-color meanings, gold featured stars, bookmarks, all routes, compact header geometry and existing interactions. This treatment does not recolor unrelated body copy, backgrounds or homepage hero artwork.
+- Files changed: `site-header.css`, `styles.css`, `project-context/STAR69AI_HEADER_DESIGN_LOCK.md`, `.github/workflows/protect-approved-header.yml`, and this handoff.
+- Validation: CSS brace balance and targeted selector/source assertions; protected-header fingerprint updated to the exact new `site-header.css` blob. Browser visual QA and GitHub Pages live verification remain outstanding.
+- Presentation-only. No Worker, D1, authentication, billing, Retell, customer data or production configuration changed. Review through this PR; do not merge or claim production deployment until the owner approves and visual QA passes.

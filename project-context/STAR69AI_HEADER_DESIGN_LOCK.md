@@ -260,3 +260,12 @@ This lock does not freeze homepage marketing copy, pricing, other page sections,
 - Mark selected high-value destinations with a gold star; the star means “featured destination,” not an endorsement or status indicator. Include a visible navigation color key explaining both the group colors and star.
 - Preserve the compact single-row header, existing MENU/CLOSE toggle, responsive overlay, current-page state, Escape/outside-click behavior, keyboard focus, utility actions, and every existing route. No homepage banner, visitor greeting, footer, Worker, D1, authentication, billing or customer data changes are part of this revision.
 - This is an explicit owner-authorized navigation revision. Update the protected source fingerprints in the same pull request and pass the protection workflow. Check desktop and mobile layout and accessibility before merge; do not claim live appearance until GitHub Pages is verified.
+
+
+## Owner-approved logo-spectrum buttons and illuminated menu text — 2026-11-24
+
+- The owner supplied two visual references and explicitly requested that Star69AI buttons and menu text use the first reference's iridescent green-to-cyan-to-blue blend from the “69” mark, combined with the second reference's vivid cyan-blue illuminated edge.
+- Apply the spectrum to primary public-site action buttons, shared utility actions, quick-jump links and navigation destination labels. Use a restrained cyan-blue glow for hover/focus states and readable dark navy text on the luminous primary-button gradient.
+- Preserve the navigator menu's existing group-color semantics (blue Explore/Learn, purple Experience, green Company & Plans, gold Policies), bookmark destinations, featured stars, labels, routes, compact header geometry, interactions and accessibility behavior. The new spectrum is a shared button/text finish, not a replacement for the group color key.
+- Keep the treatment restrained: no blanket glow on body copy, no change to page backgrounds or homepage hero artwork, and honor reduced-motion preferences already defined by the shared stylesheet.
+- This is an explicit owner-authorized presentation change. Update protected source fingerprints in the same pull request. Verify desktop/mobile rendering, contrast, focus visibility, and the shared menu on public pages before merge. Do not claim live deployment until GitHub Pages is checked.

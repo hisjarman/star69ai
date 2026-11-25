@@ -2247,3 +2247,14 @@ This section supersedes the earlier activation-status notes above where they des
 - Preserves the compact shared header, utility row, menu open/close and inert behavior, current-page highlighting, Escape/outside-click close, and existing navigation destinations. No backend, Worker, D1, authentication, billing, customer data, homepage banner or visitor-animation changes.
 - Validation planned: JavaScript syntax; exact route/destination assertions; verify group color mapping, bookmarks and legend; verify protected-header workflow fingerprints; inspect responsive CSS at mobile/tablet/desktop. Browser visual QA and GitHub Pages live verification are not available from source inspection alone and remain outstanding.
 - Review through PR. Do not merge to `main` or claim production deployment until checks pass and visual QA is completed.
+
+
+## Owner-requested logo-spectrum buttons and illuminated menu text — 2026-11-24 — REVIEW REQUIRED
+
+- Working branch: `design/mission-control-navigation-legend-2026-11-24`, extending PR #340's navigator-style public menu revision.
+- Applied the Star69AI “69” logo's green-to-cyan-to-blue blend to primary public action buttons, shared utility actions, quick-jump links and navigation destination labels. Added a restrained cyan-blue illuminated edge/glow for hover and keyboard focus.
+- Kept dark navy text on the luminous primary-button gradient for readability. Secondary controls remain dark/glass with a cyan-blue outline rather than becoming bright filled buttons.
+- Preserved the menu's five group-color meanings, gold featured stars, bookmarks, all routes, compact header geometry and existing interactions. This treatment does not recolor unrelated body copy, backgrounds or homepage hero artwork.
+- Files changed: `site-header.css`, `styles.css`, `project-context/STAR69AI_HEADER_DESIGN_LOCK.md`, `.github/workflows/protect-approved-header.yml`, and this handoff.
+- Validation: CSS brace balance and targeted selector/source assertions; protected-header fingerprint updated to the exact new `site-header.css` blob. Browser visual QA and GitHub Pages live verification remain outstanding.
+- Presentation-only. No Worker, D1, authentication, billing, Retell, customer data or production configuration changed. Review through PR #340; do not merge or claim production deployment until the owner approves and visual QA passes.

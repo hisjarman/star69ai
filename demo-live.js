@@ -46,11 +46,16 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
   const transcriptNodes=new Map();
   function message(text){
     transcriptNodes.clear();
+    const nextText=String(text||"");
+    const existing=transcript.querySelector(".transcript-empty");
+    // Retell may emit repeated empty snapshots while connecting. Do not
+    // replace an identical placeholder on every callback.
+    if(existing&&existing.querySelector("small")?.textContent===nextText)return;
     transcript.replaceChildren();
     const box=document.createElement("div");box.className="transcript-empty";
     const icon=document.createElement("span");icon.textContent="✳";
     const strong=document.createElement("b");strong.textContent="Live demo studio";
-    const small=document.createElement("small");small.textContent=text;
+    const small=document.createElement("small");small.textContent=nextText;
     box.append(icon,strong,small);transcript.append(box);
   }
   function addTranscript(lines){
@@ -65,11 +70,9 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     const emptyState=transcript.querySelector(".transcript-empty");
     if(emptyState)emptyState.remove();
 
-    const wasNearBottom=transcript.scrollHeight-transcript.scrollTop-transcript.clientHeight<48;
     transcript.classList.add("live-transcript-stream");
     const activeKeys=new Set();
     const roleOrdinals={agent:0,user:0};
-    let addedMessage=false;
 
     // Retell can revise the last partial utterance on every callback. Key rows
     // by their role-relative position rather than optional SDK IDs, which are
@@ -85,7 +88,6 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
 
       let item=transcriptNodes.get(key);
       if(!item){
-        addedMessage=true;
         item=document.createElement("div");
         item.className="transcript-message "+roleClass;
         item.dataset.transcriptId=key;
@@ -113,8 +115,6 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     // Keep the viewport stationary while speech is streaming. New turns are
     // appended without replacing or reordering existing rows; users can scroll
     // deliberately without the transcript pulling the panel during a call.
-    void wasNearBottom;
-    void addedMessage;
   }
   function setStatus(value){
     state.textContent=value;

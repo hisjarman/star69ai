@@ -1031,7 +1031,7 @@ async function route(req,env){
    const p=await body(req,3000);
    if(p.agent_id&&String(p.agent_id)!==row.agent_id)throw Error("demo_agent_mismatch");
    const ip=String(req.headers.get("CF-Connecting-IP")||"unknown").slice(0,100);
-   const visitorHash=await sha256Hex(env.RETELL_API_KEY+"|star69ai-public-demo|"+ip);
+   const visitorAgent=String(req.headers.get("User-Agent")||"unknown").slice(0,240);\n   const visitorHash=await sha256Hex(env.RETELL_API_KEY+"|star69ai-public-demo|"+ip+"|"+visitorAgent);
    const hourAgo=new Date(Date.now()-3600000).toISOString(),dayAgo=new Date(Date.now()-86400000).toISOString();
    const [visitorCount,dailyCount]=await Promise.all([
     env.DB.prepare("SELECT COUNT(*) AS n FROM avr_public_demo_call_events WHERE visitor_hash=? AND created_at>=?").bind(visitorHash,hourAgo).first(),
@@ -1355,7 +1355,20 @@ async function route(req,env){
     for(const spec of PUBLIC_DEMO_SPECS){
      try{
       const existing=await env.DB.prepare("SELECT agent_id FROM avr_public_demo_agents WHERE slug=? LIMIT 1").bind(spec.slug).first();
-      if(existing?.agent_id){results.push({slug:spec.slug,agentId:existing.agent_id,created:false,status:"already_provisioned"});continue;}
+      let agentId=existing?.agent_id||null,agent=null,created=false;
+      if(agentId){
+       agent=await retellApi(env,"/get-agent/"+encodeURIComponent(agentId));
+       if(agent.is_published!==true){
+        const version=Number(agent.version);
+        if(!Number.isInteger(version)||version<0)throw Error("retell_initial_draft_version_unavailable");
+        await retellApi(env,"/publish-agent-version/"+encodeURIComponent(agentId),"POST",{version,version_description:"Initial Star69AI public demo release"});
+        agent=await retellApi(env,"/get-agent/"+encodeURIComponent(agentId));
+       }
+       if(agent.is_published!==true)throw Error("retell_agent_publish_verification_failed");
+       await env.DB.prepare("UPDATE avr_public_demo_agents SET active=1,updated_at=? WHERE slug=?").bind(new Date().toISOString(),spec.slug).run();
+       await env.DB.prepare("UPDATE avr_agents SET status='demo',raw_json=?,synced_at=? WHERE agent_id=?").bind(JSON.stringify({...agent,channel:"voice",_avr_engine_type:"retell-llm",star69ai_public_demo:true,demo_slug:spec.slug}),new Date().toISOString(),agentId).run();
+       results.push({slug:spec.slug,agentId,created:false,status:"repaired_and_published",published:true});continue;
+      }
       const prompt=publicDemoPrompt(spec);
       const llm=await retellApi(env,"/create-retell-llm","POST",{
        model_config:{type:"cascading",primary:{model:"gpt-4.1",tier:"standard"}},
@@ -1363,19 +1376,24 @@ async function route(req,env){
       });
       const llmId=llm.llm_id||llm.id;
       if(!llmId)throw Error("retell_llm_creation_missing_id");
-      const agent=await retellApi(env,"/create-agent","POST",{
+      agent=await retellApi(env,"/create-agent","POST",{
        agent_name:"Star69AI Live Demo — "+spec.label,
        response_engine:{type:"retell-llm",llm_id:llmId},
        voice_id:spec.voice,language:"en-US",data_storage_setting:"basic_attributes_only",
        max_call_duration_ms:180000
       });
-      const agentId=agent.agent_id||agent.id;
+      agentId=agent.agent_id||agent.id;
       if(!agentId)throw Error("retell_agent_creation_missing_id");
-      const raw={...agent,channel:"voice",_avr_engine_type:"retell-llm",_avr_engine_id:llmId,star69ai_public_demo:true,demo_slug:spec.slug};
-      await env.DB.prepare("INSERT INTO avr_agents(agent_id,agent_name,customer_id,voice_id,language,status,raw_json,synced_at) VALUES(?,?,NULL,?,?,'demo',?,?)").bind(agentId,agent.agent_name||("Star69AI Live Demo — "+spec.label),agent.voice_id||spec.voice,agent.language||"en-US",JSON.stringify(raw),new Date().toISOString()).run();
+      const version=Number(agent.version);
+      if(!Number.isInteger(version)||version<0)throw Error("retell_initial_draft_version_unavailable");
+      await retellApi(env,"/publish-agent-version/"+encodeURIComponent(agentId),"POST",{version,version_description:"Initial Star69AI public demo release"});
+      const verified=await retellApi(env,"/get-agent/"+encodeURIComponent(agentId));
+      if(verified.is_published!==true)throw Error("retell_agent_publish_verification_failed");
+      const raw={...verified,channel:"voice",_avr_engine_type:"retell-llm",_avr_engine_id:llmId,star69ai_public_demo:true,demo_slug:spec.slug};
+      await env.DB.prepare("INSERT INTO avr_agents(agent_id,agent_name,customer_id,voice_id,language,status,raw_json,synced_at) VALUES(?,?,NULL,?,?,'demo',?,?)").bind(agentId,verified.agent_name||("Star69AI Live Demo — "+spec.label),verified.voice_id||spec.voice,verified.language||"en-US",JSON.stringify(raw),new Date().toISOString()).run();
       await env.DB.prepare("INSERT INTO avr_public_demo_agents(slug,label,agent_id,active,created_at,updated_at) VALUES(?,?,?,1,?,?)").bind(spec.slug,spec.label,agentId,new Date().toISOString(),new Date().toISOString()).run();
-      results.push({slug:spec.slug,agentId,created:true,status:"provisioned"});
-     }catch(e){results.push({slug:spec.slug,created:false,status:"failed",error:String(e.message||"provision_failed").slice(0,180)});}
+      results.push({slug:spec.slug,agentId,created:true,status:"provisioned_and_published",published:true});
+     }catch(e){results.push({slug:spec.slug,agentId:agentId||null,created, status:"failed",error:String(e.message||"provision_failed").slice(0,180)});}
     }
     const created=results.filter(x=>x.created).length,failed=results.filter(x=>x.status==="failed").length;
     await audit(env,u,"public_demo_agents_provisioned",null,{created,failed,total:results.length});

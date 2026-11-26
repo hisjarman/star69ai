@@ -40,7 +40,12 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
   reset.hidden=true;
   if(disclosure)disclosure.hidden=false;
 
+  // Retell emits complete transcript snapshots. Keep a DOM node per Retell
+  // transcript ID so a reordered or expanded snapshot never reuses another
+  // speaker's element and causes visible text/speaker swapping.
+  const transcriptNodes=new Map();
   function message(text){
+    transcriptNodes.clear();
     transcript.replaceChildren();
     const box=document.createElement("div");box.className="transcript-empty";
     const icon=document.createElement("span");icon.textContent="✳";
@@ -52,41 +57,59 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     const rows=Array.isArray(lines)?lines:[];
     const visible=rows.filter(x=>["agent","user"].includes(String(x.role||"").toLowerCase())&&String(x.content||"").trim());
     if(!visible.length){
-      if(!transcript.querySelector(".transcript-message"))message(publicKey?"Your live conversation will appear here.":"Voice is ready. Live transcript requires a Retell public key configured for this website.");
+      if(!transcriptNodes.size)message(publicKey?"Your live conversation will appear here.":"Voice is ready. Live transcript requires a Retell public key configured for this website.");
       return;
     }
 
-    // Retell emits the full transcript snapshot repeatedly as speech is recognized.
-    // Reuse existing message nodes and update only changed text; rebuilding the panel
-    // on every partial update replays entry animations and makes the whole box flash.
     const wasNearBottom=transcript.scrollHeight-transcript.scrollTop-transcript.clientHeight<48;
     transcript.classList.add("live-transcript-stream");
-    const existing=[...transcript.querySelectorAll(".transcript-message")];
+    const activeKeys=new Set();
     let addedMessage=false;
+
     visible.forEach((x,index)=>{
-      const who=String(x.role).toLowerCase()==="user"?"CALLER":"AI RECEPTIONIST";
-      const roleClass=who==="CALLER"?"caller":"receptionist";
-      let item=existing[index];
+      const role=String(x.role||"").toLowerCase();
+      const who=role==="user"?"CALLER":"AI RECEPTIONIST";
+      const roleClass=role==="user"?"caller":"receptionist";
+      const key=x.id==null?role+":"+index:String(x.id);
+      activeKeys.add(key);
+
+      let item=transcriptNodes.get(key);
       if(!item){
         addedMessage=true;
         item=document.createElement("div");
         item.className="transcript-message "+roleClass;
-        const tag=document.createElement("span");tag.className="transcript-speaker";tag.textContent=who;
-        const body=document.createElement("p");item.append(tag,body);
-        transcript.append(item);
+        item.dataset.transcriptId=key;
+        const tag=document.createElement("span");
+        tag.className="transcript-speaker";
+        tag.textContent=who;
+        const body=document.createElement("p");
+        item.append(tag,body);
+        transcriptNodes.set(key,item);
       }else if(!item.classList.contains(roleClass)){
-        item.classList.remove("caller","receptionist");item.classList.add(roleClass);
-        const tag=item.querySelector(".transcript-speaker");if(tag)tag.textContent=who;
+        item.classList.remove("caller","receptionist");
+        item.classList.add(roleClass);
+        const tag=item.querySelector(".transcript-speaker");
+        if(tag)tag.textContent=who;
       }
+
       const body=item.querySelector("p");
       const nextText=String(x.content||"");
       if(body&&body.textContent!==nextText)body.textContent=nextText;
+
+      // Move a node only when its position actually changed. Calling append()
+      // on every snapshot would detach/reinsert every message and visibly flash.
+      const expected=transcript.children[index]||null;
+      if(expected!==item)transcript.insertBefore(item,expected);
     });
-    while(transcript.querySelectorAll(".transcript-message").length>visible.length){
-      transcript.lastElementChild?.remove();
+
+    for(const [key,item] of transcriptNodes){
+      if(!activeKeys.has(key)){
+        item.remove();
+        transcriptNodes.delete(key);
+      }
     }
-    // Retell sends partial text snapshots many times per utterance. Do not scroll or
-    // animate the transcript on each character update; only follow a newly added turn.
+
+    // Follow only genuinely new turns; partial text changes do not move the viewport.
     if(wasNearBottom&&addedMessage)transcript.scrollTop=transcript.scrollHeight;
   }
   function setStatus(value){

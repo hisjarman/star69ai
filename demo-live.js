@@ -61,6 +61,10 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
       return;
     }
 
+    // Remove the flex-centered empty state before adding live rows. Its auto margins otherwise keep participating in layout and can shift the transcript as it grows.
+    const emptyState=transcript.querySelector(".transcript-empty");
+    if(emptyState)emptyState.remove();
+
     const wasNearBottom=transcript.scrollHeight-transcript.scrollTop-transcript.clientHeight<48;
     transcript.classList.add("live-transcript-stream");
     const activeKeys=new Set();

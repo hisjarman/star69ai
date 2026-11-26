@@ -1031,7 +1031,8 @@ async function route(req,env){
    const p=await body(req,3000);
    if(p.agent_id&&String(p.agent_id)!==row.agent_id)throw Error("demo_agent_mismatch");
    const ip=String(req.headers.get("CF-Connecting-IP")||"unknown").slice(0,100);
-   const visitorAgent=String(req.headers.get("User-Agent")||"unknown").slice(0,240);\n   const visitorHash=await sha256Hex(env.RETELL_API_KEY+"|star69ai-public-demo|"+ip+"|"+visitorAgent);
+   const visitorAgent=String(req.headers.get("User-Agent")||"unknown").slice(0,240);
+   const visitorHash=await sha256Hex(env.RETELL_API_KEY+"|star69ai-public-demo|"+ip+"|"+visitorAgent);
    const hourAgo=new Date(Date.now()-3600000).toISOString(),dayAgo=new Date(Date.now()-86400000).toISOString();
    const [visitorCount,dailyCount]=await Promise.all([
     env.DB.prepare("SELECT COUNT(*) AS n FROM avr_public_demo_call_events WHERE visitor_hash=? AND created_at>=?").bind(visitorHash,hourAgo).first(),

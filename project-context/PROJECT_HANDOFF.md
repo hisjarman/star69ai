@@ -1,3 +1,20 @@
+# Live industry demo agents — 2026-11-25 — REVIEW REQUIRED
+
+- Working branch: `feature/live-industry-demo-agents-2026-11-25`, based on current `main` at `dd165cd1f63444492f09147a6efa2c52370ca4b3`.
+- Replaced the scripted six-industry call simulator on `demos.html` with a Retell browser voice demo client. The studio supports roofing, plumbing, HVAC, dental, real estate and hotel demonstrations, microphone mute/end controls, connection state, elapsed call time and live transcript rendering when a Retell public key is configured.
+- Added the current Retell V3 `POST /v3/create-web-call` flow behind the existing `avr-platform-api` Worker. The Retell API secret remains server-side. The public browser SDK uses `retell-client-js-sdk` 3.x; its REST create-call request is routed through the Worker. Transcript monitoring requires a Retell public key with the required call-write scope, restricted to the Star69AI website domain.
+- Added admin-only `POST /api/admin/demo-agents/provision` to create six separate Retell LLMs and voice agents. Agents are stored with `customer_id=NULL`, `status='demo'`, and a public demo slug; they are not attached to customers or phone numbers. The Command Center Retell resources panel has an explicit confirmation button to run provisioning. Provisioning is idempotent by demo slug.
+- Added public `GET /api/public/demo-agents` and `POST /api/public/demo-agents/:slug/call`. Public calls are origin-allowlisted, restricted to mapped demo agents, limited to 3 calls per hashed visitor per hour and 75 calls per demo per day, and capped at 3 minutes. Only a keyed hash of the Cloudflare visitor IP is stored; raw IP addresses are not persisted in the demo rate-limit table. Old rate-limit rows are pruned after 30 days.
+- Each agent has a separate fictional industry prompt. Prompts prohibit real bookings, reservations, dispatch, transfers, messaging, payments, availability claims, real contact collection and unsupported business facts; industry-specific safety boundaries are included. Retell agent data storage is set to `basic_attributes_only`.
+- Added D1 migration `cloudflare/migrations/20261125_public_live_demo_agents.sql` and mirrored the new tables in `cloudflare/schema.sql`.
+- Added `RETELL_PUBLIC_KEY` as an optional Cloudflare Worker variable to enable browser transcript streaming. Without it, browser voice calls can still connect through the server proxy but live transcript streaming remains disabled. Configure a Retell public key restricted to `star69ai.com` and with the SDK's required call-write permission before advertising transcripts as available. Never expose `RETELL_API_KEY`.
+- **Not deployed:** D1 migration has not been applied; Worker has not been deployed; Retell agents have not yet been created; GitHub Pages has not published these changes. No customer accounts, phone numbers, billing, subscriptions, or production routing were changed.
+- **Required rollout order:** (1) validate this branch and PR; (2) apply the D1 migration to the existing `avr-trust-lab` database; (3) set the restricted `RETELL_PUBLIC_KEY` Worker variable; (4) deploy `cloudflare/platform-worker.js` while preserving all existing bindings/secrets; (5) sign in to Command Center → Retell resources and select **Create six public demo agents**; (6) verify all six mappings via `GET /api/public/demo-agents`; (7) verify live calls, transcript, mute/end controls, origin rejection, 3/hour visitor limit, 75/day per-agent limit, and 3-minute call cap; (8) verify GitHub Pages and mobile/tablet/desktop browser rendering.
+- Retell V3 web-call API and SDK behavior are based on current Retell documentation. The SDK transcript stream requires a suitable public key; do not put the Retell secret key in browser code.
+- Review via PR. Do not merge to `main` or claim deployment until the founder approves the PR and the rollout/QA sequence is completed.
+
+---
+
 ## Published Insight — HVAC and plumbing emergency call capture — 2026-11-24
 
 - **Article:** Stop Losing Emergency Jobs: How AI Receptionists Help HVAC and Plumbing Companies Capture More Calls

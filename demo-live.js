@@ -49,18 +49,41 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     box.append(icon,strong,small);transcript.append(box);
   }
   function addTranscript(lines){
-    transcript.replaceChildren();
     const rows=Array.isArray(lines)?lines:[];
     const visible=rows.filter(x=>["agent","user"].includes(String(x.role||"").toLowerCase())&&String(x.content||"").trim());
-    if(!visible.length){message(publicKey?"Your live conversation will appear here.":"Voice is ready. Live transcript requires a Retell public key configured for this website.");return;}
-    visible.forEach(x=>{
+    if(!visible.length){
+      if(!transcript.querySelector(".transcript-message"))message(publicKey?"Your live conversation will appear here.":"Voice is ready. Live transcript requires a Retell public key configured for this website.");
+      return;
+    }
+
+    // Retell emits the full transcript snapshot repeatedly as speech is recognized.
+    // Reuse existing message nodes and update only changed text; rebuilding the panel
+    // on every partial update replays entry animations and makes the whole box flash.
+    const wasNearBottom=transcript.scrollHeight-transcript.scrollTop-transcript.clientHeight<48;
+    transcript.classList.add("live-transcript-stream");
+    const existing=[...transcript.querySelectorAll(".transcript-message")];
+    visible.forEach((x,index)=>{
       const who=String(x.role).toLowerCase()==="user"?"CALLER":"AI RECEPTIONIST";
-      const item=document.createElement("div");item.className="transcript-message "+(who==="CALLER"?"caller":"receptionist");
-      const tag=document.createElement("span");tag.className="transcript-speaker";tag.textContent=who;
-      const body=document.createElement("p");body.textContent=String(x.content||"");
-      item.append(tag,body);transcript.append(item);
+      const roleClass=who==="CALLER"?"caller":"receptionist";
+      let item=existing[index];
+      if(!item){
+        item=document.createElement("div");
+        item.className="transcript-message "+roleClass;
+        const tag=document.createElement("span");tag.className="transcript-speaker";tag.textContent=who;
+        const body=document.createElement("p");item.append(tag,body);
+        transcript.append(item);
+      }else if(!item.classList.contains(roleClass)){
+        item.classList.remove("caller","receptionist");item.classList.add(roleClass);
+        const tag=item.querySelector(".transcript-speaker");if(tag)tag.textContent=who;
+      }
+      const body=item.querySelector("p");
+      const nextText=String(x.content||"");
+      if(body&&body.textContent!==nextText)body.textContent=nextText;
     });
-    transcript.scrollTop=transcript.scrollHeight;
+    while(transcript.querySelectorAll(".transcript-message").length>visible.length){
+      transcript.lastElementChild?.remove();
+    }
+    if(wasNearBottom)transcript.scrollTop=transcript.scrollHeight;
   }
   function setStatus(value){
     state.textContent=value;

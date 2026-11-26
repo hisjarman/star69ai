@@ -2321,3 +2321,11 @@ This section supersedes the earlier activation-status notes above where they des
 - Files changed: `site-header.css`, `styles.css`, `project-context/STAR69AI_HEADER_DESIGN_LOCK.md`, `.github/workflows/protect-approved-header.yml`, and this handoff.
 - Validation: CSS brace balance and targeted selector/source assertions; protected-header fingerprint updated to the exact new `site-header.css` blob. Browser visual QA and GitHub Pages live verification remain outstanding.
 - Presentation-only. No Worker, D1, authentication, billing, Retell, customer data or production configuration changed. Review through this PR; do not merge or claim production deployment until the owner approves and visual QA passes.
+
+
+## Public live demo visitor limit adjustment — 2026-11-26 — PR review required
+
+- Increased the per-visitor public live demo call-creation allowance from 3 to 10 successful web-call creations per rolling hour. The visitor key remains a keyed hash of the Cloudflare IP and bounded User-Agent; raw IP addresses are not stored.
+- Kept the separate per-industry-demo daily capacity at 75 calls and retained the 3-minute maximum call duration. Failed Retell call-creation attempts do not consume a visitor allowance because the event row is inserted only after a valid Retell `call_id` is returned.
+- Source change: `cloudflare/platform-worker.js`. This change is on `fix/public-demo-hourly-limit-10-2026-11-26` and is proposed for review; it has not been merged or deployed. The Cloudflare Worker remains unchanged until the PR is approved and the updated Worker is explicitly deployed.
+- Validation: confirmed the source contains the single intended hourly threshold change (3 → 10) and the daily capacity and call-duration safeguards remain unchanged. Live rate-limit behavior and deployment have not been tested.

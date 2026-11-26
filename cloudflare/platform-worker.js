@@ -1038,7 +1038,7 @@ async function route(req,env){
     env.DB.prepare("SELECT COUNT(*) AS n FROM avr_public_demo_call_events WHERE visitor_hash=? AND created_at>=?").bind(visitorHash,hourAgo).first(),
     env.DB.prepare("SELECT COUNT(*) AS n FROM avr_public_demo_call_events WHERE demo_slug=? AND created_at>=?").bind(slug,dayAgo).first()
    ]);
-   if(Number(visitorCount?.n||0)>=3)return json({error:"demo_hourly_limit_reached"},429,origin,env);
+   if(Number(visitorCount?.n||0)>=10)return json({error:"demo_hourly_limit_reached"},429,origin,env);
    if(Number(dailyCount?.n||0)>=75)return json({error:"demo_daily_capacity_reached"},429,origin,env);
    try{
     const call=await retellApi(env,"/v3/create-web-call","POST",{

@@ -68,13 +68,19 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     const wasNearBottom=transcript.scrollHeight-transcript.scrollTop-transcript.clientHeight<48;
     transcript.classList.add("live-transcript-stream");
     const activeKeys=new Set();
+    const roleOrdinals={agent:0,user:0};
     let addedMessage=false;
 
-    visible.forEach((x,index)=>{
+    // Retell can revise the last partial utterance on every callback. Key rows
+    // by their role-relative position rather than optional SDK IDs, which are
+    // not guaranteed to be present or stable in every transcript payload.
+    // Existing rows are updated in place; new rows are appended exactly once.
+    visible.forEach(x=>{
       const role=String(x.role||"").toLowerCase();
+      const ordinal=roleOrdinals[role]++;
       const who=role==="user"?"CALLER":"AI RECEPTIONIST";
       const roleClass=role==="user"?"caller":"receptionist";
-      const key=x.id==null?role+":"+index:String(x.id);
+      const key=role+":"+ordinal;
       activeKeys.add(key);
 
       let item=transcriptNodes.get(key);
@@ -89,21 +95,12 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
         const body=document.createElement("p");
         item.append(tag,body);
         transcriptNodes.set(key,item);
-      }else if(!item.classList.contains(roleClass)){
-        item.classList.remove("caller","receptionist");
-        item.classList.add(roleClass);
-        const tag=item.querySelector(".transcript-speaker");
-        if(tag)tag.textContent=who;
+        transcript.append(item);
       }
 
       const body=item.querySelector("p");
       const nextText=String(x.content||"");
       if(body&&body.textContent!==nextText)body.textContent=nextText;
-
-      // Move a node only when its position actually changed. Calling append()
-      // on every snapshot would detach/reinsert every message and visibly flash.
-      const expected=transcript.children[index]||null;
-      if(expected!==item)transcript.insertBefore(item,expected);
     });
 
     for(const [key,item] of transcriptNodes){
@@ -113,8 +110,11 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
       }
     }
 
-    // Follow only genuinely new turns; partial text changes do not move the viewport.
-    if(wasNearBottom&&addedMessage)transcript.scrollTop=transcript.scrollHeight;
+    // Keep the viewport stationary while speech is streaming. New turns are
+    // appended without replacing or reordering existing rows; users can scroll
+    // deliberately without the transcript pulling the panel during a call.
+    void wasNearBottom;
+    void addedMessage;
   }
   function setStatus(value){
     state.textContent=value;

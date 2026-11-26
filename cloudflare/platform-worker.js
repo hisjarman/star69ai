@@ -1039,15 +1039,15 @@ async function route(req,env){
    ]);
    if(Number(visitorCount?.n||0)>=3)return json({error:"demo_hourly_limit_reached"},429,origin,env);
    if(Number(dailyCount?.n||0)>=75)return json({error:"demo_daily_capacity_reached"},429,origin,env);
-   const eventId=crypto.randomUUID(),now=new Date().toISOString();
-   await env.DB.prepare("INSERT INTO avr_public_demo_call_events(id,visitor_hash,demo_slug,created_at) VALUES(?,?,?,?)").bind(eventId,visitorHash,slug,now).run();
    try{
     const call=await retellApi(env,"/v3/create-web-call","POST",{
      agent_id:row.agent_id,agent_version:"latest_published",
      agent_override:{agent:{max_call_duration_ms:180000}},
      metadata:{source:"star69ai_public_demo",demo_slug:slug,disclaimer_acknowledged:true}
     });
-    await env.DB.prepare("UPDATE avr_public_demo_call_events SET call_id=? WHERE id=?").bind(String(call.call_id||""),eventId).run();
+    if(!call.call_id)throw Error("retell_web_call_id_missing");
+    const eventId=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO avr_public_demo_call_events(id,visitor_hash,demo_slug,call_id,created_at) VALUES(?,?,?,?,?)").bind(eventId,visitorHash,slug,String(call.call_id),now).run();
     await env.DB.prepare("DELETE FROM avr_public_demo_call_events WHERE created_at<?").bind(new Date(Date.now()-30*86400000).toISOString()).run();
     return json({...call,publicKey:String(env.RETELL_PUBLIC_KEY||"")},200,origin,env);
    }catch(e){

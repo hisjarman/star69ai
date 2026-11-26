@@ -56,3 +56,23 @@ CREATE INDEX IF NOT EXISTS avr_checkout_evidence_customer_idx ON avr_checkout_ev
 CREATE INDEX IF NOT EXISTS avr_checkout_evidence_onboarding_idx ON avr_checkout_evidence_events(onboarding_id, server_timestamp DESC);
 CREATE TRIGGER IF NOT EXISTS avr_checkout_evidence_no_update BEFORE UPDATE ON avr_checkout_evidence_events BEGIN SELECT RAISE(ABORT, 'checkout evidence is append-only'); END;
 CREATE TRIGGER IF NOT EXISTS avr_checkout_evidence_no_delete BEFORE DELETE ON avr_checkout_evidence_events BEGIN SELECT RAISE(ABORT, 'checkout evidence is append-only'); END;
+
+
+-- Public live demonstration agents. Also defined in migration 20261125_public_live_demo_agents.sql.
+CREATE TABLE IF NOT EXISTS avr_public_demo_agents (
+  slug TEXT PRIMARY KEY,
+  label TEXT NOT NULL,
+  agent_id TEXT NOT NULL UNIQUE,
+  active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE TABLE IF NOT EXISTS avr_public_demo_call_events (
+  id TEXT PRIMARY KEY,
+  visitor_hash TEXT NOT NULL,
+  demo_slug TEXT NOT NULL,
+  call_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE INDEX IF NOT EXISTS avr_public_demo_visitor_rate_idx ON avr_public_demo_call_events(visitor_hash, created_at DESC);
+CREATE INDEX IF NOT EXISTS avr_public_demo_global_rate_idx ON avr_public_demo_call_events(demo_slug, created_at DESC);

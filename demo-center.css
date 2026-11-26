@@ -106,3 +106,8 @@
 .demo-industry-card[aria-disabled="true"]{cursor:not-allowed}
 .demo-industry-card[aria-disabled="true"]:hover{transform:none;box-shadow:none;border-color:#34515b}
 @media(max-width:650px){.demo-live-disclosure{font-size:9px;padding:10px 11px}}
+
+/* Keep live transcript rendering stable while Retell streams partial speech snapshots. */
+.demo-transcript.live-transcript-stream{scroll-behavior:auto!important;overflow-anchor:none;transition:none!important;animation:none!important}
+.demo-transcript.live-transcript-stream .transcript-message,
+.demo-transcript.live-transcript-stream .transcript-message *{animation:none!important;transition:none!important;transform:none!important}

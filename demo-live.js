@@ -62,11 +62,13 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     const wasNearBottom=transcript.scrollHeight-transcript.scrollTop-transcript.clientHeight<48;
     transcript.classList.add("live-transcript-stream");
     const existing=[...transcript.querySelectorAll(".transcript-message")];
+    let addedMessage=false;
     visible.forEach((x,index)=>{
       const who=String(x.role).toLowerCase()==="user"?"CALLER":"AI RECEPTIONIST";
       const roleClass=who==="CALLER"?"caller":"receptionist";
       let item=existing[index];
       if(!item){
+        addedMessage=true;
         item=document.createElement("div");
         item.className="transcript-message "+roleClass;
         const tag=document.createElement("span");tag.className="transcript-speaker";tag.textContent=who;
@@ -83,7 +85,9 @@ import { RetellClient } from "https://esm.sh/retell-client-js-sdk@3";
     while(transcript.querySelectorAll(".transcript-message").length>visible.length){
       transcript.lastElementChild?.remove();
     }
-    if(wasNearBottom)transcript.scrollTop=transcript.scrollHeight;
+    // Retell sends partial text snapshots many times per utterance. Do not scroll or
+    // animate the transcript on each character update; only follow a newly added turn.
+    if(wasNearBottom&&addedMessage)transcript.scrollTop=transcript.scrollHeight;
   }
   function setStatus(value){
     state.textContent=value;

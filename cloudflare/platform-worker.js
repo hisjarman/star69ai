@@ -1384,14 +1384,18 @@ async function route(req,env){
       });
       agentId=agent.agent_id||agent.id;
       if(!agentId)throw Error("retell_agent_creation_missing_id");
+      created=true;
+      const draftRaw={...agent,channel:"voice",_avr_engine_type:"retell-llm",_avr_engine_id:llmId,star69ai_public_demo:true,demo_slug:spec.slug};
+      await env.DB.prepare("INSERT INTO avr_agents(agent_id,agent_name,customer_id,voice_id,language,status,raw_json,synced_at) VALUES(?,?,NULL,?,?,'demo',?,?)").bind(agentId,agent.agent_name||("Star69AI Live Demo — "+spec.label),agent.voice_id||spec.voice,agent.language||"en-US",JSON.stringify(draftRaw),new Date().toISOString()).run();
+      await env.DB.prepare("INSERT INTO avr_public_demo_agents(slug,label,agent_id,active,created_at,updated_at) VALUES(?,?,?,0,?,?)").bind(spec.slug,spec.label,agentId,new Date().toISOString(),new Date().toISOString()).run();
       const version=Number(agent.version);
       if(!Number.isInteger(version)||version<0)throw Error("retell_initial_draft_version_unavailable");
       await retellApi(env,"/publish-agent-version/"+encodeURIComponent(agentId),"POST",{version,version_description:"Initial Star69AI public demo release"});
       const verified=await retellApi(env,"/get-agent/"+encodeURIComponent(agentId));
       if(verified.is_published!==true)throw Error("retell_agent_publish_verification_failed");
       const raw={...verified,channel:"voice",_avr_engine_type:"retell-llm",_avr_engine_id:llmId,star69ai_public_demo:true,demo_slug:spec.slug};
-      await env.DB.prepare("INSERT INTO avr_agents(agent_id,agent_name,customer_id,voice_id,language,status,raw_json,synced_at) VALUES(?,?,NULL,?,?,'demo',?,?)").bind(agentId,verified.agent_name||("Star69AI Live Demo — "+spec.label),verified.voice_id||spec.voice,verified.language||"en-US",JSON.stringify(raw),new Date().toISOString()).run();
-      await env.DB.prepare("INSERT INTO avr_public_demo_agents(slug,label,agent_id,active,created_at,updated_at) VALUES(?,?,?,1,?,?)").bind(spec.slug,spec.label,agentId,new Date().toISOString(),new Date().toISOString()).run();
+      await env.DB.prepare("UPDATE avr_agents SET raw_json=?,synced_at=? WHERE agent_id=?").bind(JSON.stringify(raw),new Date().toISOString(),agentId).run();
+      await env.DB.prepare("UPDATE avr_public_demo_agents SET active=1,updated_at=? WHERE slug=?").bind(new Date().toISOString(),spec.slug).run();
       results.push({slug:spec.slug,agentId,created:true,status:"provisioned_and_published",published:true});
      }catch(e){results.push({slug:spec.slug,agentId:agentId||null,created, status:"failed",error:String(e.message||"provision_failed").slice(0,180)});}
     }

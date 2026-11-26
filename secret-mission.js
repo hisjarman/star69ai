@@ -1,5 +1,9 @@
 (() => {
   "use strict";
+  // The homepage embeds this page in a compact live-demo dialog. Do not inject
+  // the site-wide Secret Mission marker or its fixed map launcher into that
+  // embedded experience; they otherwise float over the call controls/transcript.
+  if (new URLSearchParams(window.location.search).get("embed") === "hero") return;
   const STORAGE_KEY = "star69ai.secretMission.v1";
   const steps = [
     { path: "/", selector: ".s69-hero-copy", name: "The First Signal", short: "THE SIGNAL", clue: "A missed call becomes a captured opportunity only when the process is designed. Find the page that explains the journey from discovery to launch.", next: "/how-it-works.html", nextName: "How It Works" },

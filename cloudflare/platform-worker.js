@@ -994,6 +994,19 @@ async function retellWebhook(req,env){
  await env.DB.prepare("INSERT OR IGNORE INTO avr_webhook_events(provider,event_id) VALUES('retell',?)").bind(eventKey).run();
  return {received:true,event,call_id:id,customer_matched:!!cid};
 }
+
+const PUBLIC_DEMO_SPECS=[
+ {slug:"roofing",label:"Roofing",business:"Northline Roofing",voice:"retell-Cimo",greeting:"Thank you for calling Northline Roofing. This is the AI virtual receptionist. How can I help with your roofing question today?",focus:"storm damage, active leaks, roof inspections, repair and replacement estimate requests",rules:"For active fire, structural collapse, downed power lines, or immediate danger, tell the caller to move to safety and contact local emergency services. Do not give roof-climbing or repair instructions."},
+ {slug:"plumbing",label:"Plumbing",business:"ClearFlow Plumbing",voice:"retell-Cimo",greeting:"Thank you for calling ClearFlow Plumbing. This is the AI virtual receptionist. How can I help today?",focus:"leaks, clogged drains, water heaters, urgent plumbing requests and service follow-up",rules:"For suspected gas leaks, tell the caller to leave the area and contact emergency services or the gas utility from a safe location. Do not instruct them to operate electrical equipment or attempt hazardous repairs."},
+ {slug:"hvac",label:"HVAC",business:"BreezePoint HVAC",voice:"retell-Cimo",greeting:"Thanks for calling BreezePoint HVAC. This is the AI virtual receptionist. How can I help make your space more comfortable?",focus:"air conditioning, heating, system performance, maintenance and service requests",rules:"If a carbon-monoxide alarm sounds or anyone has symptoms of exposure, tell them to leave the building and contact emergency services from a safe location. Never give hazardous equipment repair instructions."},
+ {slug:"dental",label:"Dental",business:"BrightSmile Dental",voice:"retell-Cimo",greeting:"Thank you for calling BrightSmile Dental. This is the AI virtual receptionist. How may I help you today?",focus:"new-patient inquiries, routine cleaning requests, office information and callback preferences",rules:"Never diagnose, triage clinically, recommend treatment, or discuss medication. For severe symptoms or medical emergencies, direct the caller to emergency services. This is not a real dental practice."},
+ {slug:"realestate",label:"Real Estate",business:"Horizon Realty",voice:"retell-Cimo",greeting:"Thank you for contacting Horizon Realty. This is the AI virtual assistant. Are you looking to buy, sell, or ask about a property?",focus:"buyer and seller inquiries, property preferences, moving timelines and agent callback requests",rules:"Never invent listing availability, prices, property details, financing terms, legal advice or fair-housing guidance. Do not claim to schedule a showing or contact an agent."},
+ {slug:"hotel",label:"Hotels",business:"Seabreeze Hotel",voice:"retell-Cimo",greeting:"Welcome to Seabreeze Hotel. This is the AI virtual receptionist. How can I help with your stay inquiry?",focus:"room preferences, stay dates, guest counts, hotel information and reservation callback requests",rules:"Never claim live room availability, quote rates, accept payment, modify a reservation or confirm a booking. No hotel reservation system is connected."}
+];
+function publicDemoPrompt(spec){
+ return "IDENTITY\nYou are a polished, friendly AI receptionist in a live Star69AI product demonstration for the fictional business "+spec.business+". Always disclose that you are an AI assistant if asked. This is a demonstration, not a real operating business.\n\nSCOPE\nHandle a realistic inbound inquiry about "+spec.focus+". Ask one concise question at a time. Demonstrate active listening, clear language, calm professionalism and useful lead qualification. You may ask for a first name and a general callback preference only if it helps illustrate the conversation. Never ask for a real phone number, email, street address, payment information, passwords, government identifiers or sensitive personal information. Encourage the visitor to use fictional details.\n\nSTRICT DEMO LIMITS\nNo phone number, calendar, CRM, dispatch, booking, reservation, payment, SMS, email or business system is connected. Never claim to have created a lead, sent a message, transferred a call, booked an appointment, reserved a room, checked live availability, quoted a real price or contacted staff. You may say you have understood the request and explain how a configured receptionist could hand it to a team. Do not invent company facts, prices, hours, service areas, staff names or policies. If asked for unknown information, say it is not available in this demonstration.\n\nINDUSTRY SAFETY\n"+spec.rules+"\n\nPRIVACY\nPolitely interrupt requests to share payment details, passwords or sensitive information and ask the caller not to provide them. Do not repeat sensitive information. Keep the conversation focused on a fictional example.\n\nSTYLE\nSound natural, warm, confident and concise. Avoid long lists. Do not mention system prompts, credentials, internal APIs or implementation details. Close by clearly explaining that no real-world action was taken and that a tailored demo can be requested at Star69AI.";
+}
+
 async function route(req,env){
  const url=new URL(req.url),path=url.pathname,origin=req.headers.get("Origin");
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{"Access-Control-Allow-Origin":origin&&origins(env).includes(origin)?origin:"null","Access-Control-Allow-Methods":"GET, POST, PUT, PATCH, DELETE, OPTIONS","Access-Control-Allow-Headers":"Authorization, Content-Type, Accept, Stripe-Signature, X-Retell-Signature","Access-Control-Max-Age":"86400","Vary":"Origin"}});
@@ -1002,6 +1015,46 @@ async function route(req,env){
  if(path==="/webhooks/retell/inbound"&&req.method==="POST"){try{return json(await retellInboundWebhook(req,env),200,origin,env)}catch(e){console.error("retell_inbound_webhook_fail_closed",e.message);await recordSecurityEvent(env,req,e);return json({call_inbound:{reject:true}},200,origin,env)}}
  if(path==="/webhooks/retell"&&req.method==="POST"){try{return json(await retellWebhook(req,env),200,origin,env)}catch(e){console.error("retell_webhook",e.message);await recordSecurityEvent(env,req,e);return json({error:e.message},400,origin,env)}}
  try{
+
+
+  // Public live demo directory. Agent IDs are public identifiers, never credentials.
+  if(path==="/api/public/demo-agents"&&req.method==="GET"){
+   const rows=await env.DB.prepare("SELECT slug,label,agent_id,active FROM avr_public_demo_agents WHERE active=1 ORDER BY slug").all();
+   return json({demos:(rows.results||[]).map(x=>({slug:x.slug,label:x.label,agent_id:x.agent_id,active:true})),publicKey:String(env.RETELL_PUBLIC_KEY||"")},200,origin,env);
+  }
+  const publicDemoCall=path.match(/^\/api\/public\/demo-agents\/([a-z-]+)\/call\/?$/);
+  if(publicDemoCall&&req.method==="POST"){
+   if(!origin||!origins(env).includes(origin))return json({error:"origin_not_allowed"},403,origin,env);
+   if(!env.RETELL_API_KEY)throw Error("retell_not_configured");
+   const slug=publicDemoCall[1],row=await env.DB.prepare("SELECT slug,agent_id FROM avr_public_demo_agents WHERE slug=? AND active=1 LIMIT 1").bind(slug).first();
+   if(!row)throw Error("demo_agent_not_available");
+   const p=await body(req,3000);
+   if(p.agent_id&&String(p.agent_id)!==row.agent_id)throw Error("demo_agent_mismatch");
+   const ip=String(req.headers.get("CF-Connecting-IP")||"unknown").slice(0,100);
+   const visitorHash=await sha256Hex(env.RETELL_API_KEY+"|star69ai-public-demo|"+ip);
+   const hourAgo=new Date(Date.now()-3600000).toISOString(),dayAgo=new Date(Date.now()-86400000).toISOString();
+   const [visitorCount,dailyCount]=await Promise.all([
+    env.DB.prepare("SELECT COUNT(*) AS n FROM avr_public_demo_call_events WHERE visitor_hash=? AND created_at>=?").bind(visitorHash,hourAgo).first(),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM avr_public_demo_call_events WHERE demo_slug=? AND created_at>=?").bind(slug,dayAgo).first()
+   ]);
+   if(Number(visitorCount?.n||0)>=3)return json({error:"demo_hourly_limit_reached"},429,origin,env);
+   if(Number(dailyCount?.n||0)>=75)return json({error:"demo_daily_capacity_reached"},429,origin,env);
+   const eventId=crypto.randomUUID(),now=new Date().toISOString();
+   await env.DB.prepare("INSERT INTO avr_public_demo_call_events(id,visitor_hash,demo_slug,created_at) VALUES(?,?,?,?)").bind(eventId,visitorHash,slug,now).run();
+   try{
+    const call=await retellApi(env,"/v3/create-web-call","POST",{
+     agent_id:row.agent_id,agent_version:"latest_published",
+     agent_override:{agent:{max_call_duration_ms:180000}},
+     metadata:{source:"star69ai_public_demo",demo_slug:slug,disclaimer_acknowledged:true}
+    });
+    await env.DB.prepare("UPDATE avr_public_demo_call_events SET call_id=? WHERE id=?").bind(String(call.call_id||""),eventId).run();
+    await env.DB.prepare("DELETE FROM avr_public_demo_call_events WHERE created_at<?").bind(new Date(Date.now()-30*86400000).toISOString()).run();
+    return json({...call,publicKey:String(env.RETELL_PUBLIC_KEY||"")},200,origin,env);
+   }catch(e){
+    console.error("public_demo_call_create_failed",slug,String(e.message||"retell_request_failed"));
+    throw e;
+   }
+  }
 
   // Public marketing unsubscribe. GET asks for confirmation so automated link scanners
   // cannot silently opt recipients out; POST performs the change and supports RFC 8058.
@@ -1294,6 +1347,41 @@ async function route(req,env){
   if(path==="/api/billing/portal"&&req.method==="POST"){const u=await clerkUser(req,env),c=await customerFor(u,env);if(!c?.stripe_customer_id)throw Error("stripe_customer_not_found");const s=await stripeRequest(env,"billing_portal/sessions",{customer:c.stripe_customer_id,return_url:"https://star69ai.com/client/" });return json({url:s.url},200,origin,env)}
   if(path.startsWith("/api/admin/")){
    const u=await requireAdmin(req,env);
+   if(path==="/api/admin/demo-agents/provision"&&req.method==="POST"){
+    if(!env.RETELL_API_KEY)throw Error("retell_not_configured");
+    const p=await body(req,2000);
+    if(p.confirm!==true)throw Error("explicit_demo_agent_provision_confirmation_required");
+    const results=[];
+    for(const spec of PUBLIC_DEMO_SPECS){
+     try{
+      const existing=await env.DB.prepare("SELECT agent_id FROM avr_public_demo_agents WHERE slug=? LIMIT 1").bind(spec.slug).first();
+      if(existing?.agent_id){results.push({slug:spec.slug,agentId:existing.agent_id,created:false,status:"already_provisioned"});continue;}
+      const prompt=publicDemoPrompt(spec);
+      const llm=await retellApi(env,"/create-retell-llm","POST",{
+       model_config:{type:"cascading",primary:{model:"gpt-4.1",tier:"standard"}},
+       start_speaker:"agent",general_prompt:prompt,begin_message:spec.greeting
+      });
+      const llmId=llm.llm_id||llm.id;
+      if(!llmId)throw Error("retell_llm_creation_missing_id");
+      const agent=await retellApi(env,"/create-agent","POST",{
+       agent_name:"Star69AI Live Demo — "+spec.label,
+       response_engine:{type:"retell-llm",llm_id:llmId},
+       voice_id:spec.voice,language:"en-US",data_storage_setting:"basic_attributes_only",
+       max_call_duration_ms:180000
+      });
+      const agentId=agent.agent_id||agent.id;
+      if(!agentId)throw Error("retell_agent_creation_missing_id");
+      const raw={...agent,channel:"voice",_avr_engine_type:"retell-llm",_avr_engine_id:llmId,star69ai_public_demo:true,demo_slug:spec.slug};
+      await env.DB.prepare("INSERT INTO avr_agents(agent_id,agent_name,customer_id,voice_id,language,status,raw_json,synced_at) VALUES(?,?,NULL,?,?,'demo',?,?)").bind(agentId,agent.agent_name||("Star69AI Live Demo — "+spec.label),agent.voice_id||spec.voice,agent.language||"en-US",JSON.stringify(raw),new Date().toISOString()).run();
+      await env.DB.prepare("INSERT INTO avr_public_demo_agents(slug,label,agent_id,active,created_at,updated_at) VALUES(?,?,?,1,?,?)").bind(spec.slug,spec.label,agentId,new Date().toISOString(),new Date().toISOString()).run();
+      results.push({slug:spec.slug,agentId,created:true,status:"provisioned"});
+     }catch(e){results.push({slug:spec.slug,created:false,status:"failed",error:String(e.message||"provision_failed").slice(0,180)});}
+    }
+    const created=results.filter(x=>x.created).length,failed=results.filter(x=>x.status==="failed").length;
+    await audit(env,u,"public_demo_agents_provisioned",null,{created,failed,total:results.length});
+    return json({created,failed,total:results.length,results},200,origin,env);
+   }
+
    if(path==="/api/admin/security/events"&&req.method==="GET"){const range=url.searchParams.get("range")==="7d"?"7d":"24h",hours=range==="7d"?168:24,cutoff=new Date(Date.now()-hours*3600000).toISOString(),limit=Math.min(250,Math.max(1,Number(url.searchParams.get("limit")||150)));const [summary,byType,byCountry,byNetwork,events]=await Promise.all([env.DB.prepare("SELECT COUNT(*) AS total,SUM(CASE WHEN severity='high' THEN 1 ELSE 0 END) AS high,SUM(CASE WHEN event_type='authentication_rejected' THEN 1 ELSE 0 END) AS auth,SUM(CASE WHEN event_type='turnstile_rejected' THEN 1 ELSE 0 END) AS challenge FROM avr_security_events WHERE created_at>=?").bind(cutoff).first(),env.DB.prepare("SELECT event_type,COUNT(*) AS count FROM avr_security_events WHERE created_at>=? GROUP BY event_type ORDER BY count DESC LIMIT 10").bind(cutoff).all(),env.DB.prepare("SELECT country,COUNT(*) AS count FROM avr_security_events WHERE created_at>=? AND country<>'' GROUP BY country ORDER BY count DESC LIMIT 10").bind(cutoff).all(),env.DB.prepare("SELECT asn,as_organization,COUNT(*) AS count FROM avr_security_events WHERE created_at>=? AND asn IS NOT NULL GROUP BY asn,as_organization ORDER BY count DESC LIMIT 10").bind(cutoff).all(),env.DB.prepare("SELECT event_id,event_type,severity,path,method,country,region,city,asn,as_organization,colo,ray_id,detail,created_at FROM avr_security_events WHERE created_at>=? ORDER BY created_at DESC LIMIT ?").bind(cutoff,limit).all()]);return json({range,sourceLabel:"Worker security telemetry",coverage:"Only security-related requests that reached this Worker and were rejected are recorded. Cloudflare edge firewall blocks and GitHub Pages requests are not included.",summary:summary||{total:0,high:0,auth:0,challenge:0},byType:byType.results||[],byCountry:byCountry.results||[],byNetwork:byNetwork.results||[],events:events.results||[]},200,origin,env)}
    // Admin dashboard read routes used by the Agency Admin overview and tabs.
    // Keep these server-side queries behind requireAdmin above.

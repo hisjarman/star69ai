@@ -94,6 +94,8 @@
 @media(max-width:650px){.demo-center{padding:65px 0}.demo-center-heading{display:block}.demo-center-note{display:inline-block;margin-top:10px}.demo-industry-grid{gap:8px;margin-top:22px}.demo-industry-card{grid-template-columns:64px 1fr;column-gap:9px;padding:10px;min-height:90px}.demo-art{width:64px;height:65px}.demo-card-title{font-size:12px}.demo-card-desc{font-size:9px}.demo-card-action{font-size:7px;margin-top:5px}.demo-studio-head{align-items:flex-start;flex-direction:column;padding:18px}.demo-studio-head h3{font-size:18px}.demo-studio-layout{grid-template-columns:1fr}.demo-phone-visual{min-height:300px}.phone-device{width:145px;height:245px}.phone-avatar{margin:12px 0 8px}.phone-wave{margin-top:12px}.phone-connected{margin-top:10px}.phone-caption{margin-top:14px}.demo-transcript-panel{padding:16px 12px}.demo-transcript{height:270px}.transcript-message{max-width:95%}.demo-simulation-controls{flex-wrap:wrap}.demo-progress{flex-basis:100%;order:3}.demo-audio-row{padding:13px;flex-wrap:wrap}.audio-copy{flex:1}.audio-coming-soon{margin-left:50px}.demo-center-cta{align-items:flex-start;flex-direction:column;padding:17px}.demo-center-cta .button{width:100%}}
 @media(prefers-reduced-motion:reduce){.phone-wave i,.transcript-message{animation:none!important}}
 
+.demo-transcript.live-transcript-stream .transcript-message{animation:none!important;transform:none!important;opacity:1!important}
+
 /* Live Retell voice demo controls */
 .demo-live-disclosure{margin:15px 0 0;padding:12px 14px;border:1px solid #3d6474;border-radius:9px;background:#102a38;color:#c7e2eb;font-size:10px;line-height:1.65}
 .demo-call-status.is-live{background:#123b42;color:#9af0df}

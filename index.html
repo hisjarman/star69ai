@@ -100,7 +100,7 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 <link rel="stylesheet" href="/secret-mission.css">
 <link rel="stylesheet" href="/call-rescue-simulator.css?v=20261118-1">
 <meta name="msvalidate.01" content="7B2DE5894C9C53F0BD13DD9A57BE9241" />
-</head>
+<link rel="stylesheet" href="./hero-live-demo.css?v=20261126-1"></head>
   <body class="multi-page" id="top">
 
 <!-- STAR69AI_PROTECTED_HOMEPAGE_ARRIVAL_START -->
@@ -142,6 +142,12 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
       </div>
       <p class="s69-home-cap-note">Options are configured to your workflow and connected services.</p>
       <a class="s69-home-cap-link" href="./capabilities.html">Explore all capabilities <span aria-hidden="true">↗</span></a>
+      <button class="s69-hero-demo-launch" id="hero-live-demo-open" type="button" aria-haspopup="dialog" aria-controls="hero-live-demo-dialog">
+        <span class="s69-hero-demo-live"><i aria-hidden="true"></i> LIVE AI DEMO</span>
+        <strong>Hear Star69AI answer a call.</strong>
+        <small>Speak naturally with a live AI receptionist. No signup required.</small>
+        <span class="s69-hero-demo-action">TRY A LIVE CALL <b aria-hidden="true">↗</b></span>
+      </button>
     </aside>    </div>
   </div>
   <div class="s69-hero-divider"></div>
@@ -410,7 +416,12 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
 <a class="home-path-card" href="./pricing.html"><span>04 / PLANS</span><h3>Pricing</h3><p>Compare included AI voice minutes, setup and overage details.</p><b>Compare plans ↗</b></a>
 <a class="home-path-card" href="./demos.html"><span>05 / EXPERIENCE</span><h3>Listen to demos</h3><p>Hear sample calls and explore the dashboard preview.</p><b>See demos ↗</b></a>
 <a class="home-path-card" href="./insights/"><span>06 / KNOWLEDGE</span><h3>Insights &amp; guides</h3><p>Practical research on AI receptionists, voice technology, pricing and missed calls.</p><b>Explore the guides ↗</b></a><a class="home-path-card" href="./get-started.html"><span>08 / NEXT STEP</span><h3>Get started</h3><p>Tell us about your business so we can prepare a tailored demo.</p><b>Request your demo ↗</b></a>
-</div></div></section></div></details><section class="story-promo"><div class="section-wrap story-promo-inner"><div class="story-promo-copy"><span class="story-eyebrow">A LITTLE BUSINESS COMEDY, EVERY FRIDAY</span><h2>Saved by the AI Receptionist!</h2><p>Funny, fictional stories about real business headaches — and how a better front desk can help.</p><a class="story-text-link" href="./blog/">Explore the story series ↗</a></div><form class="story-subscribe story-subscribe-compact" data-story-subscribe><label for="home-story-email">Get the free weekly story drop</label><div class="story-subscribe-fields"><input id="home-story-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><button type="submit">Subscribe ↗</button></div><label class="story-consent"><input type="checkbox" name="consent" required><span>Yes, email me one free story each week. I can unsubscribe at any time.</span></label><input class="story-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><p class="story-form-status" role="status" aria-live="polite"></p><small>Only the weekly story email. No unrelated marketing.</small></form></div></section></main><div class="home-assistant" id="home-assistant">
+</div></div></section></div></details><section class="story-promo"><div class="section-wrap story-promo-inner"><div class="story-promo-copy"><span class="story-eyebrow">A LITTLE BUSINESS COMEDY, EVERY FRIDAY</span><h2>Saved by the AI Receptionist!</h2><p>Funny, fictional stories about real business headaches — and how a better front desk can help.</p><a class="story-text-link" href="./blog/">Explore the story series ↗</a></div><form class="story-subscribe story-subscribe-compact" data-story-subscribe><label for="home-story-email">Get the free weekly story drop</label><div class="story-subscribe-fields"><input id="home-story-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required><button type="submit">Subscribe ↗</button></div><label class="story-consent"><input type="checkbox" name="consent" required><span>Yes, email me one free story each week. I can unsubscribe at any time.</span></label><input class="story-honeypot" name="website" tabindex="-1" autocomplete="off" aria-hidden="true"><p class="story-form-status" role="status" aria-live="polite"></p><small>Only the weekly story email. No unrelated marketing.</small></form></div></section></main>
+<dialog class="s69-hero-demo-dialog" id="hero-live-demo-dialog" aria-labelledby="hero-live-demo-title">
+  <div class="s69-hero-demo-dialog-head"><div><span>STAR69AI / LIVE EXPERIENCE</span><h2 id="hero-live-demo-title">Talk to your AI receptionist.</h2></div><button type="button" id="hero-live-demo-close" aria-label="Close live demo">×</button></div>
+  <iframe id="hero-live-demo-frame" src="./demos.html?embed=hero" title="Live Star69AI receptionist demonstration" loading="lazy" allow="microphone; autoplay" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</dialog>
+<div class="home-assistant" id="home-assistant">
   <button class="home-assistant-toggle" id="home-assistant-toggle" type="button" aria-expanded="false" aria-controls="home-assistant-panel">
     <span class="home-assistant-icon" aria-hidden="true">✦</span><span><b>Ask the AI Assistant</b><small>Questions about Star69AI?</small></span><span class="home-assistant-chevron" aria-hidden="true">⌃</span>
   </button>
@@ -465,7 +476,19 @@ html{scroll-behavior:smooth;background:var(--s69-deep)}body.multi-page{margin:0;
   revealLinkedSection(window.location.hash);
 })();
 </script>
-<script defer src="./app.js"></script><script defer src="./story-series.js"></script><script defer src="./experience.js"></script>
+<script>
+(() => {
+  const dialog=document.getElementById("hero-live-demo-dialog");
+  const open=document.getElementById("hero-live-demo-open");
+  const close=document.getElementById("hero-live-demo-close");
+  const frame=document.getElementById("hero-live-demo-frame");
+  if(!dialog||!open||!close)return;
+  open.addEventListener("click",()=>{if(typeof dialog.showModal==="function")dialog.showModal();else window.location.href="./demos.html#demo-center";});
+  close.addEventListener("click",()=>dialog.close());
+  dialog.addEventListener("click",event=>{if(event.target===dialog)dialog.close();});
+  dialog.addEventListener("close",()=>{if(frame&&frame.contentWindow)frame.src=frame.src;});
+})();
+</script><script defer src="./app.js"></script><script defer src="./story-series.js"></script><script defer src="./experience.js"></script>
 <script defer src="/call-rescue-simulator.js?v=20261118-1"></script>
 <script defer src="/secret-mission.js"></script>
 <script defer src="/assets/visitor-arrival.js?v=20261120-3"></script><script defer src="/assets/visitor-welcome.js?v=20261120-3"></script>

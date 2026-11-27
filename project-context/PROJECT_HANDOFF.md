@@ -2341,3 +2341,20 @@ This section supersedes the earlier activation-status notes above where they des
 - No production Worker, D1, DNS, Cloudflare account settings, secrets, customer records, live calls, billing, or production traffic were changed. No merge or deployment is authorized by this review.
 - Remaining hardening work: revalidate Cloudflare TLS minimum and account MFA settings; map the configured Worker Rate Limiter bindings and add route-specific enforcement with tests; verify DMARC sender alignment before policy changes; add webhook replay/concurrency tests; test tenant isolation and Call Shield degraded modes; verify D1 restore and release rollback.
 - Validation status: workflow source reviewed; first CodeQL run is pending after PR creation. No vulnerability-free or production-ready claim is made.
+
+
+## Published Insight — AI phone receptionist selection checklist — 2026-11-27
+
+- **Article:** 7 Questions to Ask Before Choosing an AI Phone Receptionist for Your Business
+- **URL/slug:** https://star69ai.com/insights/best-ai-phone-receptionist-small-business.html (`best-ai-phone-receptionist-small-business.html`).
+- **Primary SEO keyword:** best AI phone receptionist for small business.
+- **Audience:** Small-business owners and operations managers comparing AI phone answering providers.
+- **Meta description:** Choose the best AI phone receptionist for your small business with seven questions about setup, integrations, testing, privacy, pricing and support. (148 characters).
+- **Article body:** 2753 words, calculated from visible article-body text.
+- **Editorial format:** Byline “By Star69AI Editorial Team”; publication date; eight-minute reading estimate; two introductory paragraphs; clickable table of contents; seven vendor due-diligence questions; evidence scorecard; pilot test plan; five FAQs; conclusion and managed-service CTA; contextual internal links; educational disclosure.
+- **Featured image:** Original ImageGen artwork optimized as WebP at 480 × 270 pixels (9,562 bytes). Saved as `assets/best-ai-phone-receptionist-small-business.webp`. Alt text: “A business owner reviews an AI receptionist vendor checklist with connected symbols for calls, integrations, pricing, security and support.”
+- **Brand language:** Explicit managed AI receptionist positioning; Our Crew; Initiate Contact; Communications, Evolved. No unsupported booking, integration, activation, support-response or performance promises.
+- **Research and references:** FTC Cybersecurity for Small Business; FTC Start with Security; NIST SP 1300 small-business cybersecurity quick-start guide; FCC 24-17 declaratory ruling on AI-generated voices in covered outbound calls. The article distinguishes inbound answering from outbound AI-voice calls and does not provide legal advice or make a compliance guarantee.
+- **Files updated:** `insights/best-ai-phone-receptionist-small-business.html`, `assets/best-ai-phone-receptionist-small-business.webp`, `insights/index.html`, `sitemap.xml`, and this handoff.
+- **Publication:** Article, original featured image, Insights listing, sitemap and handoff committed together directly to `main` under the user's explicit automatic-publishing authorization. No application code, Worker, D1, billing, authentication, integrations or customer data changed.
+- **Validation:** Meta description length; article word count; one H1; unique HTML IDs; all table-of-contents anchors resolve; both JSON-LD blocks parse; canonical/Open Graph/Twitter metadata; image path, intrinsic dimensions and alt text; Insights card and sitemap URL. GitHub Pages live HTTP verification is reported separately.

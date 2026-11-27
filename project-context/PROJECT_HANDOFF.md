@@ -2329,3 +2329,15 @@ This section supersedes the earlier activation-status notes above where they des
 - Kept the separate per-industry-demo daily capacity at 75 calls and retained the 3-minute maximum call duration. Failed Retell call-creation attempts do not consume a visitor allowance because the event row is inserted only after a valid Retell `call_id` is returned.
 - Source change: `cloudflare/platform-worker.js`. This change is on `fix/public-demo-hourly-limit-10-2026-11-26` and is proposed for review; it has not been merged or deployed. The Cloudflare Worker remains unchanged until the PR is approved and the updated Worker is explicitly deployed.
 - Validation: confirmed the source contains the single intended hourly threshold change (3 → 10) and the daily capacity and call-duration safeguards remain unchanged. Live rate-limit behavior and deployment have not been tested.
+
+
+## Security hardening review — 2026-11-27 — REVIEW REQUIRED
+
+- Working branch: `security/production-hardening-2026-11-27`, created from `main` at `90669981d9ac804b863b37d570d16ea6f7b8c2d4`.
+- Added a GitHub CodeQL workflow for JavaScript/TypeScript security analysis on pull requests, pushes to `main`, scheduled weekly scans, and manual runs. The workflow uses read-only repository permissions plus the minimum security-events permission required to publish CodeQL results.
+- This adds automated static analysis; it does not itself remediate vulnerabilities or establish that a clean scan means the application is secure. Findings must be triaged and fixed in follow-up commits.
+- Current confirmed repository posture: GitHub reports `main` as unprotected (`protected=false`) and no required status checks. The connected GitHub integration does not provide branch-protection write access. Founder must enable a ruleset/branch protection in GitHub settings and require PR review plus the CodeQL check before merge.
+- Call Shield remains intentionally fail-open on screening exceptions in the current production source. Do not silently change this to fail-closed: doing so could reject legitimate inbound calls during a D1 or runtime incident. A policy decision, customer-safe degraded mode, alerting, and failure-injection tests are required before changing that behavior.
+- No production Worker, D1, DNS, Cloudflare account settings, secrets, customer records, live calls, billing, or production traffic were changed. No merge or deployment is authorized by this review.
+- Remaining hardening work: revalidate Cloudflare TLS minimum and account MFA settings; map the configured Worker Rate Limiter bindings and add route-specific enforcement with tests; verify DMARC sender alignment before policy changes; add webhook replay/concurrency tests; test tenant isolation and Call Shield degraded modes; verify D1 restore and release rollback.
+- Validation status: workflow source reviewed; first CodeQL run is pending after PR creation. No vulnerability-free or production-ready claim is made.
